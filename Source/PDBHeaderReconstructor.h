@@ -139,7 +139,8 @@ class PDBHeaderReconstructor
 		OnAnonymousUserDataTypeEnd(
 			UdtKind UserDataTypeKind,
 			const SYMBOL_USERDATA_FIELD* FirstUserDataField,
-			const SYMBOL_USERDATA_FIELD* LastUserDataField
+			const SYMBOL_USERDATA_FIELD* LastUserDataField,
+			DWORD Size
 			) override;
 
 		void

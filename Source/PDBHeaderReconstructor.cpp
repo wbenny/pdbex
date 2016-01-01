@@ -241,7 +241,14 @@ PDBHeaderReconstructor::OnUserDataTypeEnd(
 
 	if (m_Depth == 0)
 	{
-		Write(";\n\n");
+		Write(";");
+	}
+
+	Write(" /* size: 0x%04x */", Symbol->Size);
+
+	if (m_Depth == 0)
+	{
+		Write("\n\n");
 	}
 }
 
@@ -302,6 +309,12 @@ PDBHeaderReconstructor::OnUserDataField(
 	}
 
 	Write(";");
+
+	if (UserDataField->Bits != 0)
+	{
+		Write(" /* bit position: %i */", UserDataField->BitPosition);
+	}
+
 	Write("\n");
 }
 
@@ -324,7 +337,8 @@ void
 PDBHeaderReconstructor::OnAnonymousUserDataTypeEnd(
 	UdtKind UserDataTypeKind,
 	const SYMBOL_USERDATA_FIELD* FirstUserDataField,
-	const SYMBOL_USERDATA_FIELD* LastUserDataField
+	const SYMBOL_USERDATA_FIELD* LastUserDataField,
+	DWORD Size
 	)
 {
 	m_Depth -= 1;
@@ -334,6 +348,9 @@ PDBHeaderReconstructor::OnAnonymousUserDataTypeEnd(
 	WriteUnnamedDataType(UserDataTypeKind);
 
 	Write(";");
+
+	Write(" /* size: 0x%04x */", Size);
+
 	Write("\n");
 }
 

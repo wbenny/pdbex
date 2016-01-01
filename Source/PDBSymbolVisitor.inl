@@ -780,7 +780,8 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForEndOfAnonymousUserDataType(
 			m_ReconstructVisitor->OnAnonymousUserDataTypeEnd(
 				LastAnonymousUserDataType->UserDataTypeKind,
 				LastAnonymousUserDataType->FirstUserDataField,
-				LastAnonymousUserDataType->LastUserDataField
+				LastAnonymousUserDataType->LastUserDataField,
+				(DWORD)LastAnonymousUserDataType->Size
 				);
 
 			PopAnonymousUserDataType();

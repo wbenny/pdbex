@@ -51,6 +51,8 @@ class UserDataFieldDefinition
 
 				const_cast<SYMBOL*>(Symbol)->Size = 1;
 				m_TypePrefix += "*";
+
+				m_Comment = " /* zero-length array */";
 			}
 			else
 			{
