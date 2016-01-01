@@ -170,6 +170,33 @@ class PDBSymbolVisitor
 			UdtKind UserDataTypeKind;
 		};
 
+		struct BitFieldRange
+		{
+			const SYMBOL_USERDATA_FIELD* FirstUserDataFieldBitField;
+			const SYMBOL_USERDATA_FIELD* LastUserDataFieldBitField;
+
+			BitFieldRange()
+				: FirstUserDataFieldBitField(nullptr)
+				, LastUserDataFieldBitField(nullptr)
+			{
+
+			}
+
+			void
+			Clear()
+			{
+				FirstUserDataFieldBitField = nullptr;
+				LastUserDataFieldBitField = nullptr;
+			}
+
+			bool
+			HasValue() const
+			{
+				return FirstUserDataFieldBitField != nullptr &&
+				       LastUserDataFieldBitField  != nullptr;
+			}
+		};
+
 		struct UserDataFieldContext
 		{
 			UserDataFieldContext(
@@ -186,6 +213,8 @@ class PDBSymbolVisitor
 				PreviousUserDataField = &UserDataField[-1];
 				CurrentUserDataField  = &UserDataField[ 0];
 				NextUserDataField     = &UserDataField[ 1];
+
+				this->RespectBitFields = RespectBitFields;
 
 				if (RespectBitFields)
 				{
@@ -210,7 +239,12 @@ class PDBSymbolVisitor
 			{
 				PreviousUserDataField = CurrentUserDataField;
 				CurrentUserDataField  = NextUserDataField;
-				NextUserDataField     = GetNextUserDataFieldWithRespectToBitFields(CurrentUserDataField);
+				NextUserDataField     = &CurrentUserDataField[1];
+
+				if (RespectBitFields && IsLast() == false)
+				{
+					NextUserDataField = GetNextUserDataFieldWithRespectToBitFields(CurrentUserDataField);
+				}
 
 				return IsLast() == false;
 			}
@@ -221,6 +255,8 @@ class PDBSymbolVisitor
 			const SYMBOL_USERDATA_FIELD* PreviousUserDataField;
 			const SYMBOL_USERDATA_FIELD* CurrentUserDataField;
 			const SYMBOL_USERDATA_FIELD* NextUserDataField;
+
+			BOOL RespectBitFields;
 		};
 
 		using AnonymousUserDataTypeStack = std::stack<std::shared_ptr<AnonymousUserDataType>>;
@@ -305,6 +341,11 @@ class PDBSymbolVisitor
 
 		AnonymousUserDataTypeStack m_AnonymousUnionStack;
 		AnonymousUserDataTypeStack m_AnonymousStructStack;
+
+		//
+		// Holds information about current bitfield.
+		//
+		BitFieldRange m_CurrentBitField;
 
 		//
 		// This stack holds instance of a class which will be responsible

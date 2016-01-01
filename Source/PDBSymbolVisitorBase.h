@@ -130,43 +130,54 @@ class PDBSymbolVisitorBase
 			)
 		{
 			const SYMBOL_USERDATA_FIELD* UserDataField;
-			DWORD UserDataFieldCount;
-			DWORD UserDataFieldOffset;
-			DWORD BitSum = 0;
+			const SYMBOL_USERDATA_FIELD* EndOfUserDataField;
+
+			if (Symbol->u.UserData.FieldCount == 0)
+			{
+				//
+				// Early return on empty UDTs.
+				//
+
+				return;
+			}
 
 			UserDataField = Symbol->u.UserData.Fields;
-			UserDataFieldCount = Symbol->u.UserData.FieldCount;
+			EndOfUserDataField = &Symbol->u.UserData.Fields[Symbol->u.UserData.FieldCount];
 
-			for (DWORD i = 0; i < UserDataFieldCount; i++)
+			do
 			{
-				UserDataField = &Symbol->u.UserData.Fields[i];
-				UserDataFieldOffset = UserDataField->Offset;
-
 				if (UserDataField->Bits == 0)
 				{
+					//
+					// Non-bitfield member.
+					//
 					VisitUserDataFieldBegin(UserDataField);
 					VisitUserDataField(UserDataField);
 					VisitUserDataFieldEnd(UserDataField);
-					continue;
 				}
-
-				VisitUserDataFieldBitFieldBegin(UserDataField);
-				for (; i < UserDataFieldCount; i++)
+				else
 				{
-					UserDataField = &Symbol->u.UserData.Fields[i];
+					//
+					// UserDataField now points to the first member of the bitfield.
+					//
+					VisitUserDataFieldBitFieldBegin(UserDataField);
 
-					BitSum += UserDataField->Bits;
-
-					VisitUserDataFieldBitField(UserDataField);
-
-					if (BitSum == UserDataField->Type->Size * 8)
+					do
 					{
-						VisitUserDataFieldBitFieldEnd(UserDataField);
-						BitSum = 0;
-						break;
-					}
+						//
+						// Visit all bitfield members
+						//
+						VisitUserDataFieldBitField(UserDataField);
+					} while (++UserDataField < EndOfUserDataField &&
+					           UserDataField->BitPosition != 0);
+
+					//
+					// UserDataField now points behind the last bitfield member.
+					// So decrement the iterator and call VisitUserDataFieldBitFieldEnd().
+					//
+					VisitUserDataFieldBitFieldEnd(--UserDataField);
 				}
-			}
+			} while (++UserDataField < EndOfUserDataField);
 		}
 
 		virtual

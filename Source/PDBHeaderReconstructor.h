@@ -144,7 +144,8 @@ class PDBHeaderReconstructor
 
 		void
 		OnUserDataFieldBitFieldBegin(
-			const SYMBOL_USERDATA_FIELD* FirstUserDataFieldBitField
+			const SYMBOL_USERDATA_FIELD* FirstUserDataFieldBitField,
+			const SYMBOL_USERDATA_FIELD* LastUserDataFieldBitField
 			) override;
 
 		void

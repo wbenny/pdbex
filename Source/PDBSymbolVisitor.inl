@@ -276,7 +276,7 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUserDataField(
 	m_MemberContextStack.push(MemberDefinitionFactory());
 	m_MemberContextStack.top()->SetMemberName(UserDataField->Name);
 	
-	if (IsFirstBitFieldMember || !IsBitFieldMember)
+	if (!IsBitFieldMember || IsFirstBitFieldMember)
 	{
 		//
 		// Handling of inlined user data types.
@@ -299,7 +299,15 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUserDataField(
 		// This is the first bitfield member.
 		//
 
-		m_ReconstructVisitor->OnUserDataFieldBitFieldBegin(UserDataField);
+		assert(m_CurrentBitField.HasValue() == false);
+
+		m_CurrentBitField.FirstUserDataFieldBitField = UserDataField;
+		m_CurrentBitField.LastUserDataFieldBitField = GetNextUserDataFieldWithRespectToBitFields(UserDataField) - 1;
+
+		m_ReconstructVisitor->OnUserDataFieldBitFieldBegin(
+			m_CurrentBitField.FirstUserDataFieldBitField,
+			m_CurrentBitField.LastUserDataFieldBitField
+			);
 	}
 
 	//
@@ -333,7 +341,15 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUserDataFieldBitFieldEnd(
 	const SYMBOL_USERDATA_FIELD* UserDataField
 	)
 {
-	m_ReconstructVisitor->OnUserDataFieldBitFieldEnd(UserDataField, UserDataField);
+	assert(m_CurrentBitField.HasValue() == true);
+	assert(m_CurrentBitField.LastUserDataFieldBitField == UserDataField);
+
+	m_ReconstructVisitor->OnUserDataFieldBitFieldEnd(
+		m_CurrentBitField.FirstUserDataFieldBitField,
+		m_CurrentBitField.LastUserDataFieldBitField
+		);
+
+	m_CurrentBitField.Clear();
 
 	VisitUserDataFieldEnd(UserDataField);
 }
@@ -884,77 +900,20 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::GetNextUserDataFieldWithRespectToBitFi
 	const SYMBOL_USERDATA* ParentUserData = &UserDataField->Parent->u.UserData;
 	DWORD UserDataFieldCount = ParentUserData->FieldCount;
 
-	const SYMBOL_USERDATA_FIELD* NextUserDataField = UserDataField;
+	const SYMBOL_USERDATA_FIELD* NextUserDataField = UserDataField + 1;
 	const SYMBOL_USERDATA_FIELD* EndOfUserDataField = &ParentUserData->Fields[UserDataFieldCount];
-	DWORD UserDataFieldOffset = UserDataField->Offset;
 
-	if (UserDataField->Bits == 0)
+	do
 	{
-		//
-		// Provided member is not a bitfield.
-		// Increment to the next user data field.
-		//
-		NextUserDataField++;
-	}
-	else
-	{
-		//
-		// If provided member is a part of a bitfield,
-		// we will try to iterate until end of that bitfield.
-		//
-		// This is achieved through summing all bits in the bitfield members.
-		//
-
-		DWORD BitSum = 0;
-
-		do
+		if (NextUserDataField->BitPosition == 0)
 		{
-			if (NextUserDataField->Offset != UserDataFieldOffset)
-			{
-				//
-				// If offsets don't match up before appropriate sum was reached,
-				// it means that the UserDataField provided was actually
-				// already (non-first) member of some bitfield.
-				//
+			//
+			// BitPosition == 0 announces a new member.
+			//
 
-				if (NextUserDataField->Bits == 0)
-				{
-					//
-					// If next user data field is not a part of the bitfield,
-					// just break here.
-					//
-
-					break;
-				}
-				else
-				{
-					//
-					// If next user data field is a part of the bitfield,
-					// it means that new bitfield starts after the current one.
-					// Just reset the counter and start counting from the scratch.
-					//
-
-					BitSum = 0;
-				}
-			}
-
-			BitSum += NextUserDataField->Bits;
-
-			if (BitSum == NextUserDataField->Type->Size * 8)
-			{
-				//
-				// If the sum now equals to the bit size of the data type
-				// of the bitfield, break the loop.
-				// The NextUserDataField currently points to the last member
-				// of the bitfield, so we increment it here so it points
-				// to the first member after the current bitfield.
-				//
-
-				NextUserDataField++;
-				break;
-			}
-		} while (++NextUserDataField < EndOfUserDataField);
-	}
+			break;
+		}
+	} while (++NextUserDataField < EndOfUserDataField);
 
 	if (NextUserDataField >= EndOfUserDataField)
 	{

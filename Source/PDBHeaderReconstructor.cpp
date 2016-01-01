@@ -339,18 +339,25 @@ PDBHeaderReconstructor::OnAnonymousUserDataTypeEnd(
 
 void
 PDBHeaderReconstructor::OnUserDataFieldBitFieldBegin(
-	const SYMBOL_USERDATA_FIELD* FirstUserDataFieldBitField
+	const SYMBOL_USERDATA_FIELD* FirstUserDataFieldBitField,
+	const SYMBOL_USERDATA_FIELD* LastUserDataFieldBitField
 	)
 {
 	if (m_Settings->AllowBitFieldsInUnion == false)
 	{
-		WriteIndent();
-		Write("%s /* bitfield */\n", PDB::GetUdtKindString(UdtStruct));
-		
-		WriteIndent();
-		Write("{\n");
+		//
+		// Do not wrap bitfields which have only one member.
+		//
+		if (FirstUserDataFieldBitField != LastUserDataFieldBitField)
+		{
+			WriteIndent();
+			Write("%s /* bitfield */\n", PDB::GetUdtKindString(UdtStruct));
 
-		m_Depth += 1;
+			WriteIndent();
+			Write("{\n");
+
+			m_Depth += 1;
+		}
 	}
 }
 
@@ -362,10 +369,13 @@ PDBHeaderReconstructor::OnUserDataFieldBitFieldEnd(
 {
 	if (m_Settings->AllowBitFieldsInUnion == false)
 	{
-		m_Depth -= 1;
+		if (FirstUserDataFieldBitField != LastUserDataFieldBitField)
+		{
+			m_Depth -= 1;
 
-		WriteIndent();
-		Write("}; /* bitfield */\n");
+			WriteIndent();
+			Write("}; /* bitfield */\n");
+		}
 	}
 }
 

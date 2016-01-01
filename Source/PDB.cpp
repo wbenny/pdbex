@@ -591,8 +591,6 @@ SymbolModule::ProcessSymbolUserDataType(
 	FindChildrenParams->Count = Symbol->u.UserData.FieldCount;
 	GetSymbolTypeInfo(Symbol->TypeId, TI_FINDCHILDREN, FindChildrenParams);
 
-	SYMBOL_USERDATA_FIELD* PreviousMember = NULL;
-	DWORD PreviousBitPosition = 0;
 	for (DWORD i = 0; i < Symbol->u.UserData.FieldCount; i++)
 	{
 		SYMBOL_USERDATA_FIELD* Member = &Symbol->u.UserData.Fields[i];
@@ -604,28 +602,14 @@ SymbolModule::ProcessSymbolUserDataType(
 		GetSymbolTypeInfo(FindChildrenParams->ChildId[i], TI_GET_OFFSET,      &Member->Offset);
 		GetSymbolTypeInfo(FindChildrenParams->ChildId[i], TI_GET_BITPOSITION, &Member->BitPosition);
 
+		ULONG64 Bits = 0;
+		GetSymbolTypeInfo(FindChildrenParams->ChildId[i], TI_GET_LENGTH,      &Bits);
+		Member->Bits = (DWORD)Bits;
+
 		DWORD MemberType;
 		GetSymbolTypeInfo(FindChildrenParams->ChildId[i], TI_GET_TYPE,        &MemberType);
 
 		Member->Type = GetSymbolByTypeId(MemberType);
-
-		if (Member->BitPosition != 0 && PreviousMember != NULL)
-		{
-			PreviousMember->Bits = Member->BitPosition - PreviousBitPosition;
-			PreviousBitPosition = Member->BitPosition;
-		}
-		else if (PreviousBitPosition != 0)
-		{
-			PreviousMember->Bits = (DWORD)PreviousMember->Type->Size * CHAR_BIT - PreviousBitPosition;
-			PreviousBitPosition = 0;
-		}
-
-		PreviousMember = Member;
-	}
-
-	if (PreviousBitPosition != 0)
-	{
-		PreviousMember->Bits = (DWORD)PreviousMember->Type->Size * CHAR_BIT - PreviousMember->BitPosition;
 	}
 
 	//
