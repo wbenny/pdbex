@@ -66,9 +66,6 @@ class PDBExtractor
 		PrintPDBDefinitions();
 
 		void
-		GetArchitecture();
-
-		void
 		DumpAllSymbols();
 
 		void
@@ -80,8 +77,6 @@ class PDBExtractor
 	private:
 		PDB m_PDB;
 		Settings m_Settings;
-
-		ImageArchitecture m_Architecture = ImageArchitecture::None;
 
 		std::unique_ptr<PDBSymbolSorter> m_SymbolSorter;
 		std::unique_ptr<PDBHeaderReconstructor> m_HeaderReconstructor;

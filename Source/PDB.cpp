@@ -168,6 +168,12 @@ class SymbolModule
 		VOID
 		Close();
 
+		DWORD
+		GetMachineType() const;
+
+		CV_CFL_LANG
+		GetLanguage() const;
+
 		SYMBOL*
 		GetSymbolByName(
 			IN CONST CHAR* SymbolName
@@ -267,6 +273,9 @@ class SymbolModule
 		SymbolMap     m_SymbolMap;
 		SymbolNameMap m_SymbolNameMap;
 		SymbolSet     m_SymbolSet;
+
+		DWORD         m_MachineType;
+		CV_CFL_LANG   m_Language;
 };
 
 SymbolModule::SymbolModule()
@@ -292,6 +301,12 @@ SymbolModule::Open(
 	{
 		return FALSE;
 	}
+
+	m_GlobalSymbol->get_machineType(&m_MachineType);
+
+	DWORD Language;
+	m_GlobalSymbol->get_language(&Language);
+	m_Language = static_cast<CV_CFL_LANG>(Language);
 
 	BuildSymbolMap();
 
@@ -325,6 +340,18 @@ SymbolModule::Close()
 	m_SymbolMap.clear();
 	m_SymbolNameMap.clear();
 	m_SymbolSet.clear();
+}
+
+DWORD
+SymbolModule::GetMachineType() const
+{
+	return m_MachineType;
+}
+
+CV_CFL_LANG
+SymbolModule::GetLanguage() const
+{
+	return m_Language;
 }
 
 CHAR*
@@ -915,6 +942,18 @@ VOID
 PDB::Close()
 {
 	m_Impl->Close();
+}
+
+DWORD
+PDB::GetMachineType() const
+{
+	return m_Impl->GetMachineType();
+}
+
+CV_CFL_LANG
+PDB::GetLanguage() const
+{
+	return m_Impl->GetLanguage();
 }
 
 CONST SYMBOL*

@@ -398,20 +398,18 @@ PDBExtractor::PrintPDBHeader()
 {
 	if (m_Settings.PrintHeader)
 	{
-		GetArchitecture();
-
-		static char* ArchictureStrings[] = {
-			"Unknown",
-			"x86",
-			"x64"
-		};
+		static const char* const ArchitectureString =
+			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_I386  ? "x86" :
+			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_AMD64 ? "x64" :
+			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_IA64  ? "ia64" :
+			                                                     "Unknown";
 
 		static char HEADER_FILE_HEADER_FORMATTED[16 * 1024];
 
 		sprintf_s(
 			HEADER_FILE_HEADER_FORMATTED, HEADER_FILE_HEADER,
 			m_Settings.PdbPath.c_str(),
-			ArchictureStrings[(int)m_Architecture]
+			ArchitectureString
 			);
 
 		(*m_Settings.PdbHeaderReconstructorSettings.OutputFile) << HEADER_FILE_HEADER_FORMATTED;
@@ -470,23 +468,6 @@ PDBExtractor::PrintPDBDefinitions()
 			{
 				m_SymbolVisitor->Run(e);
 			}
-		}
-	}
-}
-
-void
-PDBExtractor::GetArchitecture()
-{
-	for (auto&& e : m_PDB.GetSymbolMap())
-	{
-		m_SymbolSorter->Visit(e.second);
-
-		if (m_SymbolSorter->GetImageArchitecture() != ImageArchitecture::None)
-		{
-			m_Architecture = m_SymbolSorter->GetImageArchitecture();
-
-			m_SymbolSorter->Clear();
-			break;
 		}
 	}
 }

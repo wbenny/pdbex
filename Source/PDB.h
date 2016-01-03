@@ -332,6 +332,18 @@ class PDB
 		Close();
 
 		//
+		// Get machine type for which was the PDB compiled for.
+		//
+		DWORD
+		GetMachineType() const;
+
+		//
+		// Get language type of the global symbol.
+		//
+		CV_CFL_LANG
+		GetLanguage() const;
+
+		//
 		// Returns a SYMBOL structure of particular name.
 		//
 		// Returns non-NULL value on success.
