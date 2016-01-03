@@ -210,6 +210,11 @@ class SymbolModule
 			);
 
 		VOID
+		DestroySymbol(
+			IN SYMBOL* Symbol
+			);
+
+		VOID
 		ProcessSymbolBase(
 			IN IDiaSymbol* DiaSymbol,
 			IN SYMBOL* Symbol
@@ -254,11 +259,6 @@ class SymbolModule
 		VOID
 		ProcessSymbolUserDataType(
 			IN IDiaSymbol* DiaSymbol,
-			IN SYMBOL* Symbol
-			);
-
-		VOID
-		DestroySymbol(
 			IN SYMBOL* Symbol
 			);
 
@@ -353,7 +353,7 @@ SymbolModule::GetSymbolName(
 	size_t SymbolNameLength;
 
 	SymbolNameLength = SysStringLen(SymbolNameBstr) + 1;
-	SymbolNameMb = (CHAR*)malloc(SymbolNameLength);
+	SymbolNameMb = new CHAR[SymbolNameLength];
 	wcstombs(SymbolNameMb, SymbolNameBstr, SymbolNameLength);
 
 	//
@@ -525,7 +525,7 @@ SymbolModule::ProcessSymbolEnum(
 	DiaSymbolEnumerator->get_Count(&ChildCount);
 
 	Symbol->u.Enum.FieldCount = static_cast<DWORD>(ChildCount);
-	Symbol->u.Enum.Fields = (SYMBOL_ENUM_FIELD*)calloc(ChildCount, sizeof(SYMBOL_ENUM_FIELD));
+	Symbol->u.Enum.Fields = new SYMBOL_ENUM_FIELD[ChildCount];
 
 	IDiaSymbol* DiaChildSymbol;
 	ULONG FetchedSymbolCount = 0;
@@ -539,6 +539,8 @@ SymbolModule::ProcessSymbolEnum(
 		EnumValue->Parent = Symbol;
 
 		EnumValue->Name = GetSymbolName(DiaChildSymbol);
+
+		VariantInit(&EnumValue->Value);
 		DiaChildSymbol->get_value(&EnumValue->Value);
 
 		DiaChildSymbol->Release();
@@ -627,7 +629,7 @@ SymbolModule::ProcessSymbolFunction(
 	DiaSymbolEnumerator->get_Count(&ChildCount);
 
 	Symbol->u.Function.ArgumentCount = static_cast<DWORD>(ChildCount);
-	Symbol->u.Function.Arguments = (PSYMBOL*)calloc(ChildCount, sizeof(SYMBOL*));
+	Symbol->u.Function.Arguments = new SYMBOL*[ChildCount];
 
 	IDiaSymbol* DiaChildSymbol;
 	ULONG FetchedSymbolCount = 0;
@@ -678,7 +680,7 @@ SymbolModule::ProcessSymbolUserDataType(
 	DiaSymbolEnumerator->get_Count(&ChildCount);
 
 	Symbol->u.UserData.FieldCount = static_cast<DWORD>(ChildCount);
-	Symbol->u.UserData.Fields = (SYMBOL_USERDATA_FIELD*)calloc(ChildCount + 1, sizeof(SYMBOL_USERDATA_FIELD));
+	Symbol->u.UserData.Fields = new SYMBOL_USERDATA_FIELD[ChildCount + 1];
 
 	IDiaSymbol* DiaChildSymbol;
 	ULONG FetchedSymbolCount = 0;
@@ -749,7 +751,7 @@ SymbolModule::ProcessSymbolUserDataType(
 			PaddingSymbolArray->u.Array.ElementType = PaddingSymbolArrayElement;
 			PaddingSymbolArray->u.Array.ElementCount = PaddingSymbolArrayElement->BaseType == btLong ? PaddingSize / 4 : PaddingSize;
 
-			PaddingUserDataField->Name = (CHAR*)malloc(64);
+			PaddingUserDataField->Name = new CHAR[64];
 			PaddingUserDataField->Type = PaddingSymbolArray;
 			PaddingUserDataField->Offset = LastUserDataField->Offset + LastUserDataField->Type->Size;
 
@@ -771,30 +773,30 @@ void SymbolModule::DestroySymbol(
 	IN SYMBOL* Symbol
 	)
 {
-	free(Symbol->Name);
+	delete[] Symbol->Name;
 
 	switch (Symbol->Tag)
 	{
 		case SymTagUDT:
 			for (DWORD i = 0; i < Symbol->u.UserData.FieldCount; i++)
 			{
-				free(Symbol->u.UserData.Fields[i].Name);
+				delete[] Symbol->u.UserData.Fields[i].Name;
 			}
 
-			free(Symbol->u.UserData.Fields);
+			delete[] Symbol->u.UserData.Fields;
 			break;
 
 		case SymTagEnum:
 			for (DWORD i = 0; i < Symbol->u.Enum.FieldCount; i++)
 			{
-				free(Symbol->u.Enum.Fields[i].Name);
+				delete[] Symbol->u.Enum.Fields[i].Name;
 			}
 
-			free(Symbol->u.Enum.Fields);
+			delete[] Symbol->u.Enum.Fields;
 			break;
 
 		case SymTagFunctionType:
-			free(Symbol->u.Function.Arguments);
+			delete[] Symbol->u.Function.Arguments;
 			break;
 	}
 }
