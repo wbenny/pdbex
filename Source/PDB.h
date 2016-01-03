@@ -2,9 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 
-#pragma warning (disable : 4091) // warning C4091: 'typedef ': ignored on left of '' when no variable is declared
-#include <dbghelp.h>
-#include <cvconst.h>
+#include <dia2.h>
 
 #include <unordered_set>
 #include <unordered_map>
@@ -139,6 +137,11 @@ typedef struct _SYMBOL_POINTER
 	//
 	SYMBOL*                 Type;
 
+	//
+	// Specifies if the pointer represents the reference.
+	//
+	BOOL                    IsReference;
+
 } SYMBOL_POINTER, *PSYMBOL_POINTER;
 
 //
@@ -238,14 +241,24 @@ struct _SYMBOL
 	BasicType               BaseType;
 
 	//
-	// Total size of the type which this symbol represents.
-	//
-	ULONG64                 Size;
-
-	//
-	// Internal PDB's ID of the type.
+	// Internal ID of the type.
 	//
 	DWORD                   TypeId;
+
+	//
+	// Total size of the type which this symbol represents.
+	//
+	DWORD                   Size;
+
+	//
+	// Specifies constness.
+	//
+	BOOL                    IsConst;
+
+	//
+	// Specifies volatileness.
+	//
+	BOOL                    IsVolatile;
 
 	//
 	// Name of the type.
@@ -360,7 +373,7 @@ class PDB
 		CONST CHAR*
 		PDB::GetBasicTypeString(
 			IN BasicType BaseType,
-			IN ULONG64 Size,
+			IN DWORD Size,
 			IN BOOL UseStdInt = FALSE
 			);
 

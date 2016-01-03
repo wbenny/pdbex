@@ -178,6 +178,9 @@ PDBHeaderReconstructor::OnUserDataType(
 	if (!Expand)
 	{
 		std::string CorrectedName = GetCorrectedSymbolName(Symbol);
+
+		WriteConstAndVolatile(Symbol);
+
 		Write("%s %s", PDB::GetUdtKindString(Symbol->u.UserData.Kind), CorrectedName.c_str());
 
 		//
@@ -204,6 +207,8 @@ PDBHeaderReconstructor::OnUserDataTypeBegin(
 	//
 
 	WriteTypedefBegin(Symbol);
+
+	WriteConstAndVolatile(Symbol);
 
 	Write("%s", PDB::GetUdtKindString(Symbol->u.UserData.Kind));
 	
@@ -400,7 +405,7 @@ void
 PDBHeaderReconstructor::OnPaddingMember(
 	const SYMBOL_USERDATA_FIELD* UserDataField,
 	BasicType PaddingBasicType,
-	ULONG64 PaddingBasicTypeSize,
+	DWORD PaddingBasicTypeSize,
 	DWORD PaddingSize
 	)
 {
@@ -541,6 +546,29 @@ PDBHeaderReconstructor::WriteTypedefEnd(
 	if (UseTypedef && m_Depth == 0)
 	{
 		Write(" %s, *P%s", &CorrectedName[1], &CorrectedName[1]);
+	}
+}
+
+void
+PDBHeaderReconstructor::WriteConstAndVolatile(
+	const SYMBOL* Symbol
+	)
+{
+	if (m_Depth != 0)
+	{
+		//
+		// Allow only non-root UDTs to be "const" and/or "volatile".
+		//
+
+		if (Symbol->IsConst)
+		{
+			Write("const ");
+		}
+
+		if (Symbol->IsVolatile)
+		{
+			Write("volatile ");
+		}
 	}
 }
 

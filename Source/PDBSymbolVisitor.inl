@@ -157,7 +157,7 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitFunctionType(
 	//
 
 	m_MemberContextStack.top()->VisitFunctionTypeBegin(Symbol);
-	// PDBSymbolVisitorBase::VisitFunctionType(Symbol);
+	//PDBSymbolVisitorBase::VisitFunctionType(Symbol);
 	m_MemberContextStack.top()->VisitFunctionTypeEnd(Symbol);
 }
 
@@ -169,6 +169,9 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitFunctionArgType(
 	const SYMBOL* Symbol
 	)
 {
+	m_MemberContextStack.top()->VisitFunctionArgTypeBegin(Symbol);
+	PDBSymbolVisitorBase::VisitFunctionArgType(Symbol);
+	m_MemberContextStack.top()->VisitFunctionArgTypeEnd(Symbol);
 
 }
 
@@ -390,11 +393,18 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForDataFieldPadding(
 	//
 
 	UserDataFieldContext UserDataFieldCtx(UserDataField);
+	DWORD PreviousUserDataFieldOffset = 0;
+	DWORD SizeOfPreviousUserDataField = 0;
 
-	if (UserDataFieldCtx.IsFirst() == false &&
-	    m_PreviousUserDataField->Offset + (DWORD)m_SizeOfPreviousUserDataField < UserDataField->Offset)
+	if (UserDataFieldCtx.IsFirst() == false)
 	{
-		DWORD Difference = UserDataField->Offset - (m_PreviousUserDataField->Offset + (DWORD)m_SizeOfPreviousUserDataField);
+		PreviousUserDataFieldOffset = m_PreviousUserDataField->Offset;
+		SizeOfPreviousUserDataField = m_SizeOfPreviousUserDataField;
+	}
+
+	if (PreviousUserDataFieldOffset + SizeOfPreviousUserDataField < UserDataField->Offset)
+	{
+		DWORD Difference = UserDataField->Offset - (PreviousUserDataFieldOffset + SizeOfPreviousUserDataField);
 
 		//
 		// We can use !(Difference & 3) if we want to be clever.
@@ -781,7 +791,7 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForEndOfAnonymousUserDataType(
 				LastAnonymousUserDataType->UserDataTypeKind,
 				LastAnonymousUserDataType->FirstUserDataField,
 				LastAnonymousUserDataType->LastUserDataField,
-				(DWORD)LastAnonymousUserDataType->Size
+				LastAnonymousUserDataType->Size
 				);
 
 			PopAnonymousUserDataType();

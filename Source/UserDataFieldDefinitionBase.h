@@ -71,6 +71,25 @@ class UserDataFieldDefinitionBase
 
 		virtual
 		void
+		VisitFunctionArgTypeBegin(
+			const SYMBOL* Symbol
+		)
+		{
+
+		}
+
+		virtual
+		void
+		VisitFunctionArgTypeEnd(
+			const SYMBOL* Symbol
+			)
+		{
+
+		}
+
+
+		virtual
+		void
 		SetMemberName(
 			CONST CHAR* MemberName
 		)

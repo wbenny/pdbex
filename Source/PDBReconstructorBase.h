@@ -194,7 +194,7 @@ class PDBReconstructorBase
 		OnPaddingMember(
 			const SYMBOL_USERDATA_FIELD* UserDataField,
 			BasicType PaddingBasicType,
-			ULONG64 PaddingBasicTypeSize,
+			DWORD PaddingBasicTypeSize,
 			DWORD PaddingSize
 			)
 		{

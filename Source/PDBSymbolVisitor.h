@@ -133,8 +133,8 @@ class PDBSymbolVisitor
 				UdtKind UserDataTypeKind,
 				const SYMBOL_USERDATA_FIELD* FirstUserDataField,
 				const SYMBOL_USERDATA_FIELD* LastUserDataField,
-				ULONG64 Size = (ULONG64)0,
-				DWORD MemberCount = (DWORD)0
+				DWORD Size = 0,
+				DWORD MemberCount = 0
 				)
 			{
 				this->UserDataTypeKind   = UserDataTypeKind;
@@ -157,7 +157,7 @@ class PDBSymbolVisitor
 			//
 			// Size of the anonymous user data type.
 			//
-			ULONG64 Size;
+			DWORD Size;
 
 			//
 			// Current count of members in this anonymous user data type.
@@ -329,7 +329,7 @@ class PDBSymbolVisitor
 		// m_PreviousUserDataField just holds pointer to the previous
 		// user data field.
 		//
-		ULONG64 m_SizeOfPreviousUserDataField = 0;
+		DWORD m_SizeOfPreviousUserDataField = 0;
 		const SYMBOL_USERDATA_FIELD* m_PreviousUserDataField = nullptr;
 
 		//

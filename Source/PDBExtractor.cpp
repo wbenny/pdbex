@@ -1,5 +1,4 @@
 #include "PDBExtractor.h"
-#include "PDB.h"
 #include "PDBHeaderReconstructor.h"
 #include "PDBSymbolVisitor.h"
 #include "PDBSymbolSorter.h"
@@ -402,7 +401,7 @@ PDBExtractor::PrintPDBHeader()
 		GetArchitecture();
 
 		static char* ArchictureStrings[] = {
-			"None",
+			"Unknown",
 			"x86",
 			"x64"
 		};

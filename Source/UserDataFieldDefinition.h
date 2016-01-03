@@ -22,6 +22,21 @@ class UserDataFieldDefinition
 			// short/int/long/...
 			//
 
+			if (Symbol->BaseType == btFloat && Symbol->Size == 10)
+			{
+				m_Comment += " /* 80-bit float */";
+			}
+
+			if (Symbol->IsConst)
+			{
+				m_TypePrefix += "const ";
+			}
+
+			if (Symbol->IsVolatile)
+			{
+				m_TypePrefix += "volatile ";
+			}
+
 			m_TypePrefix += PDB::GetBasicTypeString(Symbol, m_Settings->UseStdInt);
 		}
 
@@ -30,7 +45,24 @@ class UserDataFieldDefinition
 			const SYMBOL* Symbol
 			) override
 		{
-			m_TypePrefix += "*";
+			if (Symbol->u.Pointer.IsReference)
+			{
+				m_TypePrefix += "&";
+			}
+			else
+			{
+				m_TypePrefix += "*";
+			}
+
+			if (Symbol->IsConst)
+			{
+				m_TypePrefix += " const";
+			}
+
+			if (Symbol->IsVolatile)
+			{
+				m_TypePrefix += " volatile";
+			}
 		}
 
 		void
@@ -38,6 +70,20 @@ class UserDataFieldDefinition
 			const SYMBOL* Symbol
 			) override
 		{
+			//
+			// To my knowledge, array elements can't be declared like that.
+			//
+			//	if (Symbol->IsConst)
+			//	{
+			//		m_TypePrefix += " const";
+			//	}
+			//
+			//	if (Symbol->IsVolatile)
+			//	{
+			//		m_TypePrefix += " volatile";
+			//	}
+			//
+
 			if (Symbol->u.Array.ElementCount == 0)
 			{
 				//
@@ -52,7 +98,7 @@ class UserDataFieldDefinition
 				const_cast<SYMBOL*>(Symbol)->Size = 1;
 				m_TypePrefix += "*";
 
-				m_Comment = " /* zero-length array */";
+				m_Comment += " /* zero-length array */";
 			}
 			else
 			{
@@ -72,7 +118,7 @@ class UserDataFieldDefinition
 
 			m_TypePrefix += "void";
 
-			m_Comment = " /* function */";
+			m_Comment += " /* function */";
 		}
 
 		void

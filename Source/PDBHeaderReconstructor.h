@@ -159,7 +159,7 @@ class PDBHeaderReconstructor
 		OnPaddingMember(
 			const SYMBOL_USERDATA_FIELD* UserDataField,
 			BasicType PaddingBasicType,
-			ULONG64 PaddingBasicTypeSize,
+			DWORD PaddingBasicTypeSize,
 			DWORD PaddingSize
 			) override;
 
@@ -190,6 +190,11 @@ class PDBHeaderReconstructor
 
 		void
 		WriteTypedefEnd(
+			const SYMBOL* Symbol
+			);
+
+		void
+		WriteConstAndVolatile(
 			const SYMBOL* Symbol
 			);
 
