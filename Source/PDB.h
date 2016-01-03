@@ -371,7 +371,7 @@ class PDB
 		//
 		static
 		CONST CHAR*
-		PDB::GetBasicTypeString(
+		GetBasicTypeString(
 			IN BasicType BaseType,
 			IN DWORD Size,
 			IN BOOL UseStdInt = FALSE
@@ -394,12 +394,18 @@ class PDB
 		// Returns string representing the kind
 		// of provided User Data Type.
 		//
+		// Returns non-NULL value on success.
+		//
 		static
 		CONST CHAR*
 		GetUdtKindString(
 			IN UdtKind UdtKind
 			);
 
+		//
+		// Returns TRUE if the provided symbol's name
+		// starts with "<unnamed-" or "__unnamed".
+		//
 		static
 		BOOL
 		IsUnnamedSymbol(
