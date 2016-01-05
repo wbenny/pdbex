@@ -601,6 +601,25 @@ SymbolModule::ProcessSymbolPointer(
 	DiaSymbol->get_reference(&Symbol->u.Pointer.IsReference);
 
 	Symbol->u.Pointer.Type = GetSymbol(DiaPointerSymbol);
+
+	DiaPointerSymbol->Release();
+
+	if (m_MachineType == 0)
+	{
+
+		//
+		// Sometimes the Machine type is not stored in the PDB.
+		// If this is our case, try to guess the machine type
+		// by pointer size.
+		//
+
+		switch (Symbol->Size)
+		{
+			case 4:  m_MachineType = IMAGE_FILE_MACHINE_I386;  break;
+			case 8:  m_MachineType = IMAGE_FILE_MACHINE_AMD64; break;
+			default: m_MachineType = 0; break;
+		}
+	}
 }
 
 VOID
