@@ -587,6 +587,8 @@ SymbolModule::ProcessSymbolTypedef(
 	DiaSymbol->get_type(&DiaTypedefSymbol);
 
 	Symbol->u.Typedef.Type = GetSymbol(DiaTypedefSymbol);
+
+	DiaTypedefSymbol->Release();
 }
 
 VOID
@@ -634,6 +636,8 @@ SymbolModule::ProcessSymbolArray(
 	Symbol->u.Array.ElementType = GetSymbol(DiaDataTypeSymbol);
 
 	DiaSymbol->get_count(&Symbol->u.Array.ElementCount);
+
+	DiaDataTypeSymbol->Release();
 }
 
 VOID
@@ -658,6 +662,8 @@ SymbolModule::ProcessSymbolFunction(
 	IDiaSymbol* DiaReturnTypeSymbol;
 	DiaSymbol->get_type(&DiaReturnTypeSymbol);
 	Symbol->u.Function.ReturnType = GetSymbol(DiaReturnTypeSymbol);
+
+	DiaReturnTypeSymbol->Release();
 
 	//
 	// Arguments.
@@ -704,6 +710,8 @@ SymbolModule::ProcessSymbolFunctionArg(
 
 	DiaSymbol->get_type(&DiaArgumentTypeSymbol);
 	Symbol->u.FunctionArg.Type = GetSymbol(DiaArgumentTypeSymbol);
+
+	DiaArgumentTypeSymbol->Release();
 }
 
 VOID
