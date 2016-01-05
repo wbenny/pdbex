@@ -697,7 +697,7 @@ SymbolModule::ProcessSymbolUserDataType(
 
 	IDiaEnumSymbols* DiaSymbolEnumerator;
 
-	if (FAILED(DiaSymbol->findChildren(SymTagNull, NULL, nsNone, &DiaSymbolEnumerator)))
+	if (FAILED(DiaSymbol->findChildren(SymTagData, NULL, nsNone, &DiaSymbolEnumerator)))
 	{
 		return;
 	}
