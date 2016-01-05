@@ -914,6 +914,11 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::GetNextUserDataFieldWithRespectToBitFi
 	const SYMBOL_USERDATA_FIELD* NextUserDataField = UserDataField + 1;
 	const SYMBOL_USERDATA_FIELD* EndOfUserDataField = &ParentUserData->Fields[UserDataFieldCount];
 
+	if (NextUserDataField >= EndOfUserDataField)
+	{
+		return EndOfUserDataField;
+	}
+
 	do
 	{
 		if (NextUserDataField->BitPosition == 0)
@@ -925,11 +930,6 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::GetNextUserDataFieldWithRespectToBitFi
 			break;
 		}
 	} while (++NextUserDataField < EndOfUserDataField);
-
-	if (NextUserDataField >= EndOfUserDataField)
-	{
-		return EndOfUserDataField;
-	}
 
 	return NextUserDataField;
 }
