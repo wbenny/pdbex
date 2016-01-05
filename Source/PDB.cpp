@@ -720,7 +720,9 @@ SymbolModule::ProcessSymbolUserDataType(
 	IN SYMBOL* Symbol
 	)
 {
-	DiaSymbol->get_udtKind((DWORD*)&Symbol->u.UserData.Kind);
+	DWORD Kind;
+	DiaSymbol->get_udtKind(&Kind);
+	Symbol->u.UserData.Kind = static_cast<UdtKind>(Kind);
 
 	IDiaEnumSymbols* DiaSymbolEnumerator;
 
