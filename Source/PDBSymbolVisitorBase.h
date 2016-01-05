@@ -44,7 +44,7 @@ class PDBSymbolVisitorBase
 					break;
 
 				case SymTagUDT:
-					VisitUserDataType(Symbol);
+					VisitUdt(Symbol);
 					break;
 
 				default:
@@ -125,14 +125,14 @@ class PDBSymbolVisitorBase
 
 		virtual
 		void
-		VisitUserDataType(
+		VisitUdt(
 			const SYMBOL* Symbol
 			)
 		{
-			const SYMBOL_USERDATA_FIELD* UserDataField;
-			const SYMBOL_USERDATA_FIELD* EndOfUserDataField;
+			const SYMBOL_UDT_FIELD* UdtField;
+			const SYMBOL_UDT_FIELD* EndOfUdtField;
 
-			if (Symbol->u.UserData.FieldCount == 0)
+			if (Symbol->u.Udt.FieldCount == 0)
 			{
 				//
 				// Early return on empty UDTs.
@@ -141,43 +141,43 @@ class PDBSymbolVisitorBase
 				return;
 			}
 
-			UserDataField = Symbol->u.UserData.Fields;
-			EndOfUserDataField = &Symbol->u.UserData.Fields[Symbol->u.UserData.FieldCount];
+			UdtField = Symbol->u.Udt.Fields;
+			EndOfUdtField = &Symbol->u.Udt.Fields[Symbol->u.Udt.FieldCount];
 
 			do
 			{
-				if (UserDataField->Bits == 0)
+				if (UdtField->Bits == 0)
 				{
 					//
 					// Non-bitfield member.
 					//
-					VisitUserDataFieldBegin(UserDataField);
-					VisitUserDataField(UserDataField);
-					VisitUserDataFieldEnd(UserDataField);
+					VisitUdtFieldBegin(UdtField);
+					VisitUdtField(UdtField);
+					VisitUdtFieldEnd(UdtField);
 				}
 				else
 				{
 					//
-					// UserDataField now points to the first member of the bitfield.
+					// UdtField now points to the first member of the bitfield.
 					//
-					VisitUserDataFieldBitFieldBegin(UserDataField);
+					VisitUdtFieldBitFieldBegin(UdtField);
 
 					do
 					{
 						//
 						// Visit all bitfield members
 						//
-						VisitUserDataFieldBitField(UserDataField);
-					} while (++UserDataField < EndOfUserDataField &&
-					           UserDataField->BitPosition != 0);
+						VisitUdtFieldBitField(UdtField);
+					} while (++UdtField < EndOfUdtField &&
+					           UdtField->BitPosition != 0);
 
 					//
-					// UserDataField now points behind the last bitfield member.
-					// So decrement the iterator and call VisitUserDataFieldBitFieldEnd().
+					// UdtField now points behind the last bitfield member.
+					// So decrement the iterator and call VisitUdtFieldBitFieldEnd().
 					//
-					VisitUserDataFieldBitFieldEnd(--UserDataField);
+					VisitUdtFieldBitFieldEnd(--UdtField);
 				}
-			} while (++UserDataField < EndOfUserDataField);
+			} while (++UdtField < EndOfUdtField);
 		}
 
 		virtual
@@ -200,8 +200,8 @@ class PDBSymbolVisitorBase
 
 		virtual
 		void
-		VisitUserDataFieldBegin(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		VisitUdtFieldBegin(
+			const SYMBOL_UDT_FIELD* UdtField
 			)
 		{
 
@@ -209,8 +209,8 @@ class PDBSymbolVisitorBase
 
 		virtual
 		void
-		VisitUserDataFieldEnd(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		VisitUdtFieldEnd(
+			const SYMBOL_UDT_FIELD* UdtField
 			)
 		{
 
@@ -218,8 +218,8 @@ class PDBSymbolVisitorBase
 
 		virtual
 		void
-		VisitUserDataField(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		VisitUdtField(
+			const SYMBOL_UDT_FIELD* UdtField
 			)
 		{
 
@@ -227,8 +227,8 @@ class PDBSymbolVisitorBase
 
 		virtual
 		void
-		VisitUserDataFieldBitFieldBegin(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		VisitUdtFieldBitFieldBegin(
+			const SYMBOL_UDT_FIELD* UdtField
 			)
 		{
 
@@ -236,8 +236,8 @@ class PDBSymbolVisitorBase
 
 		virtual
 		void
-		VisitUserDataFieldBitFieldEnd(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		VisitUdtFieldBitFieldEnd(
+			const SYMBOL_UDT_FIELD* UdtField
 			)
 		{
 
@@ -245,15 +245,15 @@ class PDBSymbolVisitorBase
 
 		virtual
 		void
-		VisitUserDataFieldBitField(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		VisitUdtFieldBitField(
+			const SYMBOL_UDT_FIELD* UdtField
 			)
 		{
 			//
-			// Call VisitUserDataField by default.
+			// Call VisitUdtField by default.
 			//
 
-			VisitUserDataField(UserDataField);
+			VisitUdtField(UdtField);
 		}
 };
 

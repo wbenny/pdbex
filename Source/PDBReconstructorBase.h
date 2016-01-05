@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PDB.h"
-#include "UserDataFieldDefinitionBase.h"
+#include "UdtFieldDefinitionBase.h"
 
 class PDBReconstructorBase
 {
@@ -57,12 +57,12 @@ class PDBReconstructorBase
 		}
 
 		//
-		// Called when reached the user data type (struct/class/union)
-		// If the return value is true, the user data type will be expanded.
+		// Called when reached the UDT (struct/class/union)
+		// If the return value is true, the UDT will be expanded.
 		//
 		virtual
 		bool
-		OnUserDataType(
+		OnUdt(
 			const SYMBOL* Symbol
 			)
 		{
@@ -70,12 +70,12 @@ class PDBReconstructorBase
 		}
 
 		//
-		// Called when entering into the user data type (struct/class/union)
+		// Called when entering into the UDT (struct/class/union)
 		// which will be expanded.
 		//
 		virtual
 		void
-		OnUserDataTypeBegin(
+		OnUdtBegin(
 			const SYMBOL* Symbol
 			)
 		{
@@ -83,11 +83,11 @@ class PDBReconstructorBase
 		}
 
 		//
-		// Called when leaving from the current user data type.
+		// Called when leaving from the current UDT.
 		//
 		virtual
 		void
-		OnUserDataTypeEnd(
+		OnUdtEnd(
 			const SYMBOL* Symbol
 			)
 		{
@@ -95,65 +95,65 @@ class PDBReconstructorBase
 		}
 
 		//
-		// Called when entering into the field of the current user data type.
+		// Called when entering into the field of the current UDT.
 		//
 		virtual
 		void
-		OnUserDataFieldBegin(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		OnUdtFieldBegin(
+			const SYMBOL_UDT_FIELD* UdtField
 			)
 		{
 
 		}
 
 		//
-		// Called when leaving from the field of the current user data type.
+		// Called when leaving from the field of the current UDT.
 		//
 		virtual
 		void
-		OnUserDataFieldEnd(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		OnUdtFieldEnd(
+			const SYMBOL_UDT_FIELD* UdtField
 			)
 		{
 
 		}
 
 		//
-		// Called for each field in the current user data type.
+		// Called for each field in the current UDT.
 		//
 		virtual
 		void
-		OnUserDataField(
-			const SYMBOL_USERDATA_FIELD* UserDataField,
-			UserDataFieldDefinitionBase* MemberDefinition
+		OnUdtField(
+			const SYMBOL_UDT_FIELD* UdtField,
+			UdtFieldDefinitionBase* MemberDefinition
 			)
 		{
 
 		}
 
 		//
-		// Called when entering into the nested anonymous user data type (struct/class/union)
+		// Called when entering into the nested anonymous UDT (struct/class/union)
 		// which will be expanded.
 		//
 		virtual
 		void
-		OnAnonymousUserDataTypeBegin(
-			UdtKind UserDataTypeKind,
-			const SYMBOL_USERDATA_FIELD* FirstUserDataField
+		OnAnonymousUdtBegin(
+			UdtKind Kind,
+			const SYMBOL_UDT_FIELD* FirstUdtField
 			)
 		{
 
 		}
 
 		//
-		// Called when leaving from the current nested anonymous user data type.
+		// Called when leaving from the current nested anonymous UDT.
 		//
 		virtual
 		void
-		OnAnonymousUserDataTypeEnd(
-			UdtKind UserDataTypeKind,
-			const SYMBOL_USERDATA_FIELD* FirstUserDataField,
-			const SYMBOL_USERDATA_FIELD* LastUserDataField,
+		OnAnonymousUdtEnd(
+			UdtKind Kind,
+			const SYMBOL_UDT_FIELD* FirstUdtField,
+			const SYMBOL_UDT_FIELD* LastUdtField,
 			DWORD Size
 			)
 		{
@@ -165,9 +165,9 @@ class PDBReconstructorBase
 		//
 		virtual
 		void
-		OnUserDataFieldBitFieldBegin(
-			const SYMBOL_USERDATA_FIELD* FirstUserDataFieldBitField,
-			const SYMBOL_USERDATA_FIELD* LastUserDataFieldBitField
+		OnUdtFieldBitFieldBegin(
+			const SYMBOL_UDT_FIELD* FirstUdtFieldBitField,
+			const SYMBOL_UDT_FIELD* LastUdtFieldBitField
 			)
 		{
 
@@ -178,9 +178,9 @@ class PDBReconstructorBase
 		//
 		virtual
 		void
-		OnUserDataFieldBitFieldEnd(
-			const SYMBOL_USERDATA_FIELD* FirstUserDataFieldBitField,
-			const SYMBOL_USERDATA_FIELD* LastUserDataFieldBitField
+		OnUdtFieldBitFieldEnd(
+			const SYMBOL_UDT_FIELD* FirstUdtFieldBitField,
+			const SYMBOL_UDT_FIELD* LastUdtFieldBitField
 			)
 		{
 
@@ -192,7 +192,7 @@ class PDBReconstructorBase
 		virtual
 		void
 		OnPaddingMember(
-			const SYMBOL_USERDATA_FIELD* UserDataField,
+			const SYMBOL_UDT_FIELD* UdtField,
 			BasicType PaddingBasicType,
 			DWORD PaddingBasicTypeSize,
 			DWORD PaddingSize

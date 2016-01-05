@@ -35,7 +35,7 @@ class PDBSymbolSorter
 		{
 			ImageArchitecture m_Architecture = ImageArchitecture::None;
 
-			m_VisitedUserDataTypes.clear();
+			m_VisitedUdts.clear();
 			m_SortedSymbols.clear();
 		}
 
@@ -75,23 +75,23 @@ class PDBSymbolSorter
 		}
 
 		void
-		VisitUserDataType(
+		VisitUdt(
 			const SYMBOL* Symbol
 			) override
 		{
 			if (HasBeenVisited(Symbol)) return;
 
-			PDBSymbolVisitorBase::VisitUserDataType(Symbol);
+			PDBSymbolVisitorBase::VisitUdt(Symbol);
 
 			AddSymbol(Symbol);
 		}
 
 		void
-		VisitUserDataField(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		VisitUdtField(
+			const SYMBOL_UDT_FIELD* UdtField
 			) override
 		{
-			Visit(UserDataField->Type);
+			Visit(UdtField->Type);
 		}
 
 	private:
@@ -120,7 +120,7 @@ class PDBSymbolSorter
 			//
 
 			std::string Key = Symbol->Name;
-			if (m_VisitedUserDataTypes.find(Key) != m_VisitedUserDataTypes.end())
+			if (m_VisitedUdts.find(Key) != m_VisitedUdts.end())
 			{
 				return true;
 			}
@@ -131,7 +131,7 @@ class PDBSymbolSorter
 					Key += std::to_string(++UnnamedCounter);
 				}
 
-				m_VisitedUserDataTypes[Key] = Symbol;
+				m_VisitedUdts[Key] = Symbol;
 				return false;
 			}
 		}
@@ -149,7 +149,7 @@ class PDBSymbolSorter
 
 		ImageArchitecture m_Architecture = ImageArchitecture::None;
 
-		std::map<std::string, const SYMBOL*> m_VisitedUserDataTypes;
+		std::map<std::string, const SYMBOL*> m_VisitedUdts;
 		std::vector<const SYMBOL*> m_SortedSymbols;
 };
 

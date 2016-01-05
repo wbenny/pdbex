@@ -3,7 +3,7 @@
 
 #include <string>
 
-class UserDataFieldDefinitionBase
+class UdtFieldDefinitionBase
 {
 	public:
 		virtual

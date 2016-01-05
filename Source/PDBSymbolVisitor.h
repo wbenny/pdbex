@@ -73,7 +73,7 @@ class PDBSymbolVisitor
 			) override;
 
 		void
-		VisitUserDataType(
+		VisitUdt(
 			const SYMBOL* Symbol
 			) override;
 
@@ -88,18 +88,18 @@ class PDBSymbolVisitor
 			) override;
 
 		void
-		VisitUserDataField(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		VisitUdtField(
+			const SYMBOL_UDT_FIELD* UdtField
 			) override;
 
 		void
-		VisitUserDataFieldEnd(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		VisitUdtFieldEnd(
+			const SYMBOL_UDT_FIELD* UdtField
 			) override;
 
 		void
-		VisitUserDataFieldBitFieldEnd(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		VisitUdtFieldBitFieldEnd(
+			const SYMBOL_UDT_FIELD* UdtField
 			) override;
 
 	private:
@@ -107,14 +107,14 @@ class PDBSymbolVisitor
 		// Private data types.
 		//
 
-		struct AnonymousUserDataType
+		struct AnonymousUdt
 		{
 			//
 			// This structure holds information about
-			// nested anonymous user data types.
-			// Anonymous user data type (ie. anonymous struct)
+			// nested anonymous UDTs.
+			// Anonymous UDT (ie. anonymous struct)
 			// is a type which members are in fact members
-			// of a parent user data type.
+			// of the parent UDT.
 			//
 			// struct Foo
 			// {
@@ -129,55 +129,55 @@ class PDBSymbolVisitor
 			// between unnamed and anonymous data types.
 			//
 
-			AnonymousUserDataType(
-				UdtKind UserDataTypeKind,
-				const SYMBOL_USERDATA_FIELD* FirstUserDataField,
-				const SYMBOL_USERDATA_FIELD* LastUserDataField,
+			AnonymousUdt(
+				UdtKind Kind,
+				const SYMBOL_UDT_FIELD* FirstUdtField,
+				const SYMBOL_UDT_FIELD* LastUdtField,
 				DWORD Size = 0,
 				DWORD MemberCount = 0
 				)
 			{
-				this->UserDataTypeKind   = UserDataTypeKind;
-				this->FirstUserDataField = FirstUserDataField;
-				this->LastUserDataField  = LastUserDataField;
-				this->Size               = Size;
-				this->MemberCount        = MemberCount;
+				this->Kind          = Kind;
+				this->FirstUdtField = FirstUdtField;
+				this->LastUdtField  = LastUdtField;
+				this->Size          = Size;
+				this->MemberCount   = MemberCount;
 			}
 
 			//
-			// First member of the anonymous user data type.
+			// First member of the anonymous UDT.
 			//
-			const SYMBOL_USERDATA_FIELD* FirstUserDataField;
+			const SYMBOL_UDT_FIELD* FirstUdtField;
 
 			//
-			// Last member of the anonymous user data type.
+			// Last member of the anonymous UDT.
 			//
-			const SYMBOL_USERDATA_FIELD* LastUserDataField;
+			const SYMBOL_UDT_FIELD* LastUdtField;
 
 			//
-			// Size of the anonymous user data type.
+			// Size of the anonymous UDT.
 			//
 			DWORD Size;
 
 			//
-			// Current count of members in this anonymous user data type.
+			// Current count of members in this anonymous UDT.
 			//
 			DWORD MemberCount;
 
 			//
-			// User data type kind.
+			// UDT kind.
 			//
-			UdtKind UserDataTypeKind;
+			UdtKind Kind;
 		};
 
 		struct BitFieldRange
 		{
-			const SYMBOL_USERDATA_FIELD* FirstUserDataFieldBitField;
-			const SYMBOL_USERDATA_FIELD* LastUserDataFieldBitField;
+			const SYMBOL_UDT_FIELD* FirstUdtFieldBitField;
+			const SYMBOL_UDT_FIELD* LastUdtFieldBitField;
 
 			BitFieldRange()
-				: FirstUserDataFieldBitField(nullptr)
-				, LastUserDataFieldBitField(nullptr)
+				: FirstUdtFieldBitField(nullptr)
+				, LastUdtFieldBitField(nullptr)
 			{
 
 			}
@@ -185,82 +185,82 @@ class PDBSymbolVisitor
 			void
 			Clear()
 			{
-				FirstUserDataFieldBitField = nullptr;
-				LastUserDataFieldBitField = nullptr;
+				FirstUdtFieldBitField = nullptr;
+				LastUdtFieldBitField = nullptr;
 			}
 
 			bool
 			HasValue() const
 			{
-				return FirstUserDataFieldBitField != nullptr &&
-				       LastUserDataFieldBitField  != nullptr;
+				return FirstUdtFieldBitField != nullptr &&
+				       LastUdtFieldBitField  != nullptr;
 			}
 		};
 
-		struct UserDataFieldContext
+		struct UdtFieldContext
 		{
-			UserDataFieldContext(
-				const SYMBOL_USERDATA_FIELD* UserDataField, 
+			UdtFieldContext(
+				const SYMBOL_UDT_FIELD* UdtField, 
 				BOOL RespectBitFields = TRUE
 				)
 			{
-				SYMBOL_USERDATA* ParentUserData = &UserDataField->Parent->u.UserData;
-				DWORD UserDataFieldCount = ParentUserData->FieldCount;
+				SYMBOL_UDT* ParentUdt = &UdtField->Parent->u.Udt;
+				DWORD UdtFieldCount = ParentUdt->FieldCount;
 
-				FirstUserDataField    = &ParentUserData->Fields[0];
-				EndOfUserDataField    = &ParentUserData->Fields[UserDataFieldCount];
+				FirstUdtField    = &ParentUdt->Fields[0];
+				EndOfUdtField    = &ParentUdt->Fields[UdtFieldCount];
 
-				PreviousUserDataField = &UserDataField[-1];
-				CurrentUserDataField  = &UserDataField[ 0];
-				NextUserDataField     = &UserDataField[ 1];
+				PreviousUdtField = &UdtField[-1];
+				CurrentUdtField  = &UdtField[ 0];
+				NextUdtField     = &UdtField[ 1];
 
 				this->RespectBitFields = RespectBitFields;
 
 				if (RespectBitFields)
 				{
-					NextUserDataField   = GetNextUserDataFieldWithRespectToBitFields(UserDataField);
+					NextUdtField   = GetNextUdtFieldWithRespectToBitFields(UdtField);
 				}
 			}
 
 			bool
 			IsFirst() const
 			{
-				return PreviousUserDataField < FirstUserDataField;
+				return PreviousUdtField < FirstUdtField;
 			}
 
 			bool
 			IsLast() const
 			{
-				return NextUserDataField == EndOfUserDataField;
+				return NextUdtField == EndOfUdtField;
 			}
 
 			bool
 			GetNext()
 			{
-				PreviousUserDataField = CurrentUserDataField;
-				CurrentUserDataField  = NextUserDataField;
-				NextUserDataField     = &CurrentUserDataField[1];
+				PreviousUdtField = CurrentUdtField;
+				CurrentUdtField  = NextUdtField;
+				NextUdtField     = &CurrentUdtField[1];
 
 				if (RespectBitFields && IsLast() == false)
 				{
-					NextUserDataField = GetNextUserDataFieldWithRespectToBitFields(CurrentUserDataField);
+					NextUdtField = GetNextUdtFieldWithRespectToBitFields(CurrentUdtField);
 				}
 
 				return IsLast() == false;
 			}
 
-			const SYMBOL_USERDATA_FIELD* FirstUserDataField;
-			const SYMBOL_USERDATA_FIELD* EndOfUserDataField;
+			const SYMBOL_UDT_FIELD* FirstUdtField;
+			const SYMBOL_UDT_FIELD* EndOfUdtField;
 
-			const SYMBOL_USERDATA_FIELD* PreviousUserDataField;
-			const SYMBOL_USERDATA_FIELD* CurrentUserDataField;
-			const SYMBOL_USERDATA_FIELD* NextUserDataField;
+			const SYMBOL_UDT_FIELD* PreviousUdtField;
+			const SYMBOL_UDT_FIELD* CurrentUdtField;
+			const SYMBOL_UDT_FIELD* NextUdtField;
 
 			BOOL RespectBitFields;
 		};
 
-		using AnonymousUserDataTypeStack = std::stack<std::shared_ptr<AnonymousUserDataType>>;
-		using ContextStack               = std::stack<std::shared_ptr<UserDataFieldDefinitionBase>>;
+		using AnonymousUdtStack = std::stack<std::shared_ptr<AnonymousUdt>>;
+		using ContextStack      = std::stack<std::shared_ptr<UdtFieldDefinitionBase>>;
 
 	private:
 		//
@@ -269,34 +269,34 @@ class PDBSymbolVisitor
 
 		void
 		CheckForDataFieldPadding(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+			const SYMBOL_UDT_FIELD* UdtField
 			);
 
 		void
 		CheckForAnonymousUnion(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+			const SYMBOL_UDT_FIELD* UdtField
 			);
 
 		void
 		CheckForAnonymousStruct(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+			const SYMBOL_UDT_FIELD* UdtField
 			);
 
 		void
-		CheckForEndOfAnonymousUserDataType(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		CheckForEndOfAnonymousUdt(
+			const SYMBOL_UDT_FIELD* UdtField
 			);
 
-		std::shared_ptr<UserDataFieldDefinitionBase>
+		std::shared_ptr<UdtFieldDefinitionBase>
 		MemberDefinitionFactory();
 
 		void
-		PushAnonymousUserDataType(
-			std::shared_ptr<AnonymousUserDataType> Item
+		PushAnonymousUdt(
+			std::shared_ptr<AnonymousUdt> Item
 			);
 
 		void
-		PopAnonymousUserDataType();
+		PopAnonymousUdt();
 
 	private:
 		//
@@ -304,9 +304,9 @@ class PDBSymbolVisitor
 		//
 
 		static
-		const SYMBOL_USERDATA_FIELD*
-		GetNextUserDataFieldWithRespectToBitFields(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		const SYMBOL_UDT_FIELD*
+		GetNextUdtFieldWithRespectToBitFields(
+			const SYMBOL_UDT_FIELD* UdtField
 			);
 
 		static
@@ -322,25 +322,23 @@ class PDBSymbolVisitor
 
 		//
 		// These two properties are used for padding.
-		// m_SizeOfPreviousUserDataField holds the size of the previous
-		// user data field with respect to nested unnamed and anonymous
-		// user data types.
+		// m_SizeOfPreviousUdtField holds the size of the previous
+		// UDT field with respect to nested unnamed and anonymous UDTs.
 		//
-		// m_PreviousUserDataField just holds pointer to the previous
-		// user data field.
+		// m_PreviousUdtField just holds pointer to the previous UDT field.
 		//
-		DWORD m_SizeOfPreviousUserDataField = 0;
-		const SYMBOL_USERDATA_FIELD* m_PreviousUserDataField = nullptr;
+		DWORD m_SizeOfPreviousUdtField = 0;
+		const SYMBOL_UDT_FIELD* m_PreviousUdtField = nullptr;
 
 		//
-		// This stack holds information about anonymous user data types.
-		// More information about anonymous user data types are in documentation
-		// of the AnonymousUserDataType struct.
+		// This stack holds information about anonymous UDTs.
+		// More information about anonymous UDTs are in documentation
+		// of the AnonymousUdt struct.
 		//
-		AnonymousUserDataTypeStack m_AnonymousUserDataTypeStack;
+		AnonymousUdtStack m_AnonymousUdtStack;
 
-		AnonymousUserDataTypeStack m_AnonymousUnionStack;
-		AnonymousUserDataTypeStack m_AnonymousStructStack;
+		AnonymousUdtStack m_AnonymousUnionStack;
+		AnonymousUdtStack m_AnonymousStructStack;
 
 		//
 		// Holds information about current bitfield.
@@ -349,7 +347,7 @@ class PDBSymbolVisitor
 
 		//
 		// This stack holds instance of a class which will be responsible
-		// for the formatting of the current member (user data field) -
+		// for the formatting of the current member (UDT field) -
 		// - its type, member name, ...
 		//
 		ContextStack m_MemberContextStack;

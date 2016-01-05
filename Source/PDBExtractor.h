@@ -2,7 +2,7 @@
 #include "PDBSymbolSorter.h"
 #include "PDBHeaderReconstructor.h"
 #include "PDBSymbolVisitor.h"
-#include "UserDataFieldDefinition.h"
+#include "UdtFieldDefinition.h"
 
 #include <memory>
 #include <string>
@@ -18,7 +18,7 @@ class PDBExtractor
 		struct Settings
 		{
 			PDBHeaderReconstructor::Settings PdbHeaderReconstructorSettings;
-			UserDataFieldDefinition::Settings UserDataFieldDefinitionSettings;
+			UdtFieldDefinition::Settings UdtFieldDefinitionSettings;
 
 			std::string SymbolName;
 			std::string PdbPath;
@@ -80,6 +80,6 @@ class PDBExtractor
 
 		std::unique_ptr<PDBSymbolSorter> m_SymbolSorter;
 		std::unique_ptr<PDBHeaderReconstructor> m_HeaderReconstructor;
-		std::unique_ptr<PDBSymbolVisitor<UserDataFieldDefinition>> m_SymbolVisitor;
+		std::unique_ptr<PDBSymbolVisitor<UdtFieldDefinition>> m_SymbolVisitor;
 };
 

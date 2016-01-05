@@ -263,7 +263,7 @@ class SymbolModule
 			);
 
 		VOID
-		ProcessSymbolUserDataType(
+		ProcessSymbolUdt(
 			IN IDiaSymbol* DiaSymbol,
 			IN SYMBOL* Symbol
 			);
@@ -514,15 +514,15 @@ SymbolModule::InitSymbol(
 
 	switch (Symbol->Tag)
 	{
-		case SymTagUDT:             ProcessSymbolUserDataType(DiaSymbol, Symbol); break;
-		case SymTagEnum:            ProcessSymbolEnum        (DiaSymbol, Symbol); break;
-		case SymTagFunctionType:    ProcessSymbolFunction    (DiaSymbol, Symbol); break;
-		case SymTagPointerType:     ProcessSymbolPointer     (DiaSymbol, Symbol); break;
-		case SymTagArrayType:       ProcessSymbolArray       (DiaSymbol, Symbol); break;
-		case SymTagBaseType:        ProcessSymbolBase        (DiaSymbol, Symbol); break;
-		case SymTagTypedef:         ProcessSymbolTypedef     (DiaSymbol, Symbol); break;
-		case SymTagFunctionArgType: ProcessSymbolFunctionArg (DiaSymbol, Symbol); break;
-		default:                                                                  break;
+		case SymTagUDT:             ProcessSymbolUdt        (DiaSymbol, Symbol); break;
+		case SymTagEnum:            ProcessSymbolEnum       (DiaSymbol, Symbol); break;
+		case SymTagFunctionType:    ProcessSymbolFunction   (DiaSymbol, Symbol); break;
+		case SymTagPointerType:     ProcessSymbolPointer    (DiaSymbol, Symbol); break;
+		case SymTagArrayType:       ProcessSymbolArray      (DiaSymbol, Symbol); break;
+		case SymTagBaseType:        ProcessSymbolBase       (DiaSymbol, Symbol); break;
+		case SymTagTypedef:         ProcessSymbolTypedef    (DiaSymbol, Symbol); break;
+		case SymTagFunctionArgType: ProcessSymbolFunctionArg(DiaSymbol, Symbol); break;
+		default:                                                                 break;
 	}
 }
 
@@ -715,14 +715,14 @@ SymbolModule::ProcessSymbolFunctionArg(
 }
 
 VOID
-SymbolModule::ProcessSymbolUserDataType(
+SymbolModule::ProcessSymbolUdt(
 	IN IDiaSymbol* DiaSymbol,
 	IN SYMBOL* Symbol
 	)
 {
 	DWORD Kind;
 	DiaSymbol->get_udtKind(&Kind);
-	Symbol->u.UserData.Kind = static_cast<UdtKind>(Kind);
+	Symbol->u.Udt.Kind = static_cast<UdtKind>(Kind);
 
 	IDiaEnumSymbols* DiaSymbolEnumerator;
 
@@ -735,8 +735,8 @@ SymbolModule::ProcessSymbolUserDataType(
 
 	DiaSymbolEnumerator->get_Count(&ChildCount);
 
-	Symbol->u.UserData.FieldCount = static_cast<DWORD>(ChildCount);
-	Symbol->u.UserData.Fields = new SYMBOL_USERDATA_FIELD[ChildCount + 1];
+	Symbol->u.Udt.FieldCount = static_cast<DWORD>(ChildCount);
+	Symbol->u.Udt.Fields = new SYMBOL_UDT_FIELD[ChildCount + 1];
 
 	IDiaSymbol* DiaChildSymbol;
 	ULONG FetchedSymbolCount = 0;
@@ -745,7 +745,7 @@ SymbolModule::ProcessSymbolUserDataType(
 	     SUCCEEDED(DiaSymbolEnumerator->Next(1, &DiaChildSymbol, &FetchedSymbolCount)) && (FetchedSymbolCount == 1);
 	     Index++)
 	{
-		SYMBOL_USERDATA_FIELD* Member = &Symbol->u.UserData.Fields[Index];
+		SYMBOL_UDT_FIELD* Member = &Symbol->u.Udt.Fields[Index];
 
 		Member->Name = GetSymbolName(DiaChildSymbol);
 		Member->Parent = Symbol;
@@ -774,11 +774,11 @@ SymbolModule::ProcessSymbolUserDataType(
 	//
 	// Padding.
 	//
-	if (Symbol->u.UserData.Kind == UdtStruct && Symbol->u.UserData.FieldCount > 0 && Symbol->u.UserData.Fields[Symbol->u.UserData.FieldCount - 1].Type != nullptr)
+	if (Symbol->u.Udt.Kind == UdtStruct && Symbol->u.Udt.FieldCount > 0 && Symbol->u.Udt.Fields[Symbol->u.Udt.FieldCount - 1].Type != nullptr)
 	{
-		SYMBOL_USERDATA_FIELD* LastUserDataField = &Symbol->u.UserData.Fields[Symbol->u.UserData.FieldCount - 1];
-		SYMBOL_USERDATA_FIELD* PaddingUserDataField = &Symbol->u.UserData.Fields[Symbol->u.UserData.FieldCount];
-		DWORD PaddingSize = Symbol->Size - (LastUserDataField->Offset + LastUserDataField->Type->Size);
+		SYMBOL_UDT_FIELD* LastUdtField = &Symbol->u.Udt.Fields[Symbol->u.Udt.FieldCount - 1];
+		SYMBOL_UDT_FIELD* PaddingUdtField = &Symbol->u.Udt.Fields[Symbol->u.Udt.FieldCount];
+		DWORD PaddingSize = Symbol->Size - (LastUdtField->Offset + LastUdtField->Type->Size);
 
 		if (PaddingSize > 0)
 		{
@@ -803,17 +803,17 @@ SymbolModule::ProcessSymbolUserDataType(
 			PaddingSymbolArray->u.Array.ElementType = PaddingSymbolArrayElement;
 			PaddingSymbolArray->u.Array.ElementCount = PaddingSymbolArrayElement->BaseType == btLong ? PaddingSize / 4 : PaddingSize;
 
-			PaddingUserDataField->Name = new CHAR[64];
-			PaddingUserDataField->Type = PaddingSymbolArray;
-			PaddingUserDataField->Offset = LastUserDataField->Offset + LastUserDataField->Type->Size;
+			PaddingUdtField->Name = new CHAR[64];
+			PaddingUdtField->Type = PaddingSymbolArray;
+			PaddingUdtField->Offset = LastUdtField->Offset + LastUdtField->Type->Size;
 
-			PaddingUserDataField->Bits = 0;
-			PaddingUserDataField->BitPosition = 0;
-			PaddingUserDataField->Parent = Symbol;
+			PaddingUdtField->Bits = 0;
+			PaddingUdtField->BitPosition = 0;
+			PaddingUdtField->Parent = Symbol;
 
-			strcpy(PaddingUserDataField->Name, "__PADDING__");
+			strcpy(PaddingUdtField->Name, "__PADDING__");
 
-			Symbol->u.UserData.FieldCount++;
+			Symbol->u.Udt.FieldCount++;
 
 			m_SymbolSet.insert(PaddingSymbolArray);
 			m_SymbolSet.insert(PaddingSymbolArrayElement);
@@ -830,12 +830,12 @@ void SymbolModule::DestroySymbol(
 	switch (Symbol->Tag)
 	{
 		case SymTagUDT:
-			for (DWORD i = 0; i < Symbol->u.UserData.FieldCount; i++)
+			for (DWORD i = 0; i < Symbol->u.Udt.FieldCount; i++)
 			{
-				delete[] Symbol->u.UserData.Fields[i].Name;
+				delete[] Symbol->u.Udt.Fields[i].Name;
 			}
 
-			delete[] Symbol->u.UserData.Fields;
+			delete[] Symbol->u.Udt.Fields;
 			break;
 
 		case SymTagEnum:
@@ -1044,7 +1044,7 @@ PDB::GetBasicTypeString(
 
 CONST CHAR*
 PDB::GetUdtKindString(
-	IN UdtKind UdtKind
+	IN UdtKind Kind
 	)
 {
 	static CONST CHAR* UdtKindStrings[] = {
@@ -1053,9 +1053,9 @@ PDB::GetUdtKindString(
 		"union",
 	};
 
-	if (UdtKind >= UdtStruct && UdtKind <= UdtUnion)
+	if (Kind >= UdtStruct && Kind <= UdtUnion)
 	{
-		return UdtKindStrings[UdtKind];
+		return UdtKindStrings[Kind];
 	}
 
 	return NULL;

@@ -47,13 +47,13 @@
     <ClInclude Include="PDBHeaderReconstructor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="UserDataFieldDefinition.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UserDataFieldDefinitionBase.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PDBExtractor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UdtFieldDefinition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UdtFieldDefinitionBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

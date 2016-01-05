@@ -27,17 +27,17 @@ typedef struct _SYMBOL_ENUM_FIELD
 	//
 	// Name of the enumeration field.
 	//
-	CHAR*                   Name;
+	CHAR*                Name;
 
 	//
 	// Assigned value of the enumeration field.
 	//
-	VARIANT                 Value;
+	VARIANT              Value;
 
 	//
 	// Parent enumeration.
 	//
-	SYMBOL*                 Parent;
+	SYMBOL*              Parent;
 
 } SYMBOL_ENUM_FIELD, *PSYMBOL_ENUM_FIELD;
 
@@ -53,41 +53,41 @@ typedef struct _SYMBOL_ENUM_FIELD
 //       short   XYZ_3  :  13; //  4            3
 // };
 //
-typedef struct _SYMBOL_USERDATA_FIELD
+typedef struct _SYMBOL_UDT_FIELD
 {
 	//
-	// Name of the user data field.
+	// Name of the UDT field.
 	//
-	CHAR*                   Name;
+	CHAR*                Name;
 
 	//
 	// Type of the field.
 	//
-	SYMBOL*                 Type;
+	SYMBOL*              Type;
 
 	//
 	// Offset from the start of the structure/class/union.
 	//
-	DWORD                   Offset;
+	DWORD                Offset;
 
 	//
 	// Amount of bits this field takes.
 	// If this value is 0, this field takes
 	// all of the space of the field type (Type->Size bytes).
 	//
-	DWORD                   Bits;
+	DWORD                Bits;
 
 	//
 	// Which bit this fields starts at (relative to the Offset).
 	//
-	DWORD                   BitPosition;
+	DWORD                BitPosition;
 
 	//
-	// Parent User Data symbol.
+	// Parent UDT symbol.
 	//
-	SYMBOL*                 Parent;
+	SYMBOL*              Parent;
 
-} SYMBOL_USERDATA_FIELD, *PSYMBOL_USERDATA_FIELD;
+} SYMBOL_UDT_FIELD, *PSYMBOL_UDT_FIELD;
 
 //
 // Representation of the enumeration.
@@ -106,12 +106,12 @@ typedef struct _SYMBOL_ENUM
 	//
 	// Count of fields in the enumeration.
 	//
-	DWORD                   FieldCount;
+	DWORD                FieldCount;
 
 	//
 	// Pointer to the continuous array of structures of the enumeration fields.
 	//
-	SYMBOL_ENUM_FIELD*      Fields;
+	SYMBOL_ENUM_FIELD*   Fields;
 
 } SYMBOL_ENUM, *PSYMBOL_ENUM;
 
@@ -123,7 +123,7 @@ typedef struct _SYMBOL_TYPEDEF
 	//
 	// Underlying type of the type definition.
 	//
-	SYMBOL*                 Type;
+	SYMBOL*              Type;
 
 } SYMBOL_TYPEDEF, *PSYMBOL_TYPEDEF;
 
@@ -135,12 +135,12 @@ typedef struct _SYMBOL_POINTER
 	//
 	// Underlying type of the pointer definition.
 	//
-	SYMBOL*                 Type;
+	SYMBOL*              Type;
 
 	//
 	// Specifies if the pointer represents the reference.
 	//
-	BOOL                    IsReference;
+	BOOL                 IsReference;
 
 } SYMBOL_POINTER, *PSYMBOL_POINTER;
 
@@ -152,12 +152,12 @@ typedef struct _SYMBOL_ARRAY
 	//
 	// Type of the array element.
 	//
-	SYMBOL*                 ElementType;
+	SYMBOL*              ElementType;
 
 	//
 	// Array size in elements.
 	//
-	DWORD                   ElementCount;
+	DWORD                ElementCount;
 
 } SYMBOL_ARRAY, *PSYMBOL_ARRAY;
 
@@ -169,23 +169,23 @@ typedef struct _SYMBOL_FUNCTION
 	//
 	// Return type of the function.
 	//
-	SYMBOL*                 ReturnType;
+	SYMBOL*              ReturnType;
 
 	//
 	// Calling convention of the function.
 	//
-	CV_call_e               CallingConvention;
+	CV_call_e            CallingConvention;
 
 	//
 	// Number of arguments.
 	//
-	DWORD                   ArgumentCount;
+	DWORD                ArgumentCount;
 
 	//
 	// Pointer to the continuous array of pointers to the symbol structure for arguments.
 	// These symbols are of type SYMBOL_FUNCTIONARG and has tag SymTagFunctionArgType.
 	//
-	SYMBOL**                Arguments;
+	SYMBOL**             Arguments;
 
 } SYMBOL_FUNCTION, *PSYMBOL_FUNCTION;
 
@@ -197,32 +197,32 @@ typedef struct _SYMBOL_FUNCTIONARG
 	//
 	// Underlying type of the argument.
 	//
-	PSYMBOL                 Type;
+	PSYMBOL              Type;
 
 } SYMBOL_FUNCTIONARG, *PSYMBOL_FUNCTIONARG;
 
 //
-// Representation of the user data type (struct/class/union).
+// Representation of the UDT (struct/class/union).
 //
-typedef struct _SYMBOL_USERDATA
+typedef struct _SYMBOL_UDT
 {
 	//
-	// Kind of the user data type.
+	// Kind of the UDT.
 	// It may be either UdtStruct, UdtClass or UdtUnion.
 	//
-	UdtKind                 Kind;
+	UdtKind              Kind;
 
 	//
-	// Number of fields (members) in the user data type.
+	// Number of fields (members) in the UDT.
 	//
-	DWORD                   FieldCount;
+	DWORD                FieldCount;
 
 	//
-	// Pointer to the continuous array of structures of the user data fields.
+	// Pointer to the continuous array of structures of the UDT.
 	//
-	SYMBOL_USERDATA_FIELD*  Fields;
+	SYMBOL_UDT_FIELD*    Fields;
 
-} SYMBOL_USERDATA, *PSYMBOL_USERDATA;
+} SYMBOL_UDT, *PSYMBOL_UDT;
 
 //
 // Representation of the debug symbol.
@@ -232,48 +232,48 @@ struct _SYMBOL
 	//
 	// Type of the symbol.
 	//
-	enum SymTagEnum         Tag;
+	enum SymTagEnum      Tag;
 
 	//
 	// Base type.
 	// Only set if Tag == SymTagBaseType.
 	//
-	BasicType               BaseType;
+	BasicType            BaseType;
 
 	//
 	// Internal ID of the type.
 	//
-	DWORD                   TypeId;
+	DWORD                TypeId;
 
 	//
 	// Total size of the type which this symbol represents.
 	//
-	DWORD                   Size;
+	DWORD                Size;
 
 	//
 	// Specifies constness.
 	//
-	BOOL                    IsConst;
+	BOOL                 IsConst;
 
 	//
 	// Specifies volatileness.
 	//
-	BOOL                    IsVolatile;
+	BOOL                 IsVolatile;
 
 	//
 	// Name of the type.
 	//
-	CHAR*                   Name;
+	CHAR*                Name;
 
 	union
 	{
-		SYMBOL_ENUM           Enum;
-		SYMBOL_TYPEDEF        Typedef;
-		SYMBOL_POINTER        Pointer;
-		SYMBOL_ARRAY          Array;
-		SYMBOL_FUNCTION       Function;
-		SYMBOL_FUNCTIONARG    FunctionArg;
-		SYMBOL_USERDATA       UserData;
+		SYMBOL_ENUM        Enum;
+		SYMBOL_TYPEDEF     Typedef;
+		SYMBOL_POINTER     Pointer;
+		SYMBOL_ARRAY       Array;
+		SYMBOL_FUNCTION    Function;
+		SYMBOL_FUNCTIONARG FunctionArg;
+		SYMBOL_UDT         Udt;
 	} u;
 };
 
@@ -404,14 +404,14 @@ class PDB
 
 		//
 		// Returns string representing the kind
-		// of provided User Data Type.
+		// of provided user defined type.
 		//
 		// Returns non-NULL value on success.
 		//
 		static
 		CONST CHAR*
 		GetUdtKindString(
-			IN UdtKind UdtKind
+			IN UdtKind Kind
 			);
 
 		//

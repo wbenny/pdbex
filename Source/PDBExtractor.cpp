@@ -2,7 +2,7 @@
 #include "PDBHeaderReconstructor.h"
 #include "PDBSymbolVisitor.h"
 #include "PDBSymbolSorter.h"
-#include "UserDataFieldDefinition.h"
+#include "UdtFieldDefinition.h"
 
 #include <iostream>
 #include <fstream>
@@ -324,7 +324,7 @@ PDBExtractor::ParseParameters(
 				break;
 
 			case 'i':
-				m_Settings.UserDataFieldDefinitionSettings.UseStdInt = !OffSwitch;
+				m_Settings.UdtFieldDefinitionSettings.UseStdInt = !OffSwitch;
 				break;
 
 			case 'j':
@@ -352,9 +352,9 @@ PDBExtractor::ParseParameters(
 		&m_Settings.PdbHeaderReconstructorSettings
 		);
 
-	m_SymbolVisitor = std::make_unique<PDBSymbolVisitor<UserDataFieldDefinition>>(
+	m_SymbolVisitor = std::make_unique<PDBSymbolVisitor<UdtFieldDefinition>>(
 		m_HeaderReconstructor.get(),
-		&m_Settings.UserDataFieldDefinitionSettings
+		&m_Settings.UdtFieldDefinitionSettings
 		);
 
 	m_SymbolSorter = std::make_unique<PDBSymbolSorter>();
@@ -430,7 +430,7 @@ PDBExtractor::PrintPDBDeclarations()
 			if (e->Tag == SymTagUDT && !PDB::IsUnnamedSymbol(e))
 			{
 				*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-					<< PDB::GetUdtKindString(e->u.UserData.Kind)
+					<< PDB::GetUdtKindString(e->u.Udt.Kind)
 					<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
 					<< std::endl;
 			}

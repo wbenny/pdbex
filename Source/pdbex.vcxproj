@@ -169,8 +169,8 @@
     <ClInclude Include="PDBSymbolVisitorBase.h" />
     <ClInclude Include="PDBSymbolVisitor.h" />
     <ClInclude Include="PDBSymbolSorter.h" />
-    <ClInclude Include="UserDataFieldDefinition.h" />
-    <ClInclude Include="UserDataFieldDefinitionBase.h" />
+    <ClInclude Include="UdtFieldDefinition.h" />
+    <ClInclude Include="UdtFieldDefinitionBase.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PDBSymbolVisitor.inl" />

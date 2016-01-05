@@ -16,17 +16,17 @@ class PDBHeaderReconstructor
 		enum class MemberStructExpansionType
 		{
 			//
-			// No expansion of nested user data types.
+			// No expansion of nested UDTs (user defined types).
 			//
 			None,
 
 			//
-			// Expand only unnamed user data types.
+			// Expand only unnamed UDTs (user defined types).
 			//
 			InlineUnnamed,
 
 			//
-			// Expand all references user data types.
+			// Expand all references UDTs (user defined types).
 			//
 			InlineAll,
 		};
@@ -99,65 +99,65 @@ class PDBHeaderReconstructor
 			) override;
 
 		bool
-		OnUserDataType(
+		OnUdt(
 			const SYMBOL* Symbol
 			) override;
 
 		void
-		OnUserDataTypeBegin(
+		OnUdtBegin(
 			const SYMBOL* Symbol
 			) override;
 
 		void
-		OnUserDataTypeEnd(
+		OnUdtEnd(
 			const SYMBOL* Symbol
 			) override;
 
 		void
-		OnUserDataFieldBegin(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		OnUdtFieldBegin(
+			const SYMBOL_UDT_FIELD* UdtField
 			) override;
 
 		void
-		OnUserDataFieldEnd(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+		OnUdtFieldEnd(
+			const SYMBOL_UDT_FIELD* UdtField
 			) override;
 
 		void
-		OnUserDataField(
-			const SYMBOL_USERDATA_FIELD* UserDataField,
-			UserDataFieldDefinitionBase* MemberDefinition
+		OnUdtField(
+			const SYMBOL_UDT_FIELD* UdtField,
+			UdtFieldDefinitionBase* MemberDefinition
 			) override;
 
 		void
-		OnAnonymousUserDataTypeBegin(
-			UdtKind UserDataTypeKind,
-			const SYMBOL_USERDATA_FIELD* FirstUserDataField
+		OnAnonymousUdtBegin(
+			UdtKind Kind,
+			const SYMBOL_UDT_FIELD* FirstUdtField
 			);
 
 		void
-		OnAnonymousUserDataTypeEnd(
-			UdtKind UserDataTypeKind,
-			const SYMBOL_USERDATA_FIELD* FirstUserDataField,
-			const SYMBOL_USERDATA_FIELD* LastUserDataField,
+		OnAnonymousUdtEnd(
+			UdtKind Kind,
+			const SYMBOL_UDT_FIELD* FirstUdtField,
+			const SYMBOL_UDT_FIELD* LastUdtField,
 			DWORD Size
 			) override;
 
 		void
-		OnUserDataFieldBitFieldBegin(
-			const SYMBOL_USERDATA_FIELD* FirstUserDataFieldBitField,
-			const SYMBOL_USERDATA_FIELD* LastUserDataFieldBitField
+		OnUdtFieldBitFieldBegin(
+			const SYMBOL_UDT_FIELD* FirstUdtFieldBitField,
+			const SYMBOL_UDT_FIELD* LastUdtFieldBitField
 			) override;
 
 		void
-		OnUserDataFieldBitFieldEnd(
-			const SYMBOL_USERDATA_FIELD* FirstUserDataFieldBitField,
-			const SYMBOL_USERDATA_FIELD* LastUserDataFieldBitField
+		OnUdtFieldBitFieldEnd(
+			const SYMBOL_UDT_FIELD* FirstUdtFieldBitField,
+			const SYMBOL_UDT_FIELD* LastUdtFieldBitField
 			) override;
 
 		void
 		OnPaddingMember(
-			const SYMBOL_USERDATA_FIELD* UserDataField,
+			const SYMBOL_UDT_FIELD* UdtField,
 			BasicType PaddingBasicType,
 			DWORD PaddingBasicTypeSize,
 			DWORD PaddingSize
@@ -200,7 +200,7 @@ class PDBHeaderReconstructor
 
 		void
 		WriteOffset(
-			const SYMBOL_USERDATA_FIELD* UserDataField,
+			const SYMBOL_UDT_FIELD* UdtField,
 			int PaddingOffset
 			);
 
@@ -219,7 +219,7 @@ class PDBHeaderReconstructor
 
 		void
 		AppendToTest(
-			const SYMBOL_USERDATA_FIELD* UserDataField
+			const SYMBOL_UDT_FIELD* UdtField
 			);
 
 		bool
@@ -234,10 +234,10 @@ class PDBHeaderReconstructor
 		Settings* m_Settings;
 
 		//
-		// Everytime visitor enters a new member (user data field),
+		// Everytime visitor enters a new member (UDT field),
 		// it pushes the current offset here.
-		// In case the current member is a new struct (or any other
-		// user data type) which will be expanded, this property
+		// In case the current member is a new struct (or any other UDT)
+		// which will be expanded, this property
 		// helps to find the offset of the parent member.
 		//
 		std::vector<DWORD> m_OffsetStack;
@@ -248,7 +248,7 @@ class PDBHeaderReconstructor
 		DWORD m_Depth = 0;
 
 		//
-		// Counter for anonymous user data types.
+		// Counter for anonymous UDTs.
 		//
 		DWORD m_AnonymousDataTypeCounter = 0;
 

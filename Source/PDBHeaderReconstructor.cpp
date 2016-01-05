@@ -167,7 +167,7 @@ PDBHeaderReconstructor::OnEnumField(
 }
 
 bool
-PDBHeaderReconstructor::OnUserDataType(
+PDBHeaderReconstructor::OnUdt(
 	const SYMBOL* Symbol
 	)
 {
@@ -181,11 +181,11 @@ PDBHeaderReconstructor::OnUserDataType(
 
 		WriteConstAndVolatile(Symbol);
 
-		Write("%s %s", PDB::GetUdtKindString(Symbol->u.UserData.Kind), CorrectedName.c_str());
+		Write("%s %s", PDB::GetUdtKindString(Symbol->u.Udt.Kind), CorrectedName.c_str());
 
 		//
 		// If we're not expanding the type at the root level,
-		// OnUserDataTypeEnd() won't be called, so print the semicolon here.
+		// OnUdtEnd() won't be called, so print the semicolon here.
 		//
 
 		if (m_Depth == 0)
@@ -198,7 +198,7 @@ PDBHeaderReconstructor::OnUserDataType(
 }
 
 void
-PDBHeaderReconstructor::OnUserDataTypeBegin(
+PDBHeaderReconstructor::OnUdtBegin(
 	const SYMBOL* Symbol
 	)
 {
@@ -210,7 +210,7 @@ PDBHeaderReconstructor::OnUserDataTypeBegin(
 
 	WriteConstAndVolatile(Symbol);
 
-	Write("%s", PDB::GetUdtKindString(Symbol->u.UserData.Kind));
+	Write("%s", PDB::GetUdtKindString(Symbol->u.Udt.Kind));
 	
 	if (PDB::IsUnnamedSymbol(Symbol) && m_Depth != 0)
 	{
@@ -229,7 +229,7 @@ PDBHeaderReconstructor::OnUserDataTypeBegin(
 }
 
 void
-PDBHeaderReconstructor::OnUserDataTypeEnd(
+PDBHeaderReconstructor::OnUdtEnd(
 	const SYMBOL* Symbol
 	)
 {
@@ -258,8 +258,8 @@ PDBHeaderReconstructor::OnUserDataTypeEnd(
 }
 
 void
-PDBHeaderReconstructor::OnUserDataFieldBegin(
-	const SYMBOL_USERDATA_FIELD* UserDataField
+PDBHeaderReconstructor::OnUdtFieldBegin(
+	const SYMBOL_UDT_FIELD* UdtField
 	)
 {
 	WriteIndent();
@@ -268,38 +268,38 @@ PDBHeaderReconstructor::OnUserDataFieldBegin(
 	// Do not show offsets for members which will be expanded.
 	//
 
-	if (UserDataField->Type->Tag != SymTagUDT ||
-	    ShouldExpand(UserDataField->Type) == false)
+	if (UdtField->Type->Tag != SymTagUDT ||
+	    ShouldExpand(UdtField->Type) == false)
 	{
-		WriteOffset(UserDataField, GetParentOffset());
+		WriteOffset(UdtField, GetParentOffset());
 	}
 
-	AppendToTest(UserDataField);
+	AppendToTest(UdtField);
 
 	//
 	// Push current offset in case we will be expanding
-	// some user data field.
+	// some UDT field.
 	//
 
-	m_OffsetStack.push_back(UserDataField->Offset);
+	m_OffsetStack.push_back(UdtField->Offset);
 }
 
 void
-PDBHeaderReconstructor::OnUserDataFieldEnd(
-	const SYMBOL_USERDATA_FIELD* UserDataField
+PDBHeaderReconstructor::OnUdtFieldEnd(
+	const SYMBOL_UDT_FIELD* UdtField
 	)
 {
 	//
-	// Pop offset of the current user data field.
+	// Pop offset of the current UDT field.
 	//
 
 	m_OffsetStack.pop_back();
 }
 
 void
-PDBHeaderReconstructor::OnUserDataField(
-	const SYMBOL_USERDATA_FIELD* UserDataField,
-	UserDataFieldDefinitionBase* MemberDefinition
+PDBHeaderReconstructor::OnUdtField(
+	const SYMBOL_UDT_FIELD* UdtField,
+	UdtFieldDefinitionBase* MemberDefinition
 	)
 {
 	Write("%s", MemberDefinition->GetPrintableDefinition().c_str());
@@ -308,29 +308,29 @@ PDBHeaderReconstructor::OnUserDataField(
 	// BitField handling.
 	//
 
-	if (UserDataField->Bits != 0)
+	if (UdtField->Bits != 0)
 	{
-		Write(" : %i", UserDataField->Bits);
+		Write(" : %i", UdtField->Bits);
 	}
 
 	Write(";");
 
-	if (UserDataField->Bits != 0)
+	if (UdtField->Bits != 0)
 	{
-		Write(" /* bit position: %i */", UserDataField->BitPosition);
+		Write(" /* bit position: %i */", UdtField->BitPosition);
 	}
 
 	Write("\n");
 }
 
 void
-PDBHeaderReconstructor::OnAnonymousUserDataTypeBegin(
-	UdtKind UserDataTypeKind,
-	const SYMBOL_USERDATA_FIELD* FirstUserDataField
+PDBHeaderReconstructor::OnAnonymousUdtBegin(
+	UdtKind Kind,
+	const SYMBOL_UDT_FIELD* FirstUdtField
 	)
 {
 	WriteIndent();
-	Write("%s\n", PDB::GetUdtKindString(UserDataTypeKind));
+	Write("%s\n", PDB::GetUdtKindString(Kind));
 
 	WriteIndent();
 	Write("{\n");
@@ -339,10 +339,10 @@ PDBHeaderReconstructor::OnAnonymousUserDataTypeBegin(
 }
 
 void
-PDBHeaderReconstructor::OnAnonymousUserDataTypeEnd(
-	UdtKind UserDataTypeKind,
-	const SYMBOL_USERDATA_FIELD* FirstUserDataField,
-	const SYMBOL_USERDATA_FIELD* LastUserDataField,
+PDBHeaderReconstructor::OnAnonymousUdtEnd(
+	UdtKind Kind,
+	const SYMBOL_UDT_FIELD* FirstUdtField,
+	const SYMBOL_UDT_FIELD* LastUdtField,
 	DWORD Size
 	)
 {
@@ -350,7 +350,7 @@ PDBHeaderReconstructor::OnAnonymousUserDataTypeEnd(
 	WriteIndent();
 	Write("}");
 
-	WriteUnnamedDataType(UserDataTypeKind);
+	WriteUnnamedDataType(Kind);
 
 	Write(";");
 
@@ -360,9 +360,9 @@ PDBHeaderReconstructor::OnAnonymousUserDataTypeEnd(
 }
 
 void
-PDBHeaderReconstructor::OnUserDataFieldBitFieldBegin(
-	const SYMBOL_USERDATA_FIELD* FirstUserDataFieldBitField,
-	const SYMBOL_USERDATA_FIELD* LastUserDataFieldBitField
+PDBHeaderReconstructor::OnUdtFieldBitFieldBegin(
+	const SYMBOL_UDT_FIELD* FirstUdtFieldBitField,
+	const SYMBOL_UDT_FIELD* LastUdtFieldBitField
 	)
 {
 	if (m_Settings->AllowBitFieldsInUnion == false)
@@ -370,7 +370,7 @@ PDBHeaderReconstructor::OnUserDataFieldBitFieldBegin(
 		//
 		// Do not wrap bitfields which have only one member.
 		//
-		if (FirstUserDataFieldBitField != LastUserDataFieldBitField)
+		if (FirstUdtFieldBitField != LastUdtFieldBitField)
 		{
 			WriteIndent();
 			Write("%s /* bitfield */\n", PDB::GetUdtKindString(UdtStruct));
@@ -384,14 +384,14 @@ PDBHeaderReconstructor::OnUserDataFieldBitFieldBegin(
 }
 
 void
-PDBHeaderReconstructor::OnUserDataFieldBitFieldEnd(
-	const SYMBOL_USERDATA_FIELD* FirstUserDataFieldBitField,
-	const SYMBOL_USERDATA_FIELD* LastUserDataFieldBitField
+PDBHeaderReconstructor::OnUdtFieldBitFieldEnd(
+	const SYMBOL_UDT_FIELD* FirstUdtFieldBitField,
+	const SYMBOL_UDT_FIELD* LastUdtFieldBitField
 	)
 {
 	if (m_Settings->AllowBitFieldsInUnion == false)
 	{
-		if (FirstUserDataFieldBitField != LastUserDataFieldBitField)
+		if (FirstUdtFieldBitField != LastUdtFieldBitField)
 		{
 			m_Depth -= 1;
 
@@ -403,7 +403,7 @@ PDBHeaderReconstructor::OnUserDataFieldBitFieldEnd(
 
 void
 PDBHeaderReconstructor::OnPaddingMember(
-	const SYMBOL_USERDATA_FIELD* UserDataField,
+	const SYMBOL_UDT_FIELD* UdtField,
 	BasicType PaddingBasicType,
 	DWORD PaddingBasicTypeSize,
 	DWORD PaddingSize
@@ -413,7 +413,7 @@ PDBHeaderReconstructor::OnPaddingMember(
 	{
 		WriteIndent();
 
-		WriteOffset(UserDataField, -((int)PaddingSize * (int)PaddingBasicTypeSize));
+		WriteOffset(UdtField, -((int)PaddingSize * (int)PaddingBasicTypeSize));
 
 		Write(
 			"%s %s%u",
@@ -574,13 +574,13 @@ PDBHeaderReconstructor::WriteConstAndVolatile(
 
 void
 PDBHeaderReconstructor::WriteOffset(
-	const SYMBOL_USERDATA_FIELD* UserDataField,
+	const SYMBOL_UDT_FIELD* UdtField,
 	int PaddingOffset
 	)
 {
 	if (m_Settings->ShowOffsets)
 	{
-		Write("/* 0x%04x */ ", UserDataField->Offset + PaddingOffset);
+		Write("/* 0x%04x */ ", UdtField->Offset + PaddingOffset);
 	}
 }
 
@@ -610,19 +610,19 @@ PDBHeaderReconstructor::GetParentOffset() const
 
 void
 PDBHeaderReconstructor::AppendToTest(
-	const SYMBOL_USERDATA_FIELD* UserDataField
+	const SYMBOL_UDT_FIELD* UdtField
 	)
 {
 	//
 	// Test of the current member is produced when:
 	//   - Test file was specified.
-	//   - We're in the root user data type.
+	//   - We're in the root UDT.
 	//   - This field is not a part of the bitfield.
 	//
 
 	if (m_Settings->TestFile != nullptr &&
 	    m_OffsetStack.empty() &&
-	    UserDataField->Bits == 0)
+	    UdtField->Bits == 0)
 	{
 		//
 		// Line of the test:
@@ -667,21 +667,21 @@ PDBHeaderReconstructor::AppendToTest(
 		// This is used for delimiting tests
 		// with extra new line.
 		//
-		static std::string LastTestedUserDataType;
+		static std::string LastTestedUdt;
 
-		std::string CorrectedSymbolName = GetCorrectedSymbolName(UserDataField->Parent);
+		std::string CorrectedSymbolName = GetCorrectedSymbolName(UdtField->Parent);
 
 		//
-		// If the current member is part of a different user data type
+		// If the current member is part of a different UDT
 		// than the previous one, delimit the output of the test
 		// by extra new line.
 		//
-		if (CorrectedSymbolName != LastTestedUserDataType)
+		if (CorrectedSymbolName != LastTestedUdt)
 		{
 			(*m_Settings->TestFile) << TestDelimiterString << std::endl;
 		}
 
-		LastTestedUserDataType = CorrectedSymbolName;
+		LastTestedUdt = CorrectedSymbolName;
 
 		//
 		// Build the line for the test.
@@ -690,20 +690,20 @@ PDBHeaderReconstructor::AppendToTest(
 		sprintf_s(
 			FormattedStringBuffer,
 			TestFormatString,
-			UserDataField->Offset,
+			UdtField->Offset,
 
-			PDB::GetUdtKindString(UserDataField->Parent->u.UserData.Kind),
+			PDB::GetUdtKindString(UdtField->Parent->u.Udt.Kind),
 			CorrectedSymbolName.c_str(),
-			UserDataField->Name,
+			UdtField->Name,
 
-			PDB::GetUdtKindString(UserDataField->Parent->u.UserData.Kind),
+			PDB::GetUdtKindString(UdtField->Parent->u.Udt.Kind),
 			CorrectedSymbolName.c_str(),
-			UserDataField->Name,
-			UserDataField->Offset,
+			UdtField->Name,
+			UdtField->Offset,
 
-			PDB::GetUdtKindString(UserDataField->Parent->u.UserData.Kind),
+			PDB::GetUdtKindString(UdtField->Parent->u.Udt.Kind),
 			CorrectedSymbolName.c_str(),
-			UserDataField->Name
+			UdtField->Name
 			);
 
 		(*m_Settings->TestFile) << FormattedStringBuffer << std::endl;

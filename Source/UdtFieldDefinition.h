@@ -1,10 +1,10 @@
 #pragma once
-#include "UserDataFieldDefinitionBase.h"
+#include "UdtFieldDefinitionBase.h"
 
 #include <string>
 
-class UserDataFieldDefinition
-	: public UserDataFieldDefinitionBase
+class UdtFieldDefinition
+	: public UdtFieldDefinitionBase
 {
 	public:
 		struct Settings
