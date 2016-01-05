@@ -91,7 +91,7 @@ class UdtFieldDefinitionBase
 		virtual
 		void
 		SetMemberName(
-			CONST CHAR* MemberName
+			const CHAR* MemberName
 		)
 		{
 

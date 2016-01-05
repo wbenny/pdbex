@@ -123,7 +123,7 @@ class UdtFieldDefinition
 
 		void
 		SetMemberName(
-			CONST CHAR* MemberName
+			const CHAR* MemberName
 			)
 		{
 			m_MemberName = MemberName ? MemberName : std::string();

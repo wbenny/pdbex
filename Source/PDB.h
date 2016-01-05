@@ -197,7 +197,7 @@ typedef struct _SYMBOL_FUNCTIONARG
 	//
 	// Underlying type of the argument.
 	//
-	PSYMBOL              Type;
+	SYMBOL*              Type;
 
 } SYMBOL_FUNCTIONARG, *PSYMBOL_FUNCTIONARG;
 
@@ -295,7 +295,7 @@ class PDB
 		// Instantiates PDB class with particular PDB file.
 		//
 		PDB(
-			IN CONST CHAR* Path
+			IN const CHAR* Path
 			);
 
 		//
@@ -310,7 +310,7 @@ class PDB
 		//
 		BOOL
 		Open(
-			IN CONST CHAR* Path
+			IN const CHAR* Path
 			);
 
 		//
@@ -322,7 +322,7 @@ class PDB
 		//
 		// Returns path of the currently opened PDB file.
 		//
-		CONST CHAR*
+		const CHAR*
 		GetPath() const;
 
 		//
@@ -348,9 +348,9 @@ class PDB
 		//
 		// Returns non-NULL value on success.
 		//
-		CONST SYMBOL*
+		const SYMBOL*
 		GetSymbolByName(
-			IN CONST CHAR* SymbolName
+			IN const CHAR* SymbolName
 			);
 
 		//
@@ -358,7 +358,7 @@ class PDB
 		//
 		// Returns non-NULL value on success.
 		//
-		CONST SYMBOL*
+		const SYMBOL*
 		GetSymbolByTypeId(
 			IN DWORD TypeId
 			);
@@ -382,7 +382,7 @@ class PDB
 		// Returns non-NULL value on success.
 		//
 		static
-		CONST CHAR*
+		const CHAR*
 		GetBasicTypeString(
 			IN BasicType BaseType,
 			IN DWORD Size,
@@ -396,9 +396,9 @@ class PDB
 		// Returns non-NULL value on success.
 		//
 		static
-		CONST CHAR*
+		const CHAR*
 		GetBasicTypeString(
-			IN CONST SYMBOL* Symbol,
+			IN const SYMBOL* Symbol,
 			IN BOOL UseStdInt = FALSE
 			);
 
@@ -409,7 +409,7 @@ class PDB
 		// Returns non-NULL value on success.
 		//
 		static
-		CONST CHAR*
+		const CHAR*
 		GetUdtKindString(
 			IN UdtKind Kind
 			);
@@ -421,7 +421,7 @@ class PDB
 		static
 		BOOL
 		IsUnnamedSymbol(
-			CONST SYMBOL* Symbol
+			const SYMBOL* Symbol
 			);
 
 	private:

@@ -30,7 +30,7 @@ class SymbolModuleBase
 
 		BOOL
 		Open(
-			IN CONST CHAR* Path
+			IN const CHAR* Path
 			);
 
 		VOID
@@ -61,7 +61,7 @@ SymbolModuleBase::SymbolModuleBase()
 
 BOOL
 SymbolModuleBase::Open(
-	IN CONST CHAR* Path
+	IN const CHAR* Path
 	)
 {
 	//
@@ -156,13 +156,13 @@ class SymbolModule
 
 		BOOL
 		Open(
-			IN CONST CHAR* Path
+			IN const CHAR* Path
 			);
 
 		BOOL
 		IsOpened() const;
 
-		CONST CHAR*
+		const CHAR*
 		GetPath() const;
 
 		VOID
@@ -176,7 +176,7 @@ class SymbolModule
 
 		SYMBOL*
 		GetSymbolByName(
-			IN CONST CHAR* SymbolName
+			IN const CHAR* SymbolName
 			);
 
 		SYMBOL*
@@ -290,7 +290,7 @@ SymbolModule::~SymbolModule()
 
 BOOL
 SymbolModule::Open(
-	IN CONST CHAR* Path
+	IN const CHAR* Path
 	)
 {
 	BOOL Result;
@@ -319,7 +319,7 @@ SymbolModule::IsOpened() const
 	return SymbolModuleBase::IsOpened();
 }
 
-CONST CHAR*
+const CHAR*
 SymbolModule::GetPath() const
 {
 	return m_Path.c_str();
@@ -367,7 +367,7 @@ SymbolModule::GetSymbolName(
 		// Not all symbols have the name.
 		//
 
-		return NULL;
+		return nullptr;
 	}
 
 	//
@@ -394,11 +394,11 @@ SymbolModule::GetSymbolName(
 
 SYMBOL*
 SymbolModule::GetSymbolByName(
-	IN CONST CHAR* SymbolName
+	IN const CHAR* SymbolName
 	)
 {
 	auto it = m_SymbolNameMap.find(SymbolName);
-	return it == m_SymbolNameMap.end() ? NULL : it->second;
+	return it == m_SymbolNameMap.end() ? nullptr : it->second;
 }
 
 SYMBOL*
@@ -407,7 +407,7 @@ SymbolModule::GetSymbolByTypeId(
 	)
 {
 	auto it = m_SymbolMap.find(TypeId);
-	return it == m_SymbolMap.end() ? NULL : it->second;
+	return it == m_SymbolMap.end() ? nullptr : it->second;
 }
 
 SYMBOL*
@@ -493,22 +493,22 @@ SymbolModule::InitSymbol(
 	BOOL BoolResult;
 
 	DiaSymbol->get_symTag(&DwordResult);
-	Symbol->Tag = (enum SymTagEnum)DwordResult;
+	Symbol->Tag = static_cast<enum SymTagEnum>(DwordResult);
 
 	DiaSymbol->get_baseType(&DwordResult);
-	Symbol->BaseType = (BasicType)DwordResult;
+	Symbol->BaseType = static_cast<BasicType>(DwordResult);
 
 	DiaSymbol->get_typeId(&DwordResult);
 	Symbol->TypeId = DwordResult;
 
 	DiaSymbol->get_length(&UlonglongResult);
-	Symbol->Size = (DWORD)UlonglongResult;
+	Symbol->Size = static_cast<DWORD>(UlonglongResult);
 
 	DiaSymbol->get_constType(&BoolResult);
-	Symbol->IsConst = (BOOL)BoolResult;
+	Symbol->IsConst = static_cast<BOOL>(BoolResult);
 
 	DiaSymbol->get_volatileType(&BoolResult);
-	Symbol->IsVolatile = (BOOL)BoolResult;
+	Symbol->IsVolatile = static_cast<BOOL>(BoolResult);
 
 	Symbol->Name = GetSymbolName(DiaSymbol);
 
@@ -789,7 +789,7 @@ SymbolModule::ProcessSymbolUdt(
 			PaddingSymbolArrayElement->Size = PaddingSymbolArrayElement->BaseType == btLong ? 4 : 1;
 			PaddingSymbolArrayElement->IsConst = FALSE;
 			PaddingSymbolArrayElement->IsVolatile = FALSE;
-			PaddingSymbolArrayElement->Name = NULL;
+			PaddingSymbolArrayElement->Name = nullptr;
 
 
 			SYMBOL* PaddingSymbolArray = new SYMBOL;
@@ -799,7 +799,7 @@ SymbolModule::ProcessSymbolUdt(
 			PaddingSymbolArray->Size = PaddingSize;
 			PaddingSymbolArray->IsConst = FALSE;
 			PaddingSymbolArray->IsVolatile = FALSE;
-			PaddingSymbolArray->Name = NULL;
+			PaddingSymbolArray->Name = nullptr;
 			PaddingSymbolArray->u.Array.ElementType = PaddingSymbolArrayElement;
 			PaddingSymbolArray->u.Array.ElementCount = PaddingSymbolArrayElement->BaseType == btLong ? PaddingSize / 4 : PaddingSize;
 
@@ -866,7 +866,7 @@ struct BasicTypeMapElement
 };
 
 BasicTypeMapElement BasicTypeMapMSVC[] = {
-	{ btNoType,       0,  "btNoType",         NULL               },
+	{ btNoType,       0,  "btNoType",         nullptr            },
 	{ btVoid,         0,  "btVoid",           "void"             },
 	{ btChar,         1,  "btChar",           "char"             },
 	{ btWChar,        2,  "btWChar",          "wchar_t"          },
@@ -885,18 +885,18 @@ BasicTypeMapElement BasicTypeMapMSVC[] = {
 	{ btBool,         0,  "btBool",           "BOOL"             },
 	{ btLong,         4,  "btLong",           "long"             },
 	{ btULong,        4,  "btULong",          "unsigned long"    },
-	{ btCurrency,     0,  "btCurrency",       NULL               },
+	{ btCurrency,     0,  "btCurrency",       nullptr            },
 	{ btDate,         0,  "btDate",           "DATE"             },
 	{ btVariant,      0,  "btVariant",        "VARIANT"          },
-	{ btComplex,      0,  "btComplex",        NULL               },
-	{ btBit,          0,  "btBit",            NULL               },
+	{ btComplex,      0,  "btComplex",        nullptr            },
+	{ btBit,          0,  "btBit",            nullptr            },
 	{ btBSTR,         0,  "btBSTR",           "BSTR"             },
 	{ btHresult,      4,  "btHresult",        "HRESULT"          },
-	{ (BasicType)0,   0,  NULL,               NULL               },
+	{ (BasicType)0,   0,  nullptr,            nullptr            },
 };
 
 BasicTypeMapElement BasicTypeMapStdInt[] = {
-	{ btNoType,       0,  "btNoType",         NULL               },
+	{ btNoType,       0,  "btNoType",         nullptr            },
 	{ btVoid,         0,  "btVoid",           "void"             },
 	{ btChar,         1,  "btChar",           "char"             },
 	{ btWChar,        2,  "btWChar",          "wchar_t"          },
@@ -915,14 +915,14 @@ BasicTypeMapElement BasicTypeMapStdInt[] = {
 	{ btBool,         0,  "btBool",           "BOOL"             },
 	{ btLong,         4,  "btLong",           "int32_t"          },
 	{ btULong,        4,  "btULong",          "uint32_t"         },
-	{ btCurrency,     0,  "btCurrency",       NULL               },
+	{ btCurrency,     0,  "btCurrency",       nullptr            },
 	{ btDate,         0,  "btDate",           "DATE"             },
 	{ btVariant,      0,  "btVariant",        "VARIANT"          },
-	{ btComplex,      0,  "btComplex",        NULL               },
-	{ btBit,          0,  "btBit",            NULL               },
+	{ btComplex,      0,  "btComplex",        nullptr            },
+	{ btBit,          0,  "btBit",            nullptr            },
 	{ btBSTR,         0,  "btBSTR",           "BSTR"             },
 	{ btHresult,      4,  "btHresult",        "HRESULT"          },
-	{ (BasicType)0,   0,  NULL,               NULL               },
+	{ (BasicType)0,   0,  nullptr,            nullptr            },
 };
 
 PDB::PDB()
@@ -931,7 +931,7 @@ PDB::PDB()
 }
 
 PDB::PDB(
-	IN CONST CHAR* Path
+	IN const CHAR* Path
 	)
 {
 	m_Impl = new SymbolModule();
@@ -945,7 +945,7 @@ PDB::~PDB()
 
 BOOL
 PDB::Open(
-	IN CONST CHAR* Path
+	IN const CHAR* Path
 	)
 {
 	return m_Impl->Open(Path);
@@ -957,7 +957,7 @@ PDB::IsOpened() const
 	return m_Impl->IsOpened();
 }
 
-CONST CHAR*
+const CHAR*
 PDB::GetPath() const
 {
 	return m_Impl->GetPath();
@@ -981,15 +981,15 @@ PDB::GetLanguage() const
 	return m_Impl->GetLanguage();
 }
 
-CONST SYMBOL*
+const SYMBOL*
 PDB::GetSymbolByName(
-	IN CONST CHAR* SymbolName
+	IN const CHAR* SymbolName
 	)
 {
 	return m_Impl->GetSymbolByName(SymbolName);
 }
 
-CONST SYMBOL*
+const SYMBOL*
 PDB::GetSymbolByTypeId(
 	IN DWORD TypeId
 	)
@@ -1009,7 +1009,7 @@ PDB::GetSymbolNameMap() const
 	return m_Impl->GetSymbolNameMap();
 }
 
-CONST CHAR*
+const CHAR*
 PDB::GetBasicTypeString(
 	IN BasicType BaseType,
 	IN DWORD Size,
@@ -1018,7 +1018,7 @@ PDB::GetBasicTypeString(
 {
 	BasicTypeMapElement* TypeMap = UseStdInt ? BasicTypeMapStdInt : BasicTypeMapMSVC;
 
-	for (int n = 0; TypeMap[n].BasicTypeString != NULL; n++)
+	for (int n = 0; TypeMap[n].BasicTypeString != nullptr; n++)
 	{
 		if (TypeMap[n].BaseType == BaseType)
 		{
@@ -1030,24 +1030,24 @@ PDB::GetBasicTypeString(
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
-CONST CHAR*
+const CHAR*
 PDB::GetBasicTypeString(
-	IN CONST SYMBOL* Symbol,
+	IN const SYMBOL* Symbol,
 	IN BOOL UseStdInt
 	)
 {
 	return GetBasicTypeString(Symbol->BaseType, Symbol->Size, UseStdInt);
 }
 
-CONST CHAR*
+const CHAR*
 PDB::GetUdtKindString(
 	IN UdtKind Kind
 	)
 {
-	static CONST CHAR* UdtKindStrings[] = {
+	static const CHAR* UdtKindStrings[] = {
 		"struct",
 		"class",
 		"union",
@@ -1058,14 +1058,14 @@ PDB::GetUdtKindString(
 		return UdtKindStrings[Kind];
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 BOOL
 PDB::IsUnnamedSymbol(
-	CONST SYMBOL* Symbol
+	const SYMBOL* Symbol
 	)
 {
-	return strstr(Symbol->Name, "<unnamed-") != NULL ||
-	       strstr(Symbol->Name, "__unnamed") != NULL;
+	return strstr(Symbol->Name, "<unnamed-") != nullptr ||
+	       strstr(Symbol->Name, "__unnamed") != nullptr;
 }
