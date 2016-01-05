@@ -718,28 +718,24 @@ SymbolModule::ProcessSymbolUserDataType(
 	{
 		SYMBOL_USERDATA_FIELD* Member = &Symbol->u.UserData.Fields[Index];
 
+		Member->Name = GetSymbolName(DiaChildSymbol);
 		Member->Parent = Symbol;
 
-		Member->Name = GetSymbolName(DiaChildSymbol);
+		LONG Offset = 0;
+		DiaChildSymbol->get_offset(&Offset);
+		Member->Offset = static_cast<DWORD>(Offset);
 
-		Member->BitPosition = 0;
-		Member->Bits = 0;
+		ULONGLONG Bits = 0;
+		DiaChildSymbol->get_length(&Bits);
+		Member->Bits = static_cast<DWORD>(Bits);
 
-		DiaChildSymbol->get_offset((LONG*)&Member->Offset);
 		DiaChildSymbol->get_bitPosition(&Member->BitPosition);
 
-		ULONGLONG Bits;
-		DiaChildSymbol->get_length(&Bits);
-		Member->Bits = (DWORD)Bits;
-
 		IDiaSymbol* MemberTypeDiaSymbol;
+		DiaChildSymbol->get_type(&MemberTypeDiaSymbol);
+		Member->Type = GetSymbol(MemberTypeDiaSymbol);
 
-		if (SUCCEEDED(DiaChildSymbol->get_type(&MemberTypeDiaSymbol)))
-		{
-			Member->Type = GetSymbol(MemberTypeDiaSymbol);
-
-			MemberTypeDiaSymbol->Release();
-		}
+		MemberTypeDiaSymbol->Release();
 
 		DiaChildSymbol->Release();
 	}
