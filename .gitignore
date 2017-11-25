@@ -31,3 +31,5 @@ ipch
 *.suo
 *.sdf
 *.opensdf
+*.VC.db
+*.VC.opendb

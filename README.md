@@ -141,7 +141,6 @@ This command will dump all structures and unions to the file **ntdll.h**.
 
 ### Remarks
 
-* **const**-ness and **volatile**-ness is not projected into the dumped headers (although this information is preserved in the PDB file). To my knowledge, it is not possible to obtain this information via **dbghelp** interface (which **pdbex** currently uses), but it is possible through **DIA**.
 * Pointers to functions are represented only as **void\*** with additional comment **/\* function \*/**.
 * Produced structures expect **packing alignment to be set at 1 byte**.
 * Produced **union**s have one extra **union** nested inside of it (you could notice few lines above). This is a known cosmetic bug.
@@ -149,7 +148,7 @@ This command will dump all structures and unions to the file **ntdll.h**.
 
 ### Compilation
 
-Compile **pdbex** using Visual Studio 2015. Solution file is included. No other dependencies are required.
+Compile **pdbex** using Visual Studio 2017. Solution file is included. No other dependencies are required.
 
 ### Testing
 
@@ -204,6 +203,12 @@ Example: -p-
 
 All the code in this repository is open-source under the MIT license. See the **LICENSE.txt** file in this repository.
 
+If you find this project interesting, you can buy me a coffee
+
+```
+  BTC 12hwTTPYDbkVqsfpGjrsVa7WpShvQn24ro
+  LTC LLDVqnBEMS8Tv7ZF1otcy56HDhkXVVFJDH
+```
 
   [msdn-symbols]: <https://msdn.microsoft.com/en-us/library/windows/desktop/ee416588(v=vs.85).aspx>
   [headers-nirsoft]: <http://www.nirsoft.net/kernel_struct/vista/index.html>
@@ -211,3 +216,4 @@ All the code in this repository is open-source under the MIT license. See the **
   [headers-reactos]: <http://doxygen.reactos.org/df/d7e/structETHREAD-members.html>
   [headers-mirt]: <http://msdn.mirt.net/>
   [headers-volatility]: <http://volatilityfoundation.github.io/volatility/classvolatility_1_1plugins_1_1overlays_1_1windows_1_1vista_1_1___e_t_h_r_e_a_d.html>
+
