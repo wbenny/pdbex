@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/8e24lcfhp1ltngfu?svg=true)](https://ci.appveyor.com/project/wbenny/pdbex)
+
 # pdbex
 
 pdbex is a utility for reconstructing structures and unions from the [PDB files][msdn-symbols] into compilable C headers.
