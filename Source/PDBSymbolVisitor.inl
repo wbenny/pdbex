@@ -219,7 +219,7 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdt(
 			m_AnonymousUdtStack.swap(AnonymousUDTStackBackup);
 			m_AnonymousUnionStack.swap(AnonymousUnionStackBackup);
 			m_AnonymousStructStack.swap(AnonymousStructStackBackup);
-			
+
 			{
 				m_MemberContextStack.push(MemberDefinitionFactory());
 
@@ -276,7 +276,7 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdtField(
 
 	m_MemberContextStack.push(MemberDefinitionFactory());
 	m_MemberContextStack.top()->SetMemberName(UdtField->Name);
-	
+
 	if (!IsBitFieldMember || IsFirstBitFieldMember)
 	{
 		//
@@ -562,7 +562,7 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForAnonymousStruct(
 
 		return;
 	}
-	
+
 	if (!m_AnonymousUdtStack.empty() &&
 	     m_AnonymousUdtStack.top()->Kind != UdtUnion)
 	{
@@ -732,7 +732,6 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForEndOfAnonymousUdt(
 			// Because the previous member could be non-trivial member (ie. union),
 			// we will use the variable m_SizeOfPreviousUdtField.
 			//
-
 			LastAnonymousUdt->Size += m_SizeOfPreviousUdtField;
 
 			//
@@ -751,6 +750,7 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForEndOfAnonymousUdt(
 			IsEndOfAnonymousUdt =
 				UdtFieldCtx.IsLast() ||
 				UdtFieldCtx.NextUdtField->Offset <= UdtField->Offset;
+
 
 			//
 			// Special condition for closing anonymous structs

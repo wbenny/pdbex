@@ -279,4 +279,3 @@ class PDBHeaderReconstructor
 		//
 		std::set<std::string> m_VisitedSymbols;
 };
-

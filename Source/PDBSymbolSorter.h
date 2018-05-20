@@ -110,7 +110,7 @@ class PDBSymbolSorter
 			//
 			// Problem is solved by taking into account
 			// and printing only the first definition of the symbol.
-			// 
+			//
 			// Another solution could be appending a suffix (_1, _2, ...)
 			// to the symbol names, but then it wouldn't reflect the real names.
 			// So let's just assume all definitions are same
@@ -152,4 +152,3 @@ class PDBSymbolSorter
 		std::map<std::string, const SYMBOL*> m_VisitedUdts;
 		std::vector<const SYMBOL*> m_SortedSymbols;
 };
-

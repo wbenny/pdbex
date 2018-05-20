@@ -200,7 +200,7 @@ class PDBSymbolVisitor
 		struct UdtFieldContext
 		{
 			UdtFieldContext(
-				const SYMBOL_UDT_FIELD* UdtField, 
+				const SYMBOL_UDT_FIELD* UdtField,
 				BOOL RespectBitFields = TRUE
 				)
 			{

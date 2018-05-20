@@ -165,4 +165,3 @@ class UdtFieldDefinition
 
 		Settings* m_Settings;
 };
-

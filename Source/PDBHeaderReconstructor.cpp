@@ -125,10 +125,10 @@ PDBHeaderReconstructor::OnEnumTypeBegin(
 
 	Write(" %s", CorrectedName.c_str());
 	Write("\n");
-	
+
 	WriteIndent();
 	Write("{\n");
-	
+
 	m_Depth += 1;
 }
 
@@ -138,7 +138,7 @@ PDBHeaderReconstructor::OnEnumTypeEnd(
 	)
 {
 	m_Depth -= 1;
-	
+
 	WriteIndent();
 	Write("}");
 
@@ -161,7 +161,7 @@ PDBHeaderReconstructor::OnEnumField(
 {
 	WriteIndent();
 	Write("%s = ", EnumField->Name);
-	
+
 	WriteVariant(&EnumField->Value);
 	Write(",\n");
 }
@@ -211,7 +211,7 @@ PDBHeaderReconstructor::OnUdtBegin(
 	WriteConstAndVolatile(Symbol);
 
 	Write("%s", PDB::GetUdtKindString(Symbol->u.Udt.Kind));
-	
+
 	if (PDB::IsUnnamedSymbol(Symbol) && m_Depth != 0)
 	{
 		Write(" //");
@@ -735,4 +735,3 @@ PDBHeaderReconstructor::ShouldExpand(
 
 	return Expand && Symbol->Size > 0;
 }
-

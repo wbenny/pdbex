@@ -60,7 +60,7 @@ class PDBSymbolVisitorBase
 			const SYMBOL* Symbol
 			)
 		{
-		
+
 		}
 
 		virtual
@@ -256,4 +256,3 @@ class PDBSymbolVisitorBase
 			VisitUdtField(UdtField);
 		}
 };
-

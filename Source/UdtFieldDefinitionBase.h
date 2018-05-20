@@ -12,7 +12,7 @@ class UdtFieldDefinitionBase
 			const SYMBOL* Symbol
 			)
 		{
-		
+
 		}
 
 		virtual
@@ -120,4 +120,3 @@ class UdtFieldDefinitionBase
 			return nullptr;
 		}
 };
-
