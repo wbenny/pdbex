@@ -33,10 +33,16 @@ namespace
 	static const char HEADER_FILE_HEADER[] =
 		"/*\n"
 		" * PDB file: %s\n"
-		" * Image architecture: %s\n"
+		" * Image architecture: %s (0x%04x)\n"
 		" *\n"
 		" * Dumped by pdbex tool v" PDBEX_VERSION_STRING ", by wbenny\n"
 		" */\n\n";
+
+	static const char DEFINITIONS_PRAGMA_PACK_BEGIN[] =
+		"#include <pshpack1.h>";
+
+	static const char DEFINITIONS_PRAGMA_PACK_END[] =
+		"#include <poppack.h>";
 
 	//
 	// Error messages.
@@ -140,6 +146,7 @@ PDBExtractor::PrintUsage()
 	printf(" -k                  Print header.                                    (T)\n");
 	printf(" -n                  Print declarations.                              (T)\n");
 	printf(" -l                  Print definitions.                               (T)\n");
+	printf(" -z                  Print #pragma pack directives.                   (T)\n");
 	printf("\n");
 }
 
@@ -343,6 +350,10 @@ PDBExtractor::ParseParameters(
 				m_Settings.PrintDefinitions = !OffSwitch;
 				break;
 
+			case 'z':
+				m_Settings.PrintPragmaPack = !OffSwitch;
+				break;
+
 			default:
 				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
 		}
@@ -399,9 +410,10 @@ PDBExtractor::PrintPDBHeader()
 	if (m_Settings.PrintHeader)
 	{
 		static const char* const ArchitectureString =
-			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_I386  ? "x86" :
-			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_AMD64 ? "x64" :
-			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_IA64  ? "ia64" :
+			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_I386  ? "i386"  :
+			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_AMD64 ? "AMD64" :
+			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_IA64  ? "IA64"  :
+			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_ARMNT ? "ArmNT" :
 			                                                     "Unknown";
 
 		static char HEADER_FILE_HEADER_FORMATTED[16 * 1024];
@@ -409,7 +421,8 @@ PDBExtractor::PrintPDBHeader()
 		sprintf_s(
 			HEADER_FILE_HEADER_FORMATTED, HEADER_FILE_HEADER,
 			m_Settings.PdbPath.c_str(),
-			ArchitectureString
+			ArchitectureString,
+			m_PDB.GetMachineType()
 			);
 
 		(*m_Settings.PdbHeaderReconstructorSettings.OutputFile) << HEADER_FILE_HEADER_FORMATTED;
@@ -449,6 +462,13 @@ PDBExtractor::PrintPDBDefinitions()
 
 	if (m_Settings.PrintDefinitions)
 	{
+		if (m_Settings.PrintPragmaPack)
+		{
+			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
+				<< DEFINITIONS_PRAGMA_PACK_BEGIN
+				<< std::endl;
+		}
+
 		for (auto&& e : m_SymbolSorter->GetSortedSymbols())
 		{
 			bool Expand = true;
@@ -468,6 +488,13 @@ PDBExtractor::PrintPDBDefinitions()
 			{
 				m_SymbolVisitor->Run(e);
 			}
+		}
+
+		if (m_Settings.PrintPragmaPack)
+		{
+			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
+				<< DEFINITIONS_PRAGMA_PACK_END
+				<< std::endl;
 		}
 	}
 }

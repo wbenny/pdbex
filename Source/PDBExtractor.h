@@ -30,6 +30,7 @@ class PDBExtractor
 			bool PrintHeader = true;
 			bool PrintDeclarations = true;
 			bool PrintDefinitions = true;
+			bool PrintPragmaPack = true;
 		};
 
 		int Run(
@@ -52,8 +53,8 @@ class PDBExtractor
 
 		void
 		PrintTestHeader();
-		
-		void 
+
+		void
 		PrintTestFooter();
 
 		void
@@ -82,4 +83,3 @@ class PDBExtractor
 		std::unique_ptr<PDBHeaderReconstructor> m_HeaderReconstructor;
 		std::unique_ptr<PDBSymbolVisitor<UdtFieldDefinition>> m_SymbolVisitor;
 };
-

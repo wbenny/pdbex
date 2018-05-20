@@ -23,15 +23,9 @@ VCXPROJ_TEMPLATE = '''
     <IntDir>.\Obj\</IntDir>
   </PropertyGroup>
 
-  <ItemDefinitionGroup>
-    <ClCompile>
-      <StructMemberAlignment>1Byte</StructMemberAlignment>
-    </ClCompile>
-  </ItemDefinitionGroup>
-
   <PropertyGroup>
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
 
   <ItemGroup>
@@ -83,7 +77,7 @@ def test_get_platform(file_h):
 			#
 
 			if line_counter == 3:
-				if 'x64' in line:
+				if '64' in line:
 					platform = 'x64'
 
 				break
@@ -102,7 +96,7 @@ def test_compile(file_vcxproj, file_c, file_h, platform):
 			'file_vcxproj'    : file_vcxproj,
 			'configuration'   : 'debug',
 			'platform'        : platform,
-			'platformtoolset' : 'v140'
+			'platformtoolset' : 'v141'
 		}
 
 	if VERBOSITY_LEVEL >= 1:

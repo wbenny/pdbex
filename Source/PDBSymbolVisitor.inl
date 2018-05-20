@@ -1,6 +1,4 @@
 #include "PDBSymbolVisitor.h"
-
-#pragma once
 #include "PDB.h"
 #include "PDBSymbolVisitorBase.h"
 #include "PDBReconstructorBase.h"
@@ -13,7 +11,7 @@ template <
 >
 PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::PDBSymbolVisitor(
 	PDBReconstructorBase* ReconstructVisitor,
-	void* MemberDefinitionSettings = nullptr
+	void* MemberDefinitionSettings
 	)
 {
 	m_ReconstructVisitor = ReconstructVisitor;
