@@ -770,9 +770,10 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForEndOfAnonymousUdt(
 				: m_AnonymousUnionStack.top().get();
 
 			IsEndOfAnonymousUdt = IsEndOfAnonymousUdt || (
-				LastAnonymousUnion != nullptr &&
-				LastAnonymousUnion->FirstUdtField->Offset + LastAnonymousUnion->Size == UdtField->Offset + UdtField->Type->Size &&
-				LastAnonymousUdt->MemberCount >= 2
+			    LastAnonymousUnion != nullptr &&
+			   (LastAnonymousUnion->FirstUdtField->Offset + LastAnonymousUnion->Size == UdtField->Offset + UdtField->Type->Size ||
+			    LastAnonymousUnion->FirstUdtField->Offset + LastAnonymousUnion->Size == UdtFieldCtx.NextUdtField->Offset) &&
+			    LastAnonymousUdt->MemberCount >= 2
 			);
 		}
 
