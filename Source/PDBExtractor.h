@@ -1,5 +1,5 @@
 #pragma once
-#include "PDBSymbolSorter.h"
+#include "PDBSymbolSorterBase.h"
 #include "PDBHeaderReconstructor.h"
 #include "PDBSymbolVisitor.h"
 #include "UdtFieldDefinition.h"
@@ -31,6 +31,7 @@ class PDBExtractor
 			bool PrintDeclarations = true;
 			bool PrintDefinitions = true;
 			bool PrintPragmaPack = true;
+			bool Sort = false;
 		};
 
 		int Run(
@@ -79,7 +80,7 @@ class PDBExtractor
 		PDB m_PDB;
 		Settings m_Settings;
 
-		std::unique_ptr<PDBSymbolSorter> m_SymbolSorter;
+		std::unique_ptr<PDBSymbolSorterBase> m_SymbolSorter;
 		std::unique_ptr<PDBHeaderReconstructor> m_HeaderReconstructor;
 		std::unique_ptr<PDBSymbolVisitor<UdtFieldDefinition>> m_SymbolVisitor;
 };

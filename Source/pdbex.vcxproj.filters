@@ -56,6 +56,12 @@
     <ClInclude Include="UdtFieldDefinitionBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PDBSymbolSorterAlphabetical.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PDBSymbolSorterBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="PDBSymbolVisitor.inl">

@@ -2,6 +2,7 @@
 #include "PDBHeaderReconstructor.h"
 #include "PDBSymbolVisitor.h"
 #include "PDBSymbolSorter.h"
+#include "PDBSymbolSorterAlphabetical.h"
 #include "UdtFieldDefinition.h"
 
 #include <iostream>
@@ -147,6 +148,7 @@ PDBExtractor::PrintUsage()
 	printf(" -n                  Print declarations.                              (T)\n");
 	printf(" -l                  Print definitions.                               (T)\n");
 	printf(" -z                  Print #pragma pack directives.                   (T)\n");
+	printf(" -y                  Sort declarations and definitions.               (F)\n");
 	printf("\n");
 }
 
@@ -354,6 +356,10 @@ PDBExtractor::ParseParameters(
 				m_Settings.PrintPragmaPack = !OffSwitch;
 				break;
 
+			case 'y':
+				m_Settings.Sort = !OffSwitch;
+				break;
+
 			default:
 				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
 		}
@@ -368,7 +374,14 @@ PDBExtractor::ParseParameters(
 		&m_Settings.UdtFieldDefinitionSettings
 		);
 
-	m_SymbolSorter = std::make_unique<PDBSymbolSorter>();
+	if (m_Settings.Sort)
+	{
+		m_SymbolSorter = std::make_unique<PDBSymbolSorterAlphabetical>();
+	}
+	else
+	{
+		m_SymbolSorter = std::make_unique<PDBSymbolSorter>();
+	}
 }
 
 void
@@ -440,12 +453,22 @@ PDBExtractor::PrintPDBDeclarations()
 	{
 		for (auto&& e : m_SymbolSorter->GetSortedSymbols())
 		{
-			if (e->Tag == SymTagUDT && !PDB::IsUnnamedSymbol(e))
+			if (!PDB::IsUnnamedSymbol(e))
 			{
-				*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-					<< PDB::GetUdtKindString(e->u.Udt.Kind)
-					<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
-					<< std::endl;
+				if (e->Tag == SymTagUDT)
+				{
+					*m_Settings.PdbHeaderReconstructorSettings.OutputFile
+						<< PDB::GetUdtKindString(e->u.Udt.Kind)
+						<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
+						<< std::endl;
+				}
+				else if (e->Tag == SymTagEnum)
+				{
+					*m_Settings.PdbHeaderReconstructorSettings.OutputFile
+						<< "enum"
+						<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
+						<< std::endl;
+				}
 			}
 		}
 

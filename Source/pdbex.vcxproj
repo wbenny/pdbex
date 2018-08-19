@@ -170,6 +170,8 @@
     <ClInclude Include="PDBExtractor.h" />
     <ClInclude Include="PDBHeaderReconstructor.h" />
     <ClInclude Include="PDBReconstructorBase.h" />
+    <ClInclude Include="PDBSymbolSorterAlphabetical.h" />
+    <ClInclude Include="PDBSymbolSorterBase.h" />
     <ClInclude Include="PDBSymbolVisitorBase.h" />
     <ClInclude Include="PDBSymbolVisitor.h" />
     <ClInclude Include="PDBSymbolSorter.h" />

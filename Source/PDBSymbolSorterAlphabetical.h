@@ -5,14 +5,27 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
 
-class PDBSymbolSorter
+class PDBSymbolSorterAlphabetical
 	: public PDBSymbolSorterBase
 {
 	public:
 		std::vector<const SYMBOL*>&
 		GetSortedSymbols() override
 		{
+			if (m_Dirty)
+			{
+				std::sort(
+					m_SortedSymbols.begin(),
+					m_SortedSymbols.end(),
+					[](const SYMBOL* lhs, const SYMBOL* rhs) {
+						return strcmp(lhs->Name, rhs->Name) < 0;
+					});
+
+				m_Dirty = false;
+			}
+
 			return m_SortedSymbols;
 		}
 
@@ -136,6 +149,7 @@ class PDBSymbolSorter
 			if (std::find(m_SortedSymbols.begin(), m_SortedSymbols.end(), Symbol) == m_SortedSymbols.end())
 			{
 				m_SortedSymbols.push_back(Symbol);
+				m_Dirty = true;
 			}
 		}
 
@@ -143,4 +157,5 @@ class PDBSymbolSorter
 
 		std::map<std::string, const SYMBOL*> m_VisitedUdts;
 		std::vector<const SYMBOL*> m_SortedSymbols;
+		bool m_Dirty = true;
 };
