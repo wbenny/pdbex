@@ -33,3 +33,4 @@ ipch
 *.opensdf
 *.VC.db
 *.VC.opendb
+*.user
