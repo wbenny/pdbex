@@ -104,7 +104,7 @@ PDBExtractor::Run(
 
 		PrintTestFooter();
 	}
-	catch (PDBDumperException& e)
+	catch (const PDBDumperException& e)
 	{
 		std::cerr << e.what() << std::endl;
 		Result = EXIT_FAILURE;
@@ -140,7 +140,7 @@ PDBExtractor::PrintUsage()
 	printf(" -r prefix           Prefix for all symbols.\n");
 	printf(" -g suffix           Suffix for all symbols.\n");
 	printf("\n");
-	printf("Following options can be explicitly turned of by leading '-'.\n");
+	printf("Following options can be explicitly turned off by adding trailing '-'.\n");
 	printf("Example: -p-\n");
 	printf(" -p                  Create padding members.                          (T)\n");
 	printf(" -x                  Show offsets.                                    (T)\n");
@@ -452,7 +452,7 @@ PDBExtractor::PrintPDBHeader()
 			m_PDB.GetMachineType()
 			);
 
-		(*m_Settings.PdbHeaderReconstructorSettings.OutputFile) << HEADER_FILE_HEADER_FORMATTED;
+		*m_Settings.PdbHeaderReconstructorSettings.OutputFile << HEADER_FILE_HEADER_FORMATTED;
 	}
 }
 
@@ -515,8 +515,8 @@ PDBExtractor::PrintPDBDefinitions()
 			//
 
 			if (m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion == PDBHeaderReconstructor::MemberStructExpansionType::InlineUnnamed &&
-				  (e->Tag == SymTagEnum || e->Tag == SymTagUDT) &&
-				  PDB::IsUnnamedSymbol(e))
+			    (e->Tag == SymTagEnum || e->Tag == SymTagUDT) &&
+			    PDB::IsUnnamedSymbol(e))
 			{
 				Expand = false;
 			}
