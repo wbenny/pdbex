@@ -30,6 +30,7 @@ class PDBExtractor
 			bool PrintHeader = true;
 			bool PrintDeclarations = true;
 			bool PrintDefinitions = true;
+			bool PrintFunctions = false;
 			bool PrintPragmaPack = true;
 			bool Sort = false;
 		};
@@ -66,6 +67,9 @@ class PDBExtractor
 
 		void
 		PrintPDBDefinitions();
+
+		void
+		PrintPDBFunctions();
 
 		void
 		DumpAllSymbols();

@@ -152,6 +152,7 @@ PDBExtractor::PrintUsage()
 	printf(" -k                  Print header.                                    (T)\n");
 	printf(" -n                  Print declarations.                              (T)\n");
 	printf(" -l                  Print definitions.                               (T)\n");
+	printf(" -f                  Print functions.                                 (F)\n");
 	printf(" -z                  Print #pragma pack directives.                   (T)\n");
 	printf(" -y                  Sort declarations and definitions.               (F)\n");
 	printf("\n");
@@ -361,6 +362,10 @@ PDBExtractor::ParseParameters(
 				m_Settings.PrintDefinitions = !OffSwitch;
 				break;
 
+			case 'f':
+				m_Settings.PrintFunctions = !OffSwitch;
+				break;
+
 			case 'z':
 				m_Settings.PrintPragmaPack = !OffSwitch;
 				break;
@@ -532,6 +537,32 @@ PDBExtractor::PrintPDBDefinitions()
 }
 
 void
+PDBExtractor::PrintPDBFunctions()
+{
+	//
+	// Write definitions.
+	//
+
+	if (m_Settings.PrintFunctions)
+	{
+		*m_Settings.PdbHeaderReconstructorSettings.OutputFile
+			<< "/*"
+			<< std::endl;
+
+		for (auto&& e : m_PDB.GetFunctionSet())
+		{
+			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
+				<< e
+				<< std::endl;
+		}
+
+		*m_Settings.PdbHeaderReconstructorSettings.OutputFile
+			<< "*/"
+			<< std::endl;
+	}
+}
+
+void
 PDBExtractor::DumpAllSymbols()
 {
 	//
@@ -547,6 +578,7 @@ PDBExtractor::DumpAllSymbols()
 
 	PrintPDBDeclarations();
 	PrintPDBDefinitions();
+	PrintPDBFunctions();
 }
 
 void

@@ -200,6 +200,11 @@ class SymbolModule
 			);
 
 		VOID
+		BuildFunctionSetFromEnumerator(
+			IN IDiaEnumSymbols* DiaSymbolEnumerator
+			);
+
+		VOID
 		BuildSymbolMap();
 
 		const SymbolMap&
@@ -207,6 +212,9 @@ class SymbolModule
 
 		const SymbolNameMap&
 		GetSymbolNameMap() const;
+
+		const FunctionSet&
+		GetFunctionSet() const;
 
 	private:
 		VOID
@@ -273,6 +281,7 @@ class SymbolModule
 		SymbolMap     m_SymbolMap;
 		SymbolNameMap m_SymbolNameMap;
 		SymbolSet     m_SymbolSet;
+		FunctionSet   m_FunctionSet;
 
 		DWORD         m_MachineType;
 		CV_CFL_LANG   m_Language;
@@ -457,9 +466,41 @@ SymbolModule::BuildSymbolMapFromEnumerator(
 }
 
 VOID
+SymbolModule::BuildFunctionSetFromEnumerator(
+	IN IDiaEnumSymbols* DiaSymbolEnumerator
+	)
+{
+	IDiaSymbol* DiaChildSymbol;
+	ULONG FetchedSymbolCount = 0;
+
+	while (SUCCEEDED(DiaSymbolEnumerator->Next(1, &DiaChildSymbol, &FetchedSymbolCount)) && (FetchedSymbolCount == 1))
+	{
+		BOOL IsFunction;
+		DiaChildSymbol->get_function(&IsFunction);
+
+		if (IsFunction)
+		{
+			CHAR* FunctionName = GetSymbolName(DiaChildSymbol);
+
+			DWORD DwordResult;
+			DiaChildSymbol->get_symTag(&DwordResult);
+			auto Tag = static_cast<enum SymTagEnum>(DwordResult);
+
+			m_FunctionSet.insert(std::string(FunctionName));
+			delete[] FunctionName;
+		}
+
+		DiaChildSymbol->Release();
+	}
+}
+
+VOID
 SymbolModule::BuildSymbolMap()
 {
 	IDiaEnumSymbols* DiaSymbolEnumerator;
+
+	m_GlobalSymbol->findChildren(SymTagPublicSymbol, NULL, nsNone, &DiaSymbolEnumerator);
+	BuildFunctionSetFromEnumerator(DiaSymbolEnumerator);
 
 	m_GlobalSymbol->findChildren(SymTagEnum, NULL, nsNone, &DiaSymbolEnumerator);
 	BuildSymbolMapFromEnumerator(DiaSymbolEnumerator);
@@ -480,6 +521,12 @@ const SymbolNameMap&
 SymbolModule::GetSymbolNameMap() const
 {
 	return m_SymbolNameMap;
+}
+
+const FunctionSet&
+SymbolModule::GetFunctionSet() const
+{
+	return m_FunctionSet;
 }
 
 VOID
@@ -1007,6 +1054,12 @@ const SymbolNameMap&
 PDB::GetSymbolNameMap() const
 {
 	return m_Impl->GetSymbolNameMap();
+}
+
+const FunctionSet&
+PDB::GetFunctionSet() const
+{
+	return m_Impl->GetFunctionSet();
 }
 
 const CHAR*

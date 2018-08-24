@@ -4,6 +4,7 @@
 
 #include <dia2.h>
 
+#include <set>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -282,6 +283,7 @@ class SymbolModule;
 using SymbolMap     = std::unordered_map<DWORD, SYMBOL*>;
 using SymbolNameMap = std::unordered_map<std::string, SYMBOL*>;
 using SymbolSet     = std::unordered_set<SYMBOL*>;
+using FunctionSet   = std::set<std::string>;
 
 class PDB
 {
@@ -374,6 +376,12 @@ class PDB
 		//
 		const SymbolNameMap&
 		GetSymbolNameMap() const;
+
+		//
+		// Returns collection of all named functions.
+		//
+		const FunctionSet&
+		GetFunctionSet() const;
 
 		//
 		// Returns C-like name of the type of provided symbol.
