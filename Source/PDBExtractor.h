@@ -74,6 +74,9 @@ class PDBExtractor
 		DumpOneSymbol();
 
 		void
+		DumpAllSymbolsOneByOne();
+
+		void
 		CloseOpenedFiles();
 
 	private:

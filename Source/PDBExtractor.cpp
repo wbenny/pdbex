@@ -93,6 +93,10 @@ PDBExtractor::Run(
 		{
 			DumpAllSymbols();
 		}
+		else if (m_Settings.SymbolName == "%")
+		{
+			DumpAllSymbolsOneByOne();
+		}
 		else
 		{
 			DumpOneSymbol();
@@ -121,8 +125,9 @@ PDBExtractor::PrintUsage()
 	printf("                     [-u <prefix>] [-s prefix] [-r prefix] [-g suffix]\n");
 	printf("                     [-p] [-x] [-m] [-b] [-d] [-i] [-l]\n");
 	printf("\n");
-	printf("<symbol>             Symbol name to extract or '*' if all symbol should\n");
-	printf("                     be extracted.\n");
+	printf("<symbol>             Symbol name to extract\n");
+	printf("                     Use '*' if all symbols should be extracted.\n");
+	printf("                     Use '%%' if all symbols should be extracted separately.\n");
 	printf("<path>               Path to the PDB file.\n");
 	printf(" -o filename         Specifies the output file.                       (stdout)\n");
 	printf(" -t filename         Specifies the output test file.                  (off)\n");
@@ -220,10 +225,14 @@ PDBExtractor::ParseParameters(
 
 				++ArgumentPointer;
 				m_Settings.OutputFilename = NextArgument;
-				m_Settings.PdbHeaderReconstructorSettings.OutputFile = new std::ofstream(
-					NextArgument,
-					std::ios::out
-					);
+
+				if (m_Settings.SymbolName != "%")
+				{
+					m_Settings.PdbHeaderReconstructorSettings.OutputFile = new std::ofstream(
+						NextArgument,
+						std::ios::out
+						);
+				}
 				break;
 
 			case 't':
@@ -575,6 +584,60 @@ PDBExtractor::DumpOneSymbol()
 
 		m_SymbolVisitor->Run(Symbol);
 	}
+}
+
+void
+PDBExtractor::DumpAllSymbolsOneByOne()
+{
+	//
+	// Copy all symbols locally.
+	//
+	for (auto&& e : m_PDB.GetSymbolMap())
+	{
+		m_SymbolSorter->Visit(e.second);
+	}
+
+	auto Symbols = m_SymbolSorter->GetSortedSymbols();
+
+	m_SymbolSorter->Clear();
+
+	//
+	// Create output directory.
+	//
+	std::string OutputDirectory = m_Settings.OutputFilename
+		? m_Settings.OutputFilename
+		: ".";
+
+	if (OutputDirectory[OutputDirectory.length() - 1] != '\\')
+	{
+		OutputDirectory += '\\';
+	}
+
+	BOOL Result = CreateDirectory(OutputDirectory.c_str(), NULL);
+	if (!Result && GetLastError() != ERROR_ALREADY_EXISTS)
+	{
+		throw PDBDumperException("Cannot create directory");
+	}
+
+	for (auto&& e : Symbols)
+	{
+		if (!PDB::IsUnnamedSymbol(e))
+		{
+			m_Settings.PdbHeaderReconstructorSettings.OutputFile = new std::ofstream(
+				OutputDirectory + std::string(e->Name) + ".h",
+				std::ios::out
+			);
+
+			m_Settings.SymbolName = e->Name;
+			DumpOneSymbol();
+
+			delete m_Settings.PdbHeaderReconstructorSettings.OutputFile;
+
+			m_SymbolSorter->Clear();
+		}
+	}
+
+	m_Settings.PdbHeaderReconstructorSettings.OutputFile = nullptr;
 }
 
 void
