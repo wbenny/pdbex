@@ -1,6 +1,7 @@
 #include "PDB.h"
 
 #include <dia2.h>       // IDia* interfaces
+#include <atlcomcli.h>
 
 #include <cassert>
 
@@ -77,6 +78,33 @@ SymbolModuleBase::Open(
 		__uuidof(IDiaDataSource),
 		(void**)&m_DataSource
 		);
+
+    // Retry with direct export call
+    if (HResult == REGDB_E_CLASSNOTREG)
+    {
+        HMODULE HMod = LoadLibraryW(L"msdia140.dll");
+        if (!HMod)
+        {
+            HResult = HRESULT_FROM_WIN32(GetLastError());
+            return FALSE;
+        }
+
+        auto DllGetClassObject = reinterpret_cast<BOOL(WINAPI*)(REFCLSID, REFIID, LPVOID)>(GetProcAddress(HMod, "DllGetClassObject"));
+        if (!DllGetClassObject)
+        {
+            HResult = HRESULT_FROM_WIN32(GetLastError());
+            return FALSE;
+        }
+
+        CComPtr<IClassFactory> ClassFactory;
+        HResult = DllGetClassObject(__uuidof(DiaSource), __uuidof(IClassFactory), &ClassFactory);
+        if (FAILED(HResult))
+        {
+            return FALSE;
+        }
+
+        HResult = ClassFactory->CreateInstance(nullptr, __uuidof(IDiaDataSource), (void**)&m_DataSource);
+    }
 
 	if (FAILED(HResult))
 	{
