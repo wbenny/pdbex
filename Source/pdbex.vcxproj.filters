@@ -62,6 +62,9 @@
     <ClInclude Include="PDBSymbolSorterBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PDBCallback.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="PDBSymbolVisitor.inl">

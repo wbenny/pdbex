@@ -1,4 +1,5 @@
 #include "PDB.h"
+#include "PDBCallback.h"
 
 #include <dia2.h>       // IDia* interfaces
 #include <atlcomcli.h>
@@ -69,11 +70,13 @@ SymbolModuleBase::Open(
 	// Obtain access to the provider
 	//
 
-	HRESULT HResult;
+	HRESULT HResult             = S_OK;
+    auto    PDBSearchPath       = L"Srv*.\\Symbols*https://msdl.microsoft.com/download/symbols";
+    char    FileExt[MAX_PATH]   = { 0 };
 
 	HResult = CoCreateInstance(
 		__uuidof(DiaSource),
-		NULL,
+		nullptr,
 		CLSCTX_INPROC_SERVER,
 		__uuidof(IDiaDataSource),
 		(void**)&m_DataSource
@@ -111,9 +114,21 @@ SymbolModuleBase::Open(
 		return FALSE;
 	}
 
-	HResult = m_DataSource->loadDataFromPdb(
-		string_converter.from_bytes(Path).c_str()
-		);
+    _splitpath_s(Path, nullptr, 0, nullptr, 0, nullptr, 0, FileExt, _countof(FileExt));
+    if (0 == _stricmp(FileExt, ".pdb"))
+    {
+        HResult = m_DataSource->loadDataFromPdb(
+            string_converter.from_bytes(Path).c_str()
+        );
+    }
+    else
+    {
+        PDBCallback Callback;
+        Callback.AddRef();
+
+        HResult = m_DataSource->loadDataForExe(
+            string_converter.from_bytes(Path).c_str(), PDBSearchPath, &Callback);
+    }
 
 	if (FAILED(HResult))
 	{
@@ -527,16 +542,17 @@ SymbolModule::BuildSymbolMap()
 {
 	IDiaEnumSymbols* DiaSymbolEnumerator;
 
-	m_GlobalSymbol->findChildren(SymTagPublicSymbol, NULL, nsNone, &DiaSymbolEnumerator);
-	BuildFunctionSetFromEnumerator(DiaSymbolEnumerator);
+	if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagPublicSymbol, NULL, nsNone, &DiaSymbolEnumerator)))
+	    BuildFunctionSetFromEnumerator(DiaSymbolEnumerator);
 
-	m_GlobalSymbol->findChildren(SymTagEnum, NULL, nsNone, &DiaSymbolEnumerator);
-	BuildSymbolMapFromEnumerator(DiaSymbolEnumerator);
+    if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagEnum, NULL, nsNone, &DiaSymbolEnumerator)))
+	    BuildSymbolMapFromEnumerator(DiaSymbolEnumerator);
 
-	m_GlobalSymbol->findChildren(SymTagUDT, NULL, nsNone, &DiaSymbolEnumerator);
-	BuildSymbolMapFromEnumerator(DiaSymbolEnumerator);
+    if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagUDT, NULL, nsNone, &DiaSymbolEnumerator)))
+	    BuildSymbolMapFromEnumerator(DiaSymbolEnumerator);
 
-	DiaSymbolEnumerator->Release();
+	if (DiaSymbolEnumerator) 
+        DiaSymbolEnumerator->Release();
 }
 
 const SymbolMap&
