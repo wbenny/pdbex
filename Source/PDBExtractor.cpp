@@ -20,6 +20,8 @@ namespace
 		"#include <stddef.h>\n"
 		"#include <stdint.h>\n"
 		"\n"
+		"typedef long HRESULT;\n"
+		"\n"
 		"#include \"%s\"\n"
 		"\n"
 		"int main()\n"
@@ -467,22 +469,19 @@ PDBExtractor::PrintPDBDeclarations()
 	{
 		for (auto&& e : m_SymbolSorter->GetSortedSymbols())
 		{
-			if (!PDB::IsUnnamedSymbol(e))
+			if (e->Tag == SymTagUDT && !PDB::IsUnnamedSymbol(e))
 			{
-				if (e->Tag == SymTagUDT)
-				{
-					*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-						<< PDB::GetUdtKindString(e->u.Udt.Kind)
-						<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
-						<< std::endl;
-				}
-				else if (e->Tag == SymTagEnum)
-				{
-					*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-						<< "enum"
-						<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
-						<< std::endl;
-				}
+				*m_Settings.PdbHeaderReconstructorSettings.OutputFile
+					<< PDB::GetUdtKindString(e->u.Udt.Kind)
+					<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
+					<< std::endl;
+			}
+			else if (e->Tag == SymTagEnum)
+			{
+				*m_Settings.PdbHeaderReconstructorSettings.OutputFile
+					<< "enum"
+					<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
+					<< std::endl;
 			}
 		}
 
@@ -515,7 +514,7 @@ PDBExtractor::PrintPDBDefinitions()
 			//
 
 			if (m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion == PDBHeaderReconstructor::MemberStructExpansionType::InlineUnnamed &&
-			    (e->Tag == SymTagEnum || e->Tag == SymTagUDT) &&
+			    e->Tag == SymTagUDT &&
 			    PDB::IsUnnamedSymbol(e))
 			{
 				Expand = false;

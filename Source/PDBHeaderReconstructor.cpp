@@ -725,7 +725,7 @@ PDBHeaderReconstructor::ShouldExpand(
 			break;
 
 		case MemberStructExpansionType::InlineUnnamed:
-			Expand = m_Depth == 0 || PDB::IsUnnamedSymbol(Symbol);
+			Expand = m_Depth == 0 || (Symbol->Tag == SymTagUDT && PDB::IsUnnamedSymbol(Symbol));
 			break;
 
 		case MemberStructExpansionType::InlineAll:

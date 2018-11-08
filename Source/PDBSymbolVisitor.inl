@@ -170,7 +170,6 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitFunctionArgType(
 	m_MemberContextStack.top()->VisitFunctionArgTypeBegin(Symbol);
 	PDBSymbolVisitorBase::VisitFunctionArgType(Symbol);
 	m_MemberContextStack.top()->VisitFunctionArgTypeEnd(Symbol);
-
 }
 
 template <

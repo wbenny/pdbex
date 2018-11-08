@@ -424,7 +424,7 @@ class PDB
 
 		//
 		// Returns TRUE if the provided symbol's name
-		// starts with "<unnamed-" or "__unnamed".
+		// starts with "<anonymous-", "<unnamed-" or "__unnamed".
 		//
 		static
 		BOOL
