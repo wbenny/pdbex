@@ -124,7 +124,7 @@ class UdtFieldDefinition
 		void
 		SetMemberName(
 			const CHAR* MemberName
-			)
+			) override
 		{
 			m_MemberName = MemberName ? MemberName : std::string();
 		}

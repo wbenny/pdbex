@@ -133,7 +133,7 @@ class PDBHeaderReconstructor
 		OnAnonymousUdtBegin(
 			UdtKind Kind,
 			const SYMBOL_UDT_FIELD* FirstUdtField
-			);
+			) override;
 
 		void
 		OnAnonymousUdtEnd(
