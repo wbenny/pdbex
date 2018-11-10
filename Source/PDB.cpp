@@ -56,7 +56,7 @@ SymbolModuleBase::SymbolModuleBase()
 	, m_Session(nullptr)
 	, m_GlobalSymbol(nullptr)
 {
-	HRESULT hr = CoInitialize(NULL);
+	HRESULT hr = CoInitialize(nullptr);
 
 	assert(hr == S_OK);
 }
@@ -70,9 +70,9 @@ SymbolModuleBase::Open(
 	// Obtain access to the provider
 	//
 
-	HRESULT HResult             = S_OK;
-    auto    PDBSearchPath       = L"Srv*.\\Symbols*https://msdl.microsoft.com/download/symbols";
-    char    FileExt[MAX_PATH]   = { 0 };
+	HRESULT HResult				= S_OK;
+	auto    PDBSearchPath		= L"Srv*.\\Symbols*https://msdl.microsoft.com/download/symbols";
+	char    FileExt[MAX_PATH]	= { 0 };
 
 	HResult = CoCreateInstance(
 		__uuidof(DiaSource),
@@ -82,53 +82,57 @@ SymbolModuleBase::Open(
 		(void**)&m_DataSource
 		);
 
-    // Retry with direct export call
-    if (HResult == REGDB_E_CLASSNOTREG)
-    {
-        HMODULE HMod = LoadLibraryW(L"msdia140.dll");
-        if (!HMod)
-        {
-            HResult = HRESULT_FROM_WIN32(GetLastError());
-            return FALSE;
-        }
+	// Retry with direct export call
+	if (HResult == REGDB_E_CLASSNOTREG)
+	{
+		HMODULE HMod = LoadLibraryW(L"msdia140.dll");
 
-        auto DllGetClassObject = reinterpret_cast<BOOL(WINAPI*)(REFCLSID, REFIID, LPVOID)>(GetProcAddress(HMod, "DllGetClassObject"));
-        if (!DllGetClassObject)
-        {
-            HResult = HRESULT_FROM_WIN32(GetLastError());
-            return FALSE;
-        }
+		if (!HMod)
+		{
+			HResult = HRESULT_FROM_WIN32(GetLastError());
+			return FALSE;
+		}
 
-        CComPtr<IClassFactory> ClassFactory;
-        HResult = DllGetClassObject(__uuidof(DiaSource), __uuidof(IClassFactory), &ClassFactory);
-        if (FAILED(HResult))
-        {
-            return FALSE;
-        }
+		auto DllGetClassObject = reinterpret_cast<BOOL(WINAPI*)(REFCLSID, REFIID, LPVOID)>(GetProcAddress(HMod, "DllGetClassObject"));
+		
+		if (!DllGetClassObject)
+		{
+			HResult = HRESULT_FROM_WIN32(GetLastError());
+			return FALSE;
+		}
 
-        HResult = ClassFactory->CreateInstance(nullptr, __uuidof(IDiaDataSource), (void**)&m_DataSource);
-    }
+		CComPtr<IClassFactory> ClassFactory;        
+		HResult = DllGetClassObject(__uuidof(DiaSource), __uuidof(IClassFactory), &ClassFactory);
+		
+		if (FAILED(HResult))
+		{
+			return FALSE;
+		}
+
+		HResult = ClassFactory->CreateInstance(nullptr, __uuidof(IDiaDataSource), (void**)&m_DataSource);
+	}
 
 	if (FAILED(HResult))
 	{
 		return FALSE;
 	}
 
-    _splitpath_s(Path, nullptr, 0, nullptr, 0, nullptr, 0, FileExt, _countof(FileExt));
-    if (0 == _stricmp(FileExt, ".pdb"))
-    {
-        HResult = m_DataSource->loadDataFromPdb(
-            string_converter.from_bytes(Path).c_str()
-        );
-    }
-    else
-    {
-        PDBCallback Callback;
-        Callback.AddRef();
+	_splitpath_s(Path, nullptr, 0, nullptr, 0, nullptr, 0, FileExt, _countof(FileExt));
+	
+	if (_stricmp(FileExt, ".pdb") == 0)
+	{
+		HResult = m_DataSource->loadDataFromPdb(
+			string_converter.from_bytes(Path).c_str()
+		);
+	}
+	else
+	{
+		PDBCallback Callback;
+		Callback.AddRef();
 
-        HResult = m_DataSource->loadDataForExe(
-            string_converter.from_bytes(Path).c_str(), PDBSearchPath, &Callback);
-    }
+		HResult = m_DataSource->loadDataForExe(
+			string_converter.from_bytes(Path).c_str(), PDBSearchPath, &Callback);
+	}
 
 	if (FAILED(HResult))
 	{
@@ -542,17 +546,17 @@ SymbolModule::BuildSymbolMap()
 {
 	IDiaEnumSymbols* DiaSymbolEnumerator;
 
-	if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagPublicSymbol, NULL, nsNone, &DiaSymbolEnumerator)))
-	    BuildFunctionSetFromEnumerator(DiaSymbolEnumerator);
+	if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagPublicSymbol, nullptr, nsNone, &DiaSymbolEnumerator)))
+		BuildFunctionSetFromEnumerator(DiaSymbolEnumerator);
 
-    if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagEnum, NULL, nsNone, &DiaSymbolEnumerator)))
-	    BuildSymbolMapFromEnumerator(DiaSymbolEnumerator);
+	if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagEnum, nullptr, nsNone, &DiaSymbolEnumerator)))
+		BuildSymbolMapFromEnumerator(DiaSymbolEnumerator);
 
-    if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagUDT, NULL, nsNone, &DiaSymbolEnumerator)))
-	    BuildSymbolMapFromEnumerator(DiaSymbolEnumerator);
+	if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagUDT, nullptr, nsNone, &DiaSymbolEnumerator)))
+		BuildSymbolMapFromEnumerator(DiaSymbolEnumerator);
 
 	if (DiaSymbolEnumerator) 
-        DiaSymbolEnumerator->Release();
+		DiaSymbolEnumerator->Release();
 }
 
 const SymbolMap&
@@ -634,7 +638,7 @@ SymbolModule::ProcessSymbolEnum(
 {
 	IDiaEnumSymbols* DiaSymbolEnumerator;
 
-	if (FAILED(DiaSymbol->findChildren(SymTagNull, NULL, nsNone, &DiaSymbolEnumerator)))
+	if (FAILED(DiaSymbol->findChildren(SymTagNull, nullptr, nsNone, &DiaSymbolEnumerator)))
 	{
 		return;
 	}
@@ -649,8 +653,8 @@ SymbolModule::ProcessSymbolEnum(
 	ULONG FetchedSymbolCount = 0;
 
 	for (DWORD Index = 0;
-	     SUCCEEDED(DiaSymbolEnumerator->Next(1, &DiaChildSymbol, &FetchedSymbolCount)) && (FetchedSymbolCount == 1);
-	     Index++)
+		 SUCCEEDED(DiaSymbolEnumerator->Next(1, &DiaChildSymbol, &FetchedSymbolCount)) && (FetchedSymbolCount == 1);
+		 Index++)
 	{
 		SYMBOL_ENUM_FIELD* EnumValue = &Symbol->u.Enum.Fields[Index];
 
@@ -762,7 +766,7 @@ SymbolModule::ProcessSymbolFunction(
 
 	IDiaEnumSymbols* DiaSymbolEnumerator;
 
-	if (FAILED(DiaSymbol->findChildren(SymTagNull, NULL, nsNone, &DiaSymbolEnumerator)))
+	if (FAILED(DiaSymbol->findChildren(SymTagNull, nullptr, nsNone, &DiaSymbolEnumerator)))
 	{
 		return;
 	}
@@ -778,8 +782,8 @@ SymbolModule::ProcessSymbolFunction(
 	ULONG FetchedSymbolCount = 0;
 
 	for (DWORD Index = 0;
-	     SUCCEEDED(DiaSymbolEnumerator->Next(1, &DiaChildSymbol, &FetchedSymbolCount)) && (FetchedSymbolCount == 1);
-	     Index++)
+		 SUCCEEDED(DiaSymbolEnumerator->Next(1, &DiaChildSymbol, &FetchedSymbolCount)) && (FetchedSymbolCount == 1);
+		 Index++)
 	{
 		SYMBOL* Argument;
 		Argument = GetSymbol(DiaChildSymbol);
@@ -817,7 +821,7 @@ SymbolModule::ProcessSymbolUdt(
 
 	IDiaEnumSymbols* DiaSymbolEnumerator;
 
-	if (FAILED(DiaSymbol->findChildren(SymTagData, NULL, nsNone, &DiaSymbolEnumerator)))
+	if (FAILED(DiaSymbol->findChildren(SymTagData, nullptr, nsNone, &DiaSymbolEnumerator)))
 	{
 		return;
 	}
@@ -833,8 +837,8 @@ SymbolModule::ProcessSymbolUdt(
 	ULONG FetchedSymbolCount = 0;
 
 	for (DWORD Index = 0;
-	     SUCCEEDED(DiaSymbolEnumerator->Next(1, &DiaChildSymbol, &FetchedSymbolCount)) && (FetchedSymbolCount == 1);
-	     Index++)
+		 SUCCEEDED(DiaSymbolEnumerator->Next(1, &DiaChildSymbol, &FetchedSymbolCount)) && (FetchedSymbolCount == 1);
+		 Index++)
 	{
 		SYMBOL_UDT_FIELD* Member = &Symbol->u.Udt.Fields[Index];
 
@@ -1120,7 +1124,7 @@ PDB::GetBasicTypeString(
 		if (TypeMap[n].BaseType == BaseType)
 		{
 			if (TypeMap[n].Length == Size ||
-			    TypeMap[n].Length == 0)
+				TypeMap[n].Length == 0)
 			{
 				return TypeMap[n].TypeString;
 			}
@@ -1164,5 +1168,5 @@ PDB::IsUnnamedSymbol(
 	)
 {
 	return strstr(Symbol->Name, "<unnamed-") != nullptr ||
-	       strstr(Symbol->Name, "__unnamed") != nullptr;
+		   strstr(Symbol->Name, "__unnamed") != nullptr;
 }
