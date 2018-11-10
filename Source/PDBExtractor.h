@@ -10,7 +10,7 @@
 #define PDBEX_VERSION_MAJOR 0
 #define PDBEX_VERSION_MINOR 4
 
-#define PDBEX_VERSION_STRING "0.4"
+#define PDBEX_VERSION_STRING "0.5"
 
 class PDBExtractor
 {

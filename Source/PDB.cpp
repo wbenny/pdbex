@@ -1167,6 +1167,7 @@ PDB::IsUnnamedSymbol(
 	const SYMBOL* Symbol
 	)
 {
-	return strstr(Symbol->Name, "<unnamed-") != nullptr ||
-		   strstr(Symbol->Name, "__unnamed") != nullptr;
+	return strstr(Symbol->Name, "<anonymous-") != nullptr ||
+	       strstr(Symbol->Name, "<unnamed-") != nullptr ||
+	       strstr(Symbol->Name, "__unnamed") != nullptr;
 }
