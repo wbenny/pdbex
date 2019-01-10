@@ -118,12 +118,11 @@ PDBHeaderReconstructor::OnEnumTypeBegin(
 
 	Write("enum");
 
-	if (PDB::IsUnnamedSymbol(Symbol) && m_Depth != 0)
+	if (!PDB::IsUnnamedSymbol(Symbol))
 	{
-		Write(" //");
+		Write(" %s", CorrectedName.c_str());
 	}
 
-	Write(" %s", CorrectedName.c_str());
 	Write("\n");
 
 	WriteIndent();
@@ -212,13 +211,11 @@ PDBHeaderReconstructor::OnUdtBegin(
 
 	Write("%s", PDB::GetUdtKindString(Symbol->u.Udt.Kind));
 
-	if (PDB::IsUnnamedSymbol(Symbol) && m_Depth != 0)
+	if (!PDB::IsUnnamedSymbol(Symbol))
 	{
-		Write(" //");
+		std::string CorrectedName = GetCorrectedSymbolName(Symbol);
+		Write(" %s", CorrectedName.c_str());
 	}
-
-	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
-	Write(" %s", CorrectedName.c_str());
 
 	Write("\n");
 
