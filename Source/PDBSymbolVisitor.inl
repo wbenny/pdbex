@@ -342,7 +342,10 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdtField(
 	// Remember this UdtField as a last bitfield field.
 	//
 
-	m_PreviousBitFieldField = UdtField;
+	if (IsBitFieldMember)
+	{
+		m_PreviousBitFieldField = UdtField;
+	}
 }
 
 template <
