@@ -35,24 +35,26 @@ class PDBHeaderReconstructor
 		{
 			Settings()
 			{
-				MemberStructExpansion   = MemberStructExpansionType::InlineUnnamed;
-				OutputFile              = &std::cout;
-				TestFile                = nullptr;
-				PaddingMemberPrefix     = "Padding_";
-				UnnamedTypePrefix       = "TAG_UNNAMED_";
-				AnonymousStructPrefix   = "s";  // DUMMYSTRUCTNAME (up to 6)
-				AnonymousUnionPrefix    = "u";  // DUMMYUNIONNAME  (up to 9)
-				CreatePaddingMembers    = true;
-				ShowOffsets             = true;
-				MicrosoftTypedefs       = true;
-				AllowBitFieldsInUnion   = false;
-				AllowAnonymousDataTypes = true;
+				MemberStructExpansion       = MemberStructExpansionType::InlineUnnamed;
+				OutputFile                  = &std::cout;
+				TestFile                    = nullptr;
+				PaddingMemberPrefix         = "Padding_";
+				BitFieldPaddingMemberPrefix = "";
+				UnnamedTypePrefix           = "TAG_UNNAMED_";
+				AnonymousStructPrefix       = "s";  // DUMMYSTRUCTNAME (up to 6)
+				AnonymousUnionPrefix        = "u";  // DUMMYUNIONNAME  (up to 9)
+				CreatePaddingMembers        = true;
+				ShowOffsets                 = true;
+				MicrosoftTypedefs           = true;
+				AllowBitFieldsInUnion       = false;
+				AllowAnonymousDataTypes     = true;
 			}
 
 			MemberStructExpansionType MemberStructExpansion;
 			std::ostream*             OutputFile;
 			std::ostream*             TestFile;
 			std::string               PaddingMemberPrefix;
+			std::string               BitFieldPaddingMemberPrefix;
 			std::string               UnnamedTypePrefix;
 			std::string               SymbolPrefix;
 			std::string               SymbolSuffix;
@@ -161,6 +163,12 @@ class PDBHeaderReconstructor
 			BasicType PaddingBasicType,
 			DWORD PaddingBasicTypeSize,
 			DWORD PaddingSize
+			) override;
+
+		void
+		OnPaddingBitFieldField(
+			const SYMBOL_UDT_FIELD* UdtField,
+			const SYMBOL_UDT_FIELD* PreviousUdtField
 			) override;
 
 	private:

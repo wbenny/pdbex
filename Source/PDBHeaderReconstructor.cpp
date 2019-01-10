@@ -432,6 +432,62 @@ PDBHeaderReconstructor::OnPaddingMember(
 }
 
 void
+PDBHeaderReconstructor::OnPaddingBitFieldField(
+	const SYMBOL_UDT_FIELD* UdtField,
+	const SYMBOL_UDT_FIELD* PreviousUdtField
+	)
+{
+	WriteIndent();
+
+	WriteOffset(UdtField, GetParentOffset());
+
+	//
+	// Bitfield fields can be unnamed.
+	// Check if prefix is specified and if not,
+	// simply do not print anything.
+	//
+
+	if (m_Settings->BitFieldPaddingMemberPrefix.empty())
+	{
+		Write(
+			"%s",
+			PDB::GetBasicTypeString(UdtField->Type) // TODO: UseStdInt
+		);
+	}
+	else
+	{
+		Write(
+			"%s %s%u",
+			PDB::GetBasicTypeString(UdtField->Type), // TODO: UseStdInt
+			m_Settings->PaddingMemberPrefix.c_str(),
+			m_PaddingMemberCounter++
+		);
+	}
+
+	//
+	// BitField handling.
+	//
+
+	DWORD Bits = PreviousUdtField
+		? UdtField->BitPosition - (PreviousUdtField->BitPosition + PreviousUdtField->Bits)
+		: UdtField->BitPosition;
+
+	DWORD BitPosition = PreviousUdtField
+		? PreviousUdtField->BitPosition + PreviousUdtField->Bits
+		: 0;
+
+	assert(Bits != 0);
+
+	Write(" : %i", Bits);
+
+	Write(";");
+
+	Write(" /* bit position: %i */", BitPosition);
+
+	Write("\n");
+}
+
+void
 PDBHeaderReconstructor::Write(
 	const char* Format,
 	...

@@ -267,7 +267,7 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdtField(
 	)
 {
 	BOOL IsBitFieldMember = UdtField->Bits != 0;
-	BOOL IsFirstBitFieldMember = IsBitFieldMember && UdtField->BitPosition == 0;
+	BOOL IsFirstBitFieldMember = IsBitFieldMember && !m_PreviousBitFieldField;
 
 	//
 	// Push new member context.
@@ -293,21 +293,38 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdtField(
 		CheckForAnonymousStruct(UdtField);
 	}
 
+	//
+	// Is this the first bitfield member?
+	//
+
 	if (IsFirstBitFieldMember)
 	{
-		//
-		// This is the first bitfield member.
-		//
+		BOOL IsFirstBitFieldMemberPadding = UdtField->BitPosition != 0;
 
 		assert(m_CurrentBitField.HasValue() == false);
 
-		m_CurrentBitField.FirstUdtFieldBitField = UdtField;
+		//
+		// If first bitfield field is padding, set "FirstUdtFieldBitField" as nullptr.
+		// This forces creation of the "wrapping" struct even if this bitfield
+		// has only one NAMED member.
+		//
+
+		m_CurrentBitField.FirstUdtFieldBitField = IsFirstBitFieldMemberPadding ? nullptr : UdtField;
 		m_CurrentBitField.LastUdtFieldBitField = GetNextUdtFieldWithRespectToBitFields(UdtField) - 1;
 
 		m_ReconstructVisitor->OnUdtFieldBitFieldBegin(
 			m_CurrentBitField.FirstUdtFieldBitField,
 			m_CurrentBitField.LastUdtFieldBitField
 			);
+	}
+
+	if (IsBitFieldMember)
+	{
+		//
+		// Handling of unnamed bitfield fields.
+		//
+
+		CheckForBitFieldFieldPadding(UdtField);
 	}
 
 	//
@@ -320,6 +337,12 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdtField(
 	m_ReconstructVisitor->OnUdtFieldEnd(UdtField);
 
 	m_MemberContextStack.pop();
+
+	//
+	// Remember this UdtField as a last bitfield field.
+	//
+
+	m_PreviousBitFieldField = UdtField;
 }
 
 template <
@@ -352,6 +375,8 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdtFieldBitFieldEnd(
 	m_CurrentBitField.Clear();
 
 	VisitUdtFieldEnd(UdtField);
+
+	m_PreviousBitFieldField = nullptr;
 }
 
 template <
@@ -415,6 +440,52 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForDataFieldPadding(
 			DifferenceIsDivisibleBy4 ?       4        :     1     ,
 			DifferenceIsDivisibleBy4 ? Difference / 4 : Difference
 			);
+	}
+}
+
+template <
+	typename MEMBER_DEFINITION_TYPE
+>
+void
+PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForBitFieldFieldPadding(
+	const SYMBOL_UDT_FIELD* UdtField
+	)
+{
+	BOOL WasPreviousBitFieldMember = m_PreviousBitFieldField
+	  ? m_PreviousBitFieldField->Bits != 0
+	  : FALSE;
+
+	if (
+	  //
+	  // Checks if the first bitfield field is unnamed:
+	  //   struct XYZ
+	  //   {
+	  //     unsigned     : 16;  // Unnamed bitfield field!
+	  //     unsigned var : 16;
+	  //   };
+	  //
+
+	  (UdtField->BitPosition != 0 && !WasPreviousBitFieldMember) ||
+
+	  //
+	  // Checks if some middle bitfield field is unnamed:
+	  //   struct XYZ
+	  //   {
+	  //     unsigned var1 : 12;
+	  //     unsigned      : 10;  // Unnamed bitfield field!
+	  //     unsigned var2 : 12;
+	  //   };
+	  //
+
+	  (WasPreviousBitFieldMember &&
+	   UdtField->BitPosition != m_PreviousBitFieldField->BitPosition + m_PreviousBitFieldField->Bits)
+	  )
+	{
+		//
+		// Create padding bitfield field.
+		//
+
+		m_ReconstructVisitor->OnPaddingBitFieldField(UdtField, m_PreviousBitFieldField);
 	}
 }
 

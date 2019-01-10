@@ -200,4 +200,17 @@ class PDBReconstructorBase
 		{
 
 		}
+
+		//
+		// Called when a padding bitfield field should be created.
+		//
+		virtual
+		void
+		OnPaddingBitFieldField(
+			const SYMBOL_UDT_FIELD* UdtField,
+			const SYMBOL_UDT_FIELD* PreviousUdtField
+			)
+		{
+
+		}
 };

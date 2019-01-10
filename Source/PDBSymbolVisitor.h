@@ -192,7 +192,7 @@ class PDBSymbolVisitor
 			bool
 			HasValue() const
 			{
-				return FirstUdtFieldBitField != nullptr &&
+				return /*FirstUdtFieldBitField != nullptr &&*/
 				       LastUdtFieldBitField  != nullptr;
 			}
 		};
@@ -273,6 +273,11 @@ class PDBSymbolVisitor
 			);
 
 		void
+		CheckForBitFieldFieldPadding(
+			const SYMBOL_UDT_FIELD* UdtField
+			);
+
+		void
 		CheckForAnonymousUnion(
 			const SYMBOL_UDT_FIELD* UdtField
 			);
@@ -321,14 +326,17 @@ class PDBSymbolVisitor
 		//
 
 		//
-		// These two properties are used for padding.
+		// These three properties are used for padding.
 		// m_SizeOfPreviousUdtField holds the size of the previous
 		// UDT field with respect to nested unnamed and anonymous UDTs.
 		//
 		// m_PreviousUdtField just holds pointer to the previous UDT field.
 		//
+		// m_PreviousBitFieldField holds pointer to the previous bitfield field.
+		//
 		DWORD m_SizeOfPreviousUdtField = 0;
 		const SYMBOL_UDT_FIELD* m_PreviousUdtField = nullptr;
+		const SYMBOL_UDT_FIELD* m_PreviousBitFieldField = nullptr;
 
 		//
 		// This stack holds information about anonymous UDTs.
