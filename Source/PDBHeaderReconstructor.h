@@ -26,7 +26,7 @@ class PDBHeaderReconstructor
 			InlineUnnamed,
 
 			//
-			// Expand all references UDTs (user defined types).
+			// Expand all referenced UDTs (user defined types).
 			//
 			InlineAll,
 		};
