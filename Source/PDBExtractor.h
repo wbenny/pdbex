@@ -8,9 +8,9 @@
 #include <string>
 
 #define PDBEX_VERSION_MAJOR 0
-#define PDBEX_VERSION_MINOR 10
+#define PDBEX_VERSION_MINOR 11
 
-#define PDBEX_VERSION_STRING "0.10"
+#define PDBEX_VERSION_STRING "0.11"
 
 class PDBExtractor
 {
