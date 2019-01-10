@@ -236,10 +236,10 @@ PDBExtractor::ParseParameters(
 						std::ios::out
 						);
 				}
-                else
-                {
-                    m_Settings.PdbHeaderReconstructorSettings.OutputFile = nullptr;
-                }
+				else
+				{
+					m_Settings.PdbHeaderReconstructorSettings.OutputFile = nullptr;
+				}
 				break;
 
 			case 't':
@@ -685,11 +685,11 @@ PDBExtractor::CloseOpenedFiles()
 
 	if (m_Settings.TestFilename)
 	{
-        delete m_Settings.PdbHeaderReconstructorSettings.TestFile;
+		delete m_Settings.PdbHeaderReconstructorSettings.TestFile;
 	}
 
 	if (m_Settings.OutputFilename)
 	{
-        delete m_Settings.PdbHeaderReconstructorSettings.OutputFile;
+		delete m_Settings.PdbHeaderReconstructorSettings.OutputFile;
 	}
 }
