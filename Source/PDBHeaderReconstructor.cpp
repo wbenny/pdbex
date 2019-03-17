@@ -118,10 +118,7 @@ PDBHeaderReconstructor::OnEnumTypeBegin(
 
 	Write("enum");
 
-	if (!PDB::IsUnnamedSymbol(Symbol))
-	{
-		Write(" %s", CorrectedName.c_str());
-	}
+	Write(" %s", CorrectedName.c_str());
 
 	Write("\n");
 
