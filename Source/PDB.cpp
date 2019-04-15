@@ -534,9 +534,15 @@ SymbolModule::BuildFunctionSetFromEnumerator(
 
 			DWORD DwordResult;
 			DiaChildSymbol->get_symTag(&DwordResult);
-			auto Tag = static_cast<enum SymTagEnum>(DwordResult);
 
-			m_FunctionSet.insert(std::string(FunctionName));
+			PUBLIC_FUNC_SYMBOL* PubSym;
+			PubSym = new PUBLIC_FUNC_SYMBOL;
+			DiaChildSymbol->get_addressSection(&PubSym->Segment);
+			DiaChildSymbol->get_addressOffset(&PubSym->Offset);
+			PubSym->Tag = static_cast<enum SymTagEnum>(DwordResult);
+			PubSym->Name = std::string(FunctionName);
+
+			m_FunctionSet.insert(PubSym);
 			delete[] FunctionName;
 		}
 

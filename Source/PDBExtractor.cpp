@@ -8,6 +8,8 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+#include <sstream>
+#include <iomanip>
 
 namespace
 {
@@ -549,13 +551,21 @@ PDBExtractor::PrintPDBFunctions()
 	if (m_Settings.PrintFunctions)
 	{
 		*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-			<< "/*"
+			<< "/* FUNC START"
 			<< std::endl;
 
 		for (auto&& e : m_PDB.GetFunctionSet())
 		{
+			if (m_Settings.PdbHeaderReconstructorSettings.ShowOffsets) {
+				*m_Settings.PdbHeaderReconstructorSettings.OutputFile
+					<< std::hex << std::setw(4) << std::setfill('0')
+					<< e->Segment << ":"
+					<< std::hex << std::setw(8) << std::setfill('0')
+					<< e->Offset << "\t";
+			}
+
 			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-				<< e
+				<< e->Name
 				<< std::endl;
 		}
 

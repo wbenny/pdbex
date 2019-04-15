@@ -278,12 +278,19 @@ struct _SYMBOL
 	} u;
 };
 
+typedef struct _PUBLIC_FUNC_SYMBOL {
+	enum SymTagEnum Tag;
+	DWORD Segment;
+	DWORD Offset;
+	std::string Name;
+} PUBLIC_FUNC_SYMBOL, *PPUBLIC_FUNC_SYMBOL;
+
 class SymbolModule;
 
 using SymbolMap     = std::unordered_map<DWORD, SYMBOL*>;
 using SymbolNameMap = std::unordered_map<std::string, SYMBOL*>;
 using SymbolSet     = std::unordered_set<SYMBOL*>;
-using FunctionSet   = std::set<std::string>;
+using FunctionSet   = std::unordered_set<PUBLIC_FUNC_SYMBOL*>;
 
 class PDB
 {
