@@ -39,7 +39,7 @@ class SymbolModuleBase
 		Close();
 
 		BOOL
-		IsOpened() const;
+		IsOpen() const;
 
 	protected:
 		IDiaDataSource* m_DataSource;
@@ -71,7 +71,7 @@ SymbolModuleBase::Open(
 	//
 
 	HRESULT   HResult           = S_OK;
-	LPCOLESTR PDBSearchPath     = L"Srv*.\\Symbols*https://msdl.microsoft.com/download/symbols";
+	LPCOLESTR PDBSearchPath     = L"srv*.\\Symbols*https://msdl.microsoft.com/download/symbols";
 	char      FileExt[MAX_PATH] = { 0 };
 
 	HResult = CoCreateInstance(
@@ -96,7 +96,8 @@ SymbolModuleBase::Open(
 			return FALSE;
 		}
 
-		auto DllGetClassObject = reinterpret_cast<BOOL(WINAPI*)(REFCLSID, REFIID, LPVOID)>(GetProcAddress(HMod, "DllGetClassObject"));
+		using PDLLGETCLASSOBJECT_ROUTINE = HRESULT(WINAPI*)(REFCLSID, REFIID, LPVOID);
+		auto DllGetClassObject = reinterpret_cast<PDLLGETCLASSOBJECT_ROUTINE>(GetProcAddress(HMod, "DllGetClassObject"));
 
 		if (!DllGetClassObject)
 		{
@@ -134,7 +135,8 @@ SymbolModuleBase::Open(
 		Callback.AddRef();
 
 		HResult = m_DataSource->loadDataForExe(
-			string_converter.from_bytes(Path).c_str(), PDBSearchPath, &Callback);
+			string_converter.from_bytes(Path).c_str(), PDBSearchPath, &Callback
+		);
 	}
 
 	if (FAILED(HResult))
@@ -187,7 +189,7 @@ SymbolModuleBase::Close()
 }
 
 BOOL
-SymbolModuleBase::IsOpened() const
+SymbolModuleBase::IsOpen() const
 {
 	return m_DataSource && m_Session && m_GlobalSymbol;
 }
@@ -210,7 +212,7 @@ class SymbolModule
 			);
 
 		BOOL
-		IsOpened() const;
+		IsOpen() const;
 
 		const CHAR*
 		GetPath() const;
@@ -338,6 +340,8 @@ class SymbolModule
 };
 
 SymbolModule::SymbolModule()
+	: m_MachineType(0)
+	, m_Language(CV_CFL_C)
 {
 
 }
@@ -373,9 +377,9 @@ SymbolModule::Open(
 }
 
 BOOL
-SymbolModule::IsOpened() const
+SymbolModule::IsOpen() const
 {
-	return SymbolModuleBase::IsOpened();
+	return SymbolModuleBase::IsOpen();
 }
 
 const CHAR*
@@ -1068,7 +1072,7 @@ PDB::Open(
 BOOL
 PDB::IsOpened() const
 {
-	return m_Impl->IsOpened();
+	return m_Impl->IsOpen();
 }
 
 const CHAR*
