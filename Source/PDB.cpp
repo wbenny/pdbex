@@ -335,13 +335,11 @@ class SymbolModule
 		SymbolSet     m_SymbolSet;
 		FunctionSet   m_FunctionSet;
 
-		DWORD         m_MachineType;
-		CV_CFL_LANG   m_Language;
+		DWORD         m_MachineType = 0;
+		CV_CFL_LANG   m_Language = CV_CFL_C;
 };
 
 SymbolModule::SymbolModule()
-	: m_MachineType(0)
-	, m_Language(CV_CFL_C)
 {
 
 }
