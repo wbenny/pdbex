@@ -168,12 +168,15 @@ Because the **test.py** uses **msbuild** for creating tests, special environment
 **pdbex -h** should make it:
 
 ```
+Version v0.18
+
 pdbex <symbol> <path> [-o <filename>] [-t <filename>] [-e <type>]
                      [-u <prefix>] [-s prefix] [-r prefix] [-g suffix]
                      [-p] [-x] [-m] [-b] [-d] [-i] [-l]
 
-<symbol>             Symbol name to extract or '*' if all symbol should
-                     be extracted.
+<symbol>             Symbol name to extract
+                     Use '*' if all symbols should be extracted.
+                     Use '%' if all symbols should be extracted separately.
 <path>               Path to the PDB file.
  -o filename         Specifies the output file.                       (stdout)
  -t filename         Specifies the output test file.                  (off)
@@ -186,7 +189,7 @@ pdbex <symbol> <path> [-o <filename>] [-t <filename>] [-e <type>]
  -r prefix           Prefix for all symbols.
  -g suffix           Suffix for all symbols.
 
-Following options can be explicitly turned of by leading '-'.
+Following options can be explicitly turned off by adding trailing '-'.
 Example: -p-
  -p                  Create padding members.                          (T)
  -x                  Show offsets.                                    (T)
@@ -198,6 +201,9 @@ Example: -p-
  -k                  Print header.                                    (T)
  -n                  Print declarations.                              (T)
  -l                  Print definitions.                               (T)
+ -f                  Print functions.                                 (F)
+ -z                  Print #pragma pack directives.                   (T)
+ -y                  Sort declarations and definitions.               (F)
 ```
 
 
