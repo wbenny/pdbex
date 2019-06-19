@@ -104,8 +104,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)Library\$(PlatformTarget)\msdia140.dll $(OutDir)
-copy $(SolutionDir)Library\$(PlatformTarget)\symsrv.dll $(OutDir)</Command>
+      <Command>copy "$(SolutionDir)Library\$(PlatformTarget)\msdia140.dll" "$(OutDir)"
+copy "$(SolutionDir)Library\$(PlatformTarget)\symsrv.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -123,8 +123,8 @@ copy $(SolutionDir)Library\$(PlatformTarget)\symsrv.dll $(OutDir)</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)Library\$(PlatformTarget)\msdia140.dll $(OutDir)
-copy $(SolutionDir)Library\$(PlatformTarget)\symsrv.dll $(OutDir)</Command>
+      <Command>copy "$(SolutionDir)Library\$(PlatformTarget)\msdia140.dll" "$(OutDir)"
+copy "$(SolutionDir)Library\$(PlatformTarget)\symsrv.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -147,8 +147,8 @@ copy $(SolutionDir)Library\$(PlatformTarget)\symsrv.dll $(OutDir)</Command>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)Library\$(PlatformTarget)\msdia140.dll $(OutDir)
-copy $(SolutionDir)Library\$(PlatformTarget)\symsrv.dll $(OutDir)</Command>
+      <Command>copy "$(SolutionDir)Library\$(PlatformTarget)\msdia140.dll" "$(OutDir)"
+copy "$(SolutionDir)Library\$(PlatformTarget)\symsrv.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -171,8 +171,8 @@ copy $(SolutionDir)Library\$(PlatformTarget)\symsrv.dll $(OutDir)</Command>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)Library\$(PlatformTarget)\msdia140.dll $(OutDir)
-copy $(SolutionDir)Library\$(PlatformTarget)\symsrv.dll $(OutDir)</Command>
+      <Command>copy "$(SolutionDir)Library\$(PlatformTarget)\msdia140.dll" "$(OutDir)"
+copy "$(SolutionDir)Library\$(PlatformTarget)\symsrv.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
