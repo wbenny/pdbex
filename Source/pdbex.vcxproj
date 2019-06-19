@@ -196,7 +196,6 @@ copy "$(SolutionDir)Library\$(PlatformTarget)\symsrv.dll" "$(OutDir)"</Command>
     <ClInclude Include="UdtFieldDefinitionBase.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\.editorconfig" />
     <None Include="PDBSymbolVisitor.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
