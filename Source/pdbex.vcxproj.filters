@@ -70,5 +70,6 @@
     <None Include="PDBSymbolVisitor.inl">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="..\.editorconfig" />
   </ItemGroup>
 </Project>
