@@ -81,7 +81,7 @@ class PDBExtractor
 		DumpAllSymbolsOneByOne();
 
 		void
-		CloseOpenedFiles();
+		CloseOpenFiles();
 
 	private:
 		PDB m_PDB;

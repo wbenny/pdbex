@@ -112,7 +112,7 @@ PDBExtractor::Run(
 		Result = EXIT_FAILURE;
 	}
 
-	CloseOpenedFiles();
+	CloseOpenFiles();
 
 	return Result;
 }
@@ -676,7 +676,7 @@ PDBExtractor::DumpAllSymbolsOneByOne()
 }
 
 void
-PDBExtractor::CloseOpenedFiles()
+PDBExtractor::CloseOpenFiles()
 {
 	//
 	// We want to free the memory only if the filename was specified,

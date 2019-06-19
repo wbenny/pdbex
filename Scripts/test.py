@@ -96,7 +96,7 @@ def test_compile(file_vcxproj, file_c, file_h, platform):
 			'file_vcxproj'    : file_vcxproj,
 			'configuration'   : 'debug',
 			'platform'        : platform,
-			'platformtoolset' : 'v141'
+			'platformtoolset' : 'v142'
 		}
 
 	if VERBOSITY_LEVEL >= 1:

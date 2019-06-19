@@ -236,6 +236,12 @@ struct _SYMBOL
 	enum SymTagEnum      Tag;
 
 	//
+	// Data kind.
+	// Only sef it Tag == SymTagData.
+	//
+	enum DataKind        DataKind;
+
+	//
 	// Base type.
 	// Only set if Tag == SymTagBaseType.
 	//

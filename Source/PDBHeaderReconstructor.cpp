@@ -1,6 +1,4 @@
 #include "PDBHeaderReconstructor.h"
-
-#pragma once
 #include "PDBReconstructorBase.h"
 
 #include <iostream>
@@ -43,8 +41,7 @@ PDBHeaderReconstructor::GetCorrectedSymbolName(
 	const SYMBOL* Symbol
 	) const
 {
-	auto CorrectedNameIt = m_CorrectedSymbolNames.find(Symbol);
-	if (CorrectedNameIt == m_CorrectedSymbolNames.end())
+	if (!m_CorrectedSymbolNames.contains(Symbol))
 	{
 		//
 		// Build corrected name:
@@ -487,7 +484,7 @@ PDBHeaderReconstructor::Write(
 	...
 	)
 {
-	char TempBuffer[16 * 1024];
+	char TempBuffer[8 * 1024];
 
 	va_list ArgPtr;
 	va_start(ArgPtr, Format);
