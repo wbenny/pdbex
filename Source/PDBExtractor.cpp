@@ -41,6 +41,9 @@ namespace
 		" * Dumped by pdbex tool v" PDBEX_VERSION_STRING ", by wbenny\n"
 		" */\n\n";
 
+	static const char DEFINITIONS_INCLUDE_STDINT[] =
+		"#include <stdint.h>";
+
 	static const char DEFINITIONS_PRAGMA_PACK_BEGIN[] =
 		"#include <pshpack1.h>";
 
@@ -502,6 +505,13 @@ PDBExtractor::PrintPDBDefinitions()
 
 	if (m_Settings.PrintDefinitions)
 	{
+		if (m_Settings.UdtFieldDefinitionSettings.UseStdInt)
+		{
+			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
+				<< DEFINITIONS_INCLUDE_STDINT
+				<< std::endl;
+		}
+
 		if (m_Settings.PrintPragmaPack)
 		{
 			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
