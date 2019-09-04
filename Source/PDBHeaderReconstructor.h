@@ -65,6 +65,7 @@ class PDBHeaderReconstructor
 			bool                      MicrosoftTypedefs       : 1;
 			bool                      AllowBitFieldsInUnion   : 1;
 			bool                      AllowAnonymousDataTypes : 1;
+			bool                      AllPublics              : 1;
 		};
 
 		PDBHeaderReconstructor(

@@ -282,6 +282,7 @@ typedef struct _PUBLIC_FUNC_SYMBOL {
 	enum SymTagEnum Tag;
 	DWORD Segment;
 	DWORD Offset;
+	BOOL IsFunction;
 	std::string Name;
 } PUBLIC_FUNC_SYMBOL, *PPUBLIC_FUNC_SYMBOL;
 

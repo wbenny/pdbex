@@ -159,6 +159,7 @@ PDBExtractor::PrintUsage()
 	printf(" -f                  Print functions.                                 (F)\n");
 	printf(" -z                  Print #pragma pack directives.                   (T)\n");
 	printf(" -y                  Sort declarations and definitions.               (F)\n");
+	printf(" -a                  Print all publics.                               (F)\n");
 	printf("\n");
 }
 
@@ -336,6 +337,11 @@ PDBExtractor::ParseParameters(
 
 			case 'x':
 				m_Settings.PdbHeaderReconstructorSettings.ShowOffsets = !OffSwitch;
+				break;
+
+			case 'a':
+				m_Settings.PdbHeaderReconstructorSettings.AllPublics = !OffSwitch;
+				m_Settings.PrintFunctions = !OffSwitch;
 				break;
 
 			case 'm':
@@ -556,6 +562,9 @@ PDBExtractor::PrintPDBFunctions()
 
 		for (auto&& e : m_PDB.GetFunctionSet())
 		{
+			if (!e->IsFunction && !m_Settings.PdbHeaderReconstructorSettings.AllPublics)
+				continue;
+
 			if (m_Settings.PdbHeaderReconstructorSettings.ShowOffsets) {
 				*m_Settings.PdbHeaderReconstructorSettings.OutputFile
 					<< std::hex << std::setw(4) << std::setfill('0')

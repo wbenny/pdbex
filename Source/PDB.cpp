@@ -528,23 +528,21 @@ SymbolModule::BuildFunctionSetFromEnumerator(
 		BOOL IsFunction;
 		DiaChildSymbol->get_function(&IsFunction);
 
-		if (IsFunction)
-		{
-			CHAR* FunctionName = GetSymbolName(DiaChildSymbol);
+		CHAR* FunctionName = GetSymbolName(DiaChildSymbol);
 
-			DWORD DwordResult;
-			DiaChildSymbol->get_symTag(&DwordResult);
+		DWORD DwordResult;
+		DiaChildSymbol->get_symTag(&DwordResult);
 
-			PUBLIC_FUNC_SYMBOL* PubSym;
-			PubSym = new PUBLIC_FUNC_SYMBOL;
-			DiaChildSymbol->get_addressSection(&PubSym->Segment);
-			DiaChildSymbol->get_addressOffset(&PubSym->Offset);
-			PubSym->Tag = static_cast<enum SymTagEnum>(DwordResult);
-			PubSym->Name = std::string(FunctionName);
+		PUBLIC_FUNC_SYMBOL* PubSym;
+		PubSym = new PUBLIC_FUNC_SYMBOL;
+		DiaChildSymbol->get_addressSection(&PubSym->Segment);
+		DiaChildSymbol->get_addressOffset(&PubSym->Offset);
+		PubSym->Tag = static_cast<enum SymTagEnum>(DwordResult);
+		PubSym->Name = std::string(FunctionName);
+		PubSym->IsFunction = IsFunction;
 
-			m_FunctionSet.insert(PubSym);
-			delete[] FunctionName;
-		}
+		m_FunctionSet.insert(PubSym);
+		delete[] FunctionName;
 
 		DiaChildSymbol->Release();
 	}
