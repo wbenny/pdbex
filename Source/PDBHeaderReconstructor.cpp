@@ -209,6 +209,27 @@ PDBHeaderReconstructor::OnUdtBegin(
 	{
 		std::string CorrectedName = GetCorrectedSymbolName(Symbol);
 		Write(" %s", CorrectedName.c_str());
+
+		if (Symbol->u.Udt.BaseClassCount)
+		{
+			std::string FuncName;
+			for (DWORD i = 0; i < Symbol->u.Udt.BaseClassCount; i++)
+			{
+				std::string Access;
+				switch (Symbol->u.Udt.BaseClassFields[i].Access)
+				{
+				case 1: Access = "private"; break;
+				case 2: Access = "protected"; break;
+				case 3: Access = "public"; break;
+				}
+				std::string Virtual;
+				if (Symbol->u.Udt.BaseClassFields[i].IsVirtual) Virtual = "virtual";
+				std::string CorrectFuncName = GetCorrectedSymbolName(Symbol->u.Udt.BaseClassFields[i].Type);
+				if (FuncName.size()) FuncName += ",";
+				FuncName += Access + Virtual + CorrectFuncName;
+			}
+			Write(" : %s", FuncName);
+		}
 	}
 
 	Write("\n");
@@ -259,8 +280,10 @@ PDBHeaderReconstructor::OnUdtFieldBegin(
 	// Do not show offsets for members which will be expanded.
 	//
 
-	if (UdtField->Type->Tag != SymTagUDT ||
-	    ShouldExpand(UdtField->Type) == false)
+	if (UdtField->Type->Tag != SymTagFunction &&
+	    UdtField->Type->Tag != SymTagTypedef &&
+	    (UdtField->Type->Tag != SymTagUDT ||
+	    ShouldExpand(UdtField->Type) == false))
 	{
 		WriteOffset(UdtField, GetParentOffset());
 	}

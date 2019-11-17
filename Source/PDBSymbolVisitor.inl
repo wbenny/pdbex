@@ -77,6 +77,10 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitEnumType(
 	// enum XYZ ...
 	//
 
+	if (m_MemberContextStack.size())
+	{
+		m_MemberContextStack.top()->VisitEnumType(Symbol);
+	} else
 	if (m_ReconstructVisitor->OnEnumType(Symbol))
 	{
 		//
@@ -101,7 +105,13 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitTypedefType(
 	const SYMBOL* Symbol
 	)
 {
+	//
+	// TypedefType:
+	//
 
+	m_MemberContextStack.top()->VisitTypedefTypeBegin(Symbol);
+	PDBSymbolVisitorBase::VisitTypedefType(Symbol);
+	m_MemberContextStack.top()->VisitTypedefTypeEnd(Symbol);
 }
 
 template <
@@ -150,12 +160,11 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitFunctionType(
 	)
 {
 	//
-	// #TODO:
-	// Currently, show void* instead of functions.
+	// FunctionType:
 	//
 
 	m_MemberContextStack.top()->VisitFunctionTypeBegin(Symbol);
-	//PDBSymbolVisitorBase::VisitFunctionType(Symbol);
+	PDBSymbolVisitorBase::VisitFunctionType(Symbol);
 	m_MemberContextStack.top()->VisitFunctionTypeEnd(Symbol);
 }
 
@@ -193,6 +202,10 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdt(
 	// struct XYZ ...
 	//
 
+	if (!PDB::IsUnnamedSymbol(Symbol) && m_MemberContextStack.size())
+	{
+		m_MemberContextStack.top()->VisitUdtType(Symbol);
+	} else
 	if (m_ReconstructVisitor->OnUdt(Symbol))
 	{
 		//
@@ -266,6 +279,12 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdtField(
 	const SYMBOL_UDT_FIELD* UdtField
 	)
 {
+	if (UdtField->Type->Tag == SymTagVTable ||
+	    UdtField->IsBaseClass == TRUE)
+	{
+		return;
+	}
+
 	BOOL IsBitFieldMember = UdtField->Bits != 0;
 	BOOL IsFirstBitFieldMember = IsBitFieldMember && !m_PreviousBitFieldField;
 

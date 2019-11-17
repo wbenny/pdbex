@@ -88,6 +88,11 @@ typedef struct _SYMBOL_UDT_FIELD
 	//
 	SYMBOL*              Parent;
 
+	//
+	//
+	//
+	BOOL                 IsBaseClass;
+
 } SYMBOL_UDT_FIELD, *PSYMBOL_UDT_FIELD;
 
 //
@@ -177,6 +182,13 @@ typedef struct _SYMBOL_FUNCTION
 	//
 	CV_call_e            CallingConvention;
 
+	BOOL                 IsStatic;
+	BOOL                 IsVirtual;
+	DWORD                VirtualOffset;
+	BOOL                 IsOverride;
+	BOOL                 IsConst;
+	BOOL                 IsPure;
+
 	//
 	// Number of arguments.
 	//
@@ -203,6 +215,16 @@ typedef struct _SYMBOL_FUNCTIONARG
 } SYMBOL_FUNCTIONARG, *PSYMBOL_FUNCTIONARG;
 
 //
+// Representation of the baseclass.
+//
+typedef struct _SYMBOL_UDT_BASECLASS
+{
+	SYMBOL*              Type;
+	DWORD                Access;
+	BOOL                 IsVirtual;
+} SYMBOL_UDT_BASECLASS;
+
+//
 // Representation of the UDT (struct/class/union).
 //
 typedef struct _SYMBOL_UDT
@@ -222,6 +244,16 @@ typedef struct _SYMBOL_UDT
 	// Pointer to the continuous array of structures of the UDT.
 	//
 	SYMBOL_UDT_FIELD*    Fields;
+
+	//
+	// Number of fields (members) in the baseclass.
+	//
+	DWORD                BaseClassCount;
+
+	//
+	// Pointer to the continuous array of structures of the baseclass.
+	//
+	SYMBOL_UDT_BASECLASS *BaseClassFields;
 
 } SYMBOL_UDT, *PSYMBOL_UDT;
 

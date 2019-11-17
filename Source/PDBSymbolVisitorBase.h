@@ -35,6 +35,7 @@ class PDBSymbolVisitorBase
 					VisitArrayType(Symbol);
 					break;
 
+				case SymTagFunction:
 				case SymTagFunctionType:
 					VisitFunctionType(Symbol);
 					break;

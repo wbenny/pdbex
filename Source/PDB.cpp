@@ -347,6 +347,12 @@ class SymbolModule
 			IN SYMBOL* Symbol
 			);
 
+		VOID
+		ProcessSymbolFunctionEx(
+			IN IDiaSymbol* DiaSymbol,
+			IN SYMBOL* Symbol
+			);
+
 	private:
 		std::string   m_Path;
 		SymbolMap     m_SymbolMap;
@@ -642,12 +648,21 @@ SymbolModule::InitSymbol(
 	{
 		case SymTagUDT:             ProcessSymbolUdt        (DiaSymbol, Symbol); break;
 		case SymTagEnum:            ProcessSymbolEnum       (DiaSymbol, Symbol); break;
-		case SymTagFunctionType:    ProcessSymbolFunction   (DiaSymbol, Symbol); break;
+		case SymTagFunctionType:
+		{
+						Symbol->u.Function.IsOverride = FALSE;
+						Symbol->u.Function.IsPure = FALSE;
+						Symbol->u.Function.IsConst = FALSE;
+						Symbol->u.Function.IsVirtual = FALSE;
+						Symbol->u.Function.IsStatic = FALSE;
+					    ProcessSymbolFunction   (DiaSymbol, Symbol); 
+		} break;
 		case SymTagPointerType:     ProcessSymbolPointer    (DiaSymbol, Symbol); break;
 		case SymTagArrayType:       ProcessSymbolArray      (DiaSymbol, Symbol); break;
 		case SymTagBaseType:        ProcessSymbolBase       (DiaSymbol, Symbol); break;
 		case SymTagTypedef:         ProcessSymbolTypedef    (DiaSymbol, Symbol); break;
 		case SymTagFunctionArgType: ProcessSymbolFunctionArg(DiaSymbol, Symbol); break;
+		case SymTagFunction:        ProcessSymbolFunctionEx (DiaSymbol, Symbol); break;
 		default:                                                                 break;
 	}
 }
@@ -859,24 +874,75 @@ SymbolModule::ProcessSymbolUdt(
 	{
 		CComPtr<IDiaSymbol> DiaChildSymbol(Result);
 
+		DWORD symTag;
+		DiaChildSymbol->get_symTag(DiaSymbol, &symTag);
+
 		SYMBOL_UDT_FIELD* Member = &Symbol->u.Udt.Fields[Index];
 
 		Member->Name = GetSymbolName(DiaChildSymbol);
 		Member->Parent = Symbol;
+		Member->IsBaseClass = FALSE;
 
 		LONG Offset = 0;
 		DiaChildSymbol->get_offset(&Offset);
 		Member->Offset = static_cast<DWORD>(Offset);
 
 		ULONGLONG Bits = 0;
-		DiaChildSymbol->get_length(&Bits);
+		if (symTag == SymTagData)
+		{
+			DiaChildSymbol->get_length(&Bits);
+		}
 		Member->Bits = static_cast<DWORD>(Bits);
 
 		DiaChildSymbol->get_bitPosition(&Member->BitPosition);
 
-		CComPtr<IDiaSymbol> MemberTypeDiaSymbol;
-		DiaChildSymbol->get_type(&MemberTypeDiaSymbol);
-		Member->Type = GetSymbol(MemberTypeDiaSymbol);
+		if (symTag == SymTagData || symTag == SymTagBaseClass)
+		{
+			CComPtr<IDiaSymbol> MemberTypeDiaSymbol;
+			DiaChildSymbol->get_type(&MemberTypeDiaSymbol);
+			Member->Type = GetSymbol(MemberTypeDiaSymbol);
+			if (symTag == SymTagBaseClass)
+			{
+				++Symbol->u.Udt.BaseClassCount;
+				if (Symbol->u.Udt.BaseClassFields == 0)
+					Symbol->u.Udt.BaseClassFields = malloc(sizeof(SYMBOL_UDT_BASECLASS));
+				else	Symbol->u.Udt.BaseClassFields = realloc(Symbol->u.Udt.BaseClassFields, sizeof(SYMBOL_UDT_BASECLASS)*Symbol->u.Udt.BaseClassCount);
+				Symbol->u.Udt.BaseClassFields[Symbol->u.Udt.BaseClassCount-1].Type = Member->Type;
+				DWORD Access = 0;
+				DiaChildSymbol->get_access(&Access);
+				Symbol->u.Udt.BaseClassFields[Symbol->u.Udt.BaseClassCount-1].Access = Access;
+				BOOL IsVirtual = FALSE;
+				DiaChildSymbol->get_virtualBaseClass(&IsVirtual);
+				Symbol->u.Udt.BaseClassFields[Symbol->u.Udt.BaseClassCount-1].IsVirtual = IsVirtual;
+				Member->IsBaseClass = TRUE;
+			}
+		} else
+		{
+			Member->Type = GetSymbol(DiaChildSymbol);
+			if (symTag == SymTagFunction)
+			{
+				if (Member->Type->u.Function.IsOverride && Symbol->u.Udt.BaseClassCount)
+				{
+					for (DWORD i = 0; i < Symbol->u.Udt.BaseClassCount; i++)
+					{
+						SYMBOL *TmpSymbol = Symbol->u.Udt.BaseClassFields[i].Type;
+						for (DWORD j = 0; j < TmpSymbol->u.Udt.FieldCount; j++)
+						{
+							if (TmpSymbol->u.Udt.Fields->Tag == SymTagFunction &&
+							    strcmp(TmpSymbol->u.Udt.Fields->Name, Member->Type->Name) == 0 &&
+							    TmpSymbol->u.Udt.Fields->Type->u.Function.ArgumentCount == Member->Type->u.Function.ArgumentCount)
+							{
+								Member->Type->u.Function.virtualBaseOffset = TmpSymbol->u.Udt.Fields->Type->u.Function.virtualBaseOffset;
+							}
+						}
+					}
+				}
+			} else
+			if (symTag == SymTagUDT)
+			{
+				Member->Type->u.Function.IsOverride = TRUE;
+			}
+		}
 
 		Index += 1;
 	}
@@ -928,6 +994,52 @@ SymbolModule::ProcessSymbolUdt(
 			m_SymbolSet.insert(PaddingSymbolArrayElement);
 		}
 	}
+}
+
+VOID
+SymbolModule::ProcessSymbolFunctionEx(
+	IN IDiaSymbol* DiaSymbol,
+	IN SYMBOL* Symbol
+	)
+{
+	CComPtr<IDiaSymbol> DiaArgumentTypeSymbol;
+
+	BOOL IsStatic = FALSE;
+	DiaSymbol->get_isStatic(&IsStatic);
+	Symbol->u.Function.IsStatic = IsStatic;
+
+	BOOL IsVirtual = FALSE;
+	DiaSymbol->get_isVirtual(&IsVirtual);
+	Symbol->u.Function.IsVirtual = IsVirtual;
+	Symbol->u.Function.IsOverride = FALSE;
+
+	BOOL IsIntro = FALSE;
+	if (!DiaSymbol->get_intro(&IsIntro) && !IsIntro && IsVirtual)
+	{
+		Symbol->u.Function.IsOverride = TRUE;
+	}
+
+	Symbol->u.Function.virtualBaseOffset = -1;
+	if (IsVirtual == TRUE)
+	{
+		DWORD VirtualOffset = 0;
+		DiaSymbol->get_virtualBaseOffset(&VirtualOffset);
+		Symbol->u.Function.virtualBaseOffset = VirtualOffset;
+	}
+
+	BOOL IsConst = FALSE;
+	DiaSymbol->get_isVirtual(&IsConst);
+	Symbol->u.Function.IsConst = IsConst;
+
+	BOOL IsPure = FALSE;
+	if (IsVirtual == TRUE)
+	{
+		DiaSymbol->get_is_pure(&IsPure);
+	}
+	Symbol->u.Function.IsPure = IsPure;
+	
+	DiaSymbol->get_type(&DiaArgumentTypeSymbol);
+	ProcessSymbolFunction(DiaArgumentTypeSymbol, Symbol);
 }
 
 void SymbolModule::DestroySymbol(

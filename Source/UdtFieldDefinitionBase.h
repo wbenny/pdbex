@@ -17,6 +17,42 @@ class UdtFieldDefinitionBase
 
 		virtual
 		void
+		VisitTypedefTypeBegin(
+			const SYMBOL* Symbol
+		)
+		{
+
+		}
+
+		virtual
+		void
+		VisitTypedefTypeEnd(
+			const SYMBOL* Symbol
+			)
+		{
+
+		}
+
+		virtual
+		void
+		VisitEnumType(
+			const SYMBOL* Symbol
+			)
+		{
+
+		}
+
+		virtual
+		void
+		VisitUdtType(
+			const SYMBOL* Symbol
+			)
+		{
+
+		}
+
+		virtual
+		void
 		VisitPointerTypeBegin(
 			const SYMBOL* Symbol
 		)
