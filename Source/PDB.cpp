@@ -649,7 +649,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 		CComPtr<IDiaSymbol> DiaChildSymbol(Result);
 
 		DWORD symTag;
-		DiaChildSymbol->get_symTag(DiaSymbol, &symTag);
+		DiaChildSymbol->get_symTag(&symTag);
 
 		SYMBOL_UDT_FIELD* Member = &Symbol->u.Udt.Fields[Index];
 
@@ -776,7 +776,7 @@ VOID SymbolModule::ProcessSymbolFunctionEx(IN IDiaSymbol* DiaSymbol, IN SYMBOL* 
 	Symbol->u.Function.IsStatic = IsStatic;
 
 	BOOL IsVirtual = FALSE;
-	DiaSymbol->get_isVirtual(&IsVirtual);
+	DiaSymbol->get_virtual(&IsVirtual);
 	Symbol->u.Function.IsVirtual = IsVirtual;
 	Symbol->u.Function.IsOverride = FALSE;
 
@@ -786,22 +786,22 @@ VOID SymbolModule::ProcessSymbolFunctionEx(IN IDiaSymbol* DiaSymbol, IN SYMBOL* 
 		Symbol->u.Function.IsOverride = TRUE;
 	}
 
-	Symbol->u.Function.virtualBaseOffset = -1;
+	Symbol->u.Function.VirtualOffset = -1;
 	if (IsVirtual == TRUE)
 	{
 		DWORD VirtualOffset = 0;
 		DiaSymbol->get_virtualBaseOffset(&VirtualOffset);
-		Symbol->u.Function.virtualBaseOffset = VirtualOffset;
+		Symbol->u.Function.VirtualOffset = VirtualOffset;
 	}
 
 	BOOL IsConst = FALSE;
-	DiaSymbol->get_isVirtual(&IsConst);
+	DiaSymbol->get_constType(&IsConst);
 	Symbol->u.Function.IsConst = IsConst;
 
 	BOOL IsPure = FALSE;
 	if (IsVirtual == TRUE)
 	{
-		DiaSymbol->get_is_pure(&IsPure);
+		DiaSymbol->get_pure(&IsPure);
 	}
 	Symbol->u.Function.IsPure = IsPure;
 	
