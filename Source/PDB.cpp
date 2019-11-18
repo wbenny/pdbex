@@ -706,7 +706,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 							    strcmp(TmpSymbol->u.Udt.Fields->Name, Member->Type->Name) == 0 &&
 							    TmpSymbol->u.Udt.Fields->Type->u.Function.ArgumentCount == Member->Type->u.Function.ArgumentCount)
 							{
-								Member->Type->u.Function.virtualBaseOffset = TmpSymbol->u.Udt.Fields->Type->u.Function.virtualBaseOffset;
+								Member->Type->u.Function.VirtualOffset = TmpSymbol->u.Udt.Fields->Type->u.Function.VirtualOffset;
 							}
 						}
 					}
