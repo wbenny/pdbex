@@ -15,7 +15,7 @@ public:
 
 	BOOL Open(IN const CHAR* Path);
 	VOID Close();
-	BOOL IsOpen() const { return return m_DataSource && m_Session && m_GlobalSymbol; }
+	BOOL IsOpen() const { return m_DataSource && m_Session && m_GlobalSymbol; }
 
 private:
 	HRESULT LoadDiaViaCoCreateInstance();
@@ -62,7 +62,7 @@ HRESULT SymbolModuleBase::LoadDiaViaLoadLibrary()
 		return FALSE;
 	}
 
-	CComPtr<IClassFactory> ClassFactory;
+	IClassFactory *ClassFactory;
 	Result = DllGetClassObject(__uuidof(DiaSource), __uuidof(IClassFactory), &ClassFactory);
 	if (FAILED(Result))
 	{
@@ -448,7 +448,7 @@ VOID SymbolModule::ProcessSymbolEnum(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol
 
 VOID SymbolModule::ProcessSymbolTypedef(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 {
-	DiaSymbol *DiaTypedefSymbol;
+	IDiaSymbol *DiaTypedefSymbol;
 
 	DiaSymbol->get_type(&DiaTypedefSymbol);
 
@@ -615,6 +615,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 		} else
 		{
 			Member->Type = GetSymbol(DiaChildSymbol);
+		#if 0
 			if (symTag == SymTagFunction)
 			{
 				if (Member->Type->u.Function.IsOverride && Symbol->u.Udt.BaseClassCount)
@@ -624,7 +625,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 						SYMBOL *TmpSymbol = Symbol->u.Udt.BaseClassFields[i].Type;
 						for (DWORD j = 0; j < TmpSymbol->u.Udt.FieldCount; ++j)
 						{
-							if (TmpSymbol->u.Udt.Fields[j].Tag == SymTagFunction &&
+							if (TmpSymbol->u.Udt.Fields[j].Tag->Type == SymTagFunction &&
 							    strcmp(TmpSymbol->u.Udt.Fields[j].Name, Member->Type->Name) == 0 &&
 							    TmpSymbol->u.Udt.Fields[j].Type->u.Function.ArgumentCount == Member->Type->u.Function.ArgumentCount)
 							{
@@ -634,6 +635,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 					}
 				}
 			} else
+		#endif
 			if (symTag == SymTagUDT)
 			{
 				Member->Type->u.Function.IsOverride = TRUE;

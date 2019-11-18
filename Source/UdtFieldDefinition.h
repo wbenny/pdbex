@@ -121,7 +121,7 @@ public:
 
 		if (Symbol->u.Function.IsVirtual)
 		{
-			m_Comment += " /* VO: " + std:to_string(Symbol->u.Function.VirtualOffset) + " */"; //hex
+			m_Comment += " /* VO: " + std::to_string(Symbol->u.Function.VirtualOffset) + " */"; //hex
 		}
 
 		if (m_TypeSuffix.size())
