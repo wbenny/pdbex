@@ -44,7 +44,6 @@ public:
 
 	virtual	void VisitFunctionTypeBegin(const SYMBOL* Symbol)
 	{
-
 	}
 
 	virtual	void VisitFunctionTypeEnd(const SYMBOL* Symbol)
@@ -58,7 +57,6 @@ public:
 	virtual void VisitFunctionArgTypeEnd(const SYMBOL* Symbol)
 	{
 	}
-
 
 	virtual	void SetMemberName(const CHAR* MemberName)
 	{

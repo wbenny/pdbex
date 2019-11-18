@@ -34,16 +34,13 @@ public:
 		if (Rid == __uuidof(IDiaLoadCallback2))
 		{
 			*Interface = (IDiaLoadCallback2 *)this;
-		}
-		else if (Rid == __uuidof(IDiaLoadCallback))
+		} else if (Rid == __uuidof(IDiaLoadCallback))
 		{
 			*Interface = (IDiaLoadCallback *)this;
-		}
-		else if (Rid == __uuidof(IUnknown))
+		} else if (Rid == __uuidof(IUnknown))
 		{
 			*Interface = (IUnknown *)this;
-		}
-		else
+		} else
 		{
 			*Interface = nullptr;
 		}

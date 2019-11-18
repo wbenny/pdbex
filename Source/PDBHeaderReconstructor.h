@@ -110,37 +110,13 @@ private:
 private:
 	Settings* m_Settings;
 
-	//
-	// Everytime visitor enters a new member (UDT field),
-	// it pushes the current offset here.
-	// In case the current member is a new struct (or any other UDT)
-	// which will be expanded, this property
-	// helps to find the offset of the parent member.
-	//
 	std::vector<DWORD> m_OffsetStack;
 	DWORD m_Depth = 0;
 	DWORD m_AnonymousDataTypeCounter = 0;
 	DWORD m_PaddingMemberCounter = 0;
 
-	//
-	// Collection of unnamed symbols.
-	//
-	// Unnamed symbols actually have a special name.
-	// See PDB::IsUnnamedSymbol() for more information.
-	//
 	mutable std::set<const SYMBOL*> m_UnnamedSymbols;
-
-	//
-	// Mapping of symbols to their "corrected" names.
-	//
 	mutable std::map<const SYMBOL*, std::string> m_CorrectedSymbolNames;
 
-	//
-	// Collection of symbol names which has already been visited.
-	// We save names of the symbols here, because some PDBs
-	// has multiple definition of the same symbol.
-	//
-	// See PDBVisitorSorter::HasBeenVisited() for more information.
-	//
 	std::set<std::string> m_VisitedSymbols;
 };

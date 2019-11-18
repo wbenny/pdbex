@@ -98,47 +98,27 @@ protected:
 
 		if (Symbol->u.Udt.FieldCount == 0)
 		{
-			//
-			// Early return on empty UDTs.
-			//
-
 			return;
 		}
 
 		UdtField = Symbol->u.Udt.Fields;
 		EndOfUdtField = &Symbol->u.Udt.Fields[Symbol->u.Udt.FieldCount];
 
-		do
-		{
+		do {
 			if (UdtField->Bits == 0)
 			{
-				//
-				// Non-bitfield member.
-				//
 				VisitUdtFieldBegin(UdtField);
 				VisitUdtField(UdtField);
 				VisitUdtFieldEnd(UdtField);
-			}
-			else
+			} else
 			{
-				//
-				// UdtField now points to the first member of the bitfield.
-				//
 				VisitUdtFieldBitFieldBegin(UdtField);
 
-				do
-				{
-					//
-					// Visit all bitfield members
-					//
+				do {
 					VisitUdtFieldBitField(UdtField);
 				} while (++UdtField < EndOfUdtField &&
 				           UdtField->BitPosition != 0);
 
-				//
-				// UdtField now points behind the last bitfield member.
-				// So decrement the iterator and call VisitUdtFieldBitFieldEnd().
-				//
 				VisitUdtFieldBitFieldEnd(--UdtField);
 			}
 		} while (++UdtField < EndOfUdtField);
@@ -174,10 +154,6 @@ protected:
 
 	virtual	void VisitUdtFieldBitField(const SYMBOL_UDT_FIELD* UdtField)
 	{
-		//
-		// Call VisitUdtField by default.
-		//
-
 		VisitUdtField(UdtField);
 	}
 };

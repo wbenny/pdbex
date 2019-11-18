@@ -37,16 +37,6 @@ const std::string& PDBHeaderReconstructor::GetCorrectedSymbolName(const SYMBOL* 
 {
 	if (!m_CorrectedSymbolNames.contains(Symbol))
 	{
-		//
-		// Build corrected name:
-		// SymbolPrefix
-		//   + "_" (if Microsoft typedefs are enabled)
-		//   + unnamed tag (if symbol does not have name)
-		//   + symbol name (if symbol does have name)
-		//
-		// ...and cache the name.
-		//
-
 		std::string CorrectedName;
 
 		CorrectedName += m_Settings->SymbolPrefix;
@@ -61,8 +51,7 @@ const std::string& PDBHeaderReconstructor::GetCorrectedSymbolName(const SYMBOL* 
 			m_UnnamedSymbols.insert(Symbol);
 
 			CorrectedName += m_Settings->UnnamedTypePrefix + std::to_string(m_UnnamedSymbols.size());
-		}
-		else
+		} else
 		{
 			CorrectedName += Symbol->Name;
 		}
@@ -95,10 +84,6 @@ void PDBHeaderReconstructor::OnEnumTypeBegin(const SYMBOL* Symbol)
 {
 	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
 
-	//
-	// Handle begin of the typedef.
-	//
-
 	WriteTypedefBegin(Symbol);
 
 	Write("enum");
@@ -119,10 +104,6 @@ void PDBHeaderReconstructor::OnEnumTypeEnd(const SYMBOL* Symbol)
 
 	WriteIndent();
 	Write("}");
-
-	//
-	// Handle end of the typedef.
-	//
 
 	WriteTypedefEnd(Symbol);
 
@@ -155,11 +136,6 @@ bool PDBHeaderReconstructor::OnUdt(const SYMBOL* Symbol)
 
 		Write("%s %s", PDB::GetUdtKindString(Symbol->u.Udt.Kind), CorrectedName.c_str());
 
-		//
-		// If we're not expanding the type at the root level,
-		// OnUdtEnd() won't be called, so print the semicolon here.
-		//
-
 		if (m_Depth == 0)
 		{
 			Write(";\n\n");
@@ -171,10 +147,6 @@ bool PDBHeaderReconstructor::OnUdt(const SYMBOL* Symbol)
 
 void PDBHeaderReconstructor::OnUdtBegin(const SYMBOL* Symbol)
 {
-	//
-	// Handle begin of the typedef.
-	//
-
 	WriteTypedefBegin(Symbol);
 
 	WriteConstAndVolatile(Symbol);
@@ -223,10 +195,6 @@ void PDBHeaderReconstructor::OnUdtEnd(const SYMBOL* Symbol)
 	WriteIndent();
 	Write("}");
 
-	//
-	// Handle end of the typedef.
-	//
-
 	WriteTypedefEnd(Symbol);
 
 	if (m_Depth == 0)
@@ -246,10 +214,6 @@ void PDBHeaderReconstructor::OnUdtFieldBegin(const SYMBOL_UDT_FIELD* UdtField)
 {
 	WriteIndent();
 
-	//
-	// Do not show offsets for members which will be expanded.
-	//
-
 	if (UdtField->Type->Tag != SymTagFunction &&
 	    UdtField->Type->Tag != SymTagTypedef &&
 	    (UdtField->Type->Tag != SymTagUDT ||
@@ -260,30 +224,17 @@ void PDBHeaderReconstructor::OnUdtFieldBegin(const SYMBOL_UDT_FIELD* UdtField)
 
 	AppendToTest(UdtField);
 
-	//
-	// Push current offset in case we will be expanding
-	// some UDT field.
-	//
-
 	m_OffsetStack.push_back(UdtField->Offset);
 }
 
 void PDBHeaderReconstructor::OnUdtFieldEnd(const SYMBOL_UDT_FIELD* UdtField)
 {
-	//
-	// Pop offset of the current UDT field.
-	//
-
 	m_OffsetStack.pop_back();
 }
 
 void PDBHeaderReconstructor::OnUdtField(const SYMBOL_UDT_FIELD* UdtField, UdtFieldDefinitionBase* MemberDefinition)
 {
 	Write("%s", MemberDefinition->GetPrintableDefinition().c_str());
-
-	//
-	// BitField handling.
-	//
 
 	if (UdtField->Bits != 0)
 	{
@@ -321,9 +272,7 @@ void PDBHeaderReconstructor::OnAnonymousUdtEnd(UdtKind Kind,
 	WriteUnnamedDataType(Kind);
 
 	Write(";");
-
 	Write(" /* size: 0x%04x */", Size);
-
 	Write("\n");
 }
 
@@ -332,9 +281,6 @@ void PDBHeaderReconstructor::OnUdtFieldBitFieldBegin(
 {
 	if (m_Settings->AllowBitFieldsInUnion == false)
 	{
-		//
-		// Do not wrap bitfields which have only one member.
-		//
 		if (FirstUdtFieldBitField != LastUdtFieldBitField)
 		{
 			WriteIndent();
@@ -395,30 +341,20 @@ void PDBHeaderReconstructor::OnPaddingBitFieldField(
 
 	WriteOffset(UdtField, GetParentOffset());
 
-	//
-	// Bitfield fields can be unnamed.
-	// Check if prefix is specified and if not,
-	// simply do not print anything.
-	//
-
 	if (m_Settings->BitFieldPaddingMemberPrefix.empty())
 	{
 		Write("%s",
-			PDB::GetBasicTypeString(UdtField->Type) // TODO: UseStdInt
+			PDB::GetBasicTypeString(UdtField->Type)
 		);
 	}
 	else
 	{
 		Write("%s %s%u",
-			PDB::GetBasicTypeString(UdtField->Type), // TODO: UseStdInt
+			PDB::GetBasicTypeString(UdtField->Type),
 			m_Settings->PaddingMemberPrefix.c_str(),
 			m_PaddingMemberCounter++
 		);
 	}
-
-	//
-	// BitField handling.
-	//
 
 	DWORD Bits = PreviousUdtField
 		? UdtField->BitPosition - (PreviousUdtField->BitPosition + PreviousUdtField->Bits)
@@ -431,11 +367,8 @@ void PDBHeaderReconstructor::OnPaddingBitFieldField(
 	assert(Bits != 0);
 
 	Write(" : %i", Bits);
-
 	Write(";");
-
 	Write(" /* bit position: %i */", BitPosition);
-
 	Write("\n");
 }
 
@@ -544,10 +477,6 @@ void PDBHeaderReconstructor::WriteConstAndVolatile(const SYMBOL* Symbol)
 {
 	if (m_Depth != 0)
 	{
-		//
-		// Allow only non-root UDTs to be "const" and/or "volatile".
-		//
-
 		if (Symbol->IsConst)
 		{
 			Write("const ");
@@ -587,35 +516,10 @@ DWORD PDBHeaderReconstructor::GetParentOffset() const
 
 void PDBHeaderReconstructor::AppendToTest(const SYMBOL_UDT_FIELD* UdtField)
 {
-	//
-	// Test of the current member is produced when:
-	//   - Test file was specified.
-	//   - We're in the root UDT.
-	//   - This field is not a part of the bitfield.
-	//
-
 	if (m_Settings->TestFile != nullptr &&
 	    m_OffsetStack.empty() &&
 	    UdtField->Bits == 0)
 	{
-		//
-		// Line of the test:
-		//
-		// printf(
-		//   \"[%%c] 0x%%04x - 0x%04x (%s %s.%s)\\n\",
-		//   offsetof(%s %s, %s) == %u ? ' ' : '!',
-		//   (unsigned)offsetof(%s %s, %s)
-		// );
-		//
-		//
-		// Example:
-		//
-		// printf(
-		//   "[%c] 0x%04x - 0x000c (struct _DEVICE_OBJECT.NextDevice)\n",
-		//   offsetof(struct _DEVICE_OBJECT, NextDevice) == 12 ? ' ' : '!',
-		//   (unsigned)offsetof(struct _DEVICE_OBJECT, NextDevice)
-		// );
-		//
 		static const char TestFormatString[] =
 			"\t"
 			"printf("
@@ -624,32 +528,16 @@ void PDBHeaderReconstructor::AppendToTest(const SYMBOL_UDT_FIELD* UdtField)
 				"(unsigned)offsetof(%s %s, %s)"
 			");";
 
-		//
-		// Delimiter for the structs.
-		//
-		// printf("\n");
-		//
 		static const char TestDelimiterString[] =
 			"\t"
 			"printf("
 			"\"\\n\""
 			");";
 
-		//
-		// Holds corrected name of a last symbol
-		// which test was produced for.
-		// This is used for delimiting tests
-		// with extra new line.
-		//
 		static std::string LastTestedUdt;
 
 		std::string CorrectedSymbolName = GetCorrectedSymbolName(UdtField->Parent);
 
-		//
-		// If the current member is part of a different UDT
-		// than the previous one, delimit the output of the test
-		// by extra new line.
-		//
 		if (CorrectedSymbolName != LastTestedUdt)
 		{
 			(*m_Settings->TestFile) << TestDelimiterString << std::endl;

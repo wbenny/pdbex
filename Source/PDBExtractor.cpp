@@ -156,17 +156,8 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 		const char* CurrentArgument = argv[ArgumentPointer];
 		size_t CurrentArgumentLength = strlen(CurrentArgument);
 
-		const char* NextArgument = ArgumentPointer < argc
-			? argv[ArgumentPointer + 1]
-			: nullptr;
-
-		size_t NextArgumentLength = NextArgument
-			? strlen(CurrentArgument)
-			: 0;
-
-		//
-		// Handling of -X- switches.
-		//
+		const char* NextArgument = ArgumentPointer < argc ? argv[ArgumentPointer + 1] : nullptr;
+		size_t NextArgumentLength = NextArgument ? strlen(CurrentArgument) : 0;
 
 		if ((CurrentArgumentLength != 2 && CurrentArgumentLength != 3) ||
 		    (CurrentArgumentLength == 2 && CurrentArgument[0] != '-') ||
@@ -181,9 +172,7 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 		{
 		case 'o':
 			if (!NextArgument)
-			{
 				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-			}
 
 			++ArgumentPointer;
 			m_Settings.OutputFilename = NextArgument;
@@ -191,11 +180,8 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 			if (m_Settings.SymbolName != "%")
 			{
 				m_Settings.PdbHeaderReconstructorSettings.OutputFile = new std::ofstream(
-					NextArgument,
-					std::ios::out
-					);
-			}
-			else
+					NextArgument, std::ios::out);
+			} else
 			{
 				m_Settings.PdbHeaderReconstructorSettings.OutputFile = nullptr;
 			}
@@ -203,55 +189,47 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 
 		case 't':
 			if (!NextArgument)
-			{
 				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-			}
 
 			++ArgumentPointer;
 			m_Settings.TestFilename = NextArgument;
 			m_Settings.PdbHeaderReconstructorSettings.TestFile = new std::ofstream(
-				m_Settings.TestFilename,
-				std::ios::out
-				);
+				m_Settings.TestFilename, std::ios::out);
 
 			break;
 
 		case 'e':
 			if (!NextArgument)
-			{
 				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-			}
 
 			++ArgumentPointer;
 			switch (NextArgument[0])
 			{
-				case 'n':
-					m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
-						PDBHeaderReconstructor::MemberStructExpansionType::None;
-					break;
+			case 'n':
+				m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
+					PDBHeaderReconstructor::MemberStructExpansionType::None;
+				break;
 
-				case 'i':
-					m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
-						PDBHeaderReconstructor::MemberStructExpansionType::InlineUnnamed;
-					break;
+			case 'i':
+				m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
+					PDBHeaderReconstructor::MemberStructExpansionType::InlineUnnamed;
+				break;
 
-				case 'a':
-					m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
-						PDBHeaderReconstructor::MemberStructExpansionType::InlineAll;
-					break;
+			case 'a':
+				m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
+					PDBHeaderReconstructor::MemberStructExpansionType::InlineAll;
+				break;
 
-				default:
-					m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
-						PDBHeaderReconstructor::MemberStructExpansionType::InlineUnnamed;
-					break;
+			default:
+				m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
+					PDBHeaderReconstructor::MemberStructExpansionType::InlineUnnamed;
+				break;
 			}
 			break;
 
 		case 'u':
 			if (!NextArgument)
-			{
 				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-			}
 
 			++ArgumentPointer;
 			m_Settings.PdbHeaderReconstructorSettings.AnonymousUnionPrefix = NextArgument;
@@ -259,9 +237,7 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 
 		case 's':
 			if (!NextArgument)
-			{
 				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-			}
 
 			++ArgumentPointer;
 			m_Settings.PdbHeaderReconstructorSettings.AnonymousStructPrefix = NextArgument;
@@ -269,9 +245,7 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 
 		case 'r':
 			if (!NextArgument)
-			{
 				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-			}
 
 			++ArgumentPointer;
 			m_Settings.PdbHeaderReconstructorSettings.SymbolPrefix = NextArgument;
@@ -279,9 +253,7 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 
 		case 'g':
 			if (!NextArgument)
-			{
 				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-			}
 
 			++ArgumentPointer;
 			m_Settings.PdbHeaderReconstructorSettings.SymbolSuffix = NextArgument;
@@ -356,8 +328,7 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 	if (m_Settings.Sort)
 	{
 		m_SymbolSorter = std::make_unique<PDBSymbolSorterAlphabetical>();
-	}
-	else
+	} else
 	{
 		m_SymbolSorter = std::make_unique<PDBSymbolSorter>();
 	}
@@ -376,8 +347,7 @@ void PDBExtractor::PrintTestHeader()
 	if (m_Settings.PdbHeaderReconstructorSettings.TestFile != nullptr)
 	{
 		static char TEST_FILE_HEADER_FORMATTED[16 * 1024];
-		sprintf_s(
-			TEST_FILE_HEADER_FORMATTED, TEST_FILE_HEADER,
+		sprintf_s(TEST_FILE_HEADER_FORMATTED, TEST_FILE_HEADER,
 			m_Settings.OutputFilename
 			);
 
@@ -406,8 +376,7 @@ void PDBExtractor::PrintPDBHeader()
 
 		static char HEADER_FILE_HEADER_FORMATTED[16 * 1024];
 
-		sprintf_s(
-			HEADER_FILE_HEADER_FORMATTED, HEADER_FILE_HEADER,
+		sprintf_s(HEADER_FILE_HEADER_FORMATTED, HEADER_FILE_HEADER,
 			m_Settings.PdbPath.c_str(),
 			ArchitectureString,
 			m_PDB.GetMachineType()
@@ -429,8 +398,7 @@ void PDBExtractor::PrintPDBDeclarations()
 					<< PDB::GetUdtKindString(e->u.Udt.Kind)
 					<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
 					<< std::endl;
-			}
-			else if (e->Tag == SymTagEnum)
+			} else if (e->Tag == SymTagEnum)
 			{
 				*m_Settings.PdbHeaderReconstructorSettings.OutputFile
 					<< "enum"
@@ -464,10 +432,6 @@ void PDBExtractor::PrintPDBDefinitions()
 		for (auto&& e : m_SymbolSorter->GetSortedSymbols())
 		{
 			bool Expand = true;
-
-			//
-			// Do not expand unnamed types, if they will be inlined.
-			//
 
 			if (m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion == PDBHeaderReconstructor::MemberStructExpansionType::InlineUnnamed &&
 			    e->Tag == SymTagUDT &&

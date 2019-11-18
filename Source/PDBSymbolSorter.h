@@ -74,29 +74,11 @@ private:
 	{
 		static DWORD UnnamedCounter = 0;
 
-		//
-		// In one PDB there can be more than one symbol
-		// with same name (and different definitions),
-		// which would result into redefinitions of types
-		// during the printing.
-		//
-		// Problem is solved by taking into account
-		// and printing only the first definition of the symbol.
-		//
-		// Another solution could be appending a suffix (_1, _2, ...)
-		// to the symbol names, but then it wouldn't reflect the real names.
-		// So let's just assume all definitions are same
-		// and/or the first one is the most correct one.
-		//
-		// Also, unnamed symbols must be handled as a special case.
-		//
-
 		std::string Key = Symbol->Name;
 		if (m_VisitedUdts.find(Key) != m_VisitedUdts.end())
 		{
 			return true;
-		}
-		else
+		} else
 		{
 			if (PDB::IsUnnamedSymbol(Symbol))
 			{

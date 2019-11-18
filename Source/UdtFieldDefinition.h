@@ -16,25 +16,13 @@ public:
 
 	void VisitBaseType(const SYMBOL* Symbol) override
 	{
-		//
-		// BaseType:
-		// short/int/long/...
-		//
-
 		if (Symbol->BaseType == btFloat && Symbol->Size == 10)
 		{
 			m_Comment += " /* 80-bit float */";
 		}
 
-		if (Symbol->IsConst)
-		{
-			m_TypePrefix += "const ";
-		}
-
-		if (Symbol->IsVolatile)
-		{
-			m_TypePrefix += "volatile ";
-		}
+		if (Symbol->IsConst)	m_TypePrefix += "const ";
+		if (Symbol->IsVolatile)	m_TypePrefix += "volatile ";
 
 		m_TypePrefix += PDB::GetBasicTypeString(Symbol, m_Settings->UseStdInt);
 	}
@@ -46,15 +34,8 @@ public:
 
 	void VisitEnumType(const SYMBOL* Symbol) override
 	{
-		if (Symbol->IsConst)
-		{
-			m_TypePrefix += "const ";
-		}
-
-		if (Symbol->IsVolatile)
-		{
-			m_TypePrefix += "volatile ";
-		}
+		if (Symbol->IsConst)	m_TypePrefix += "const ";
+		if (Symbol->IsVolatile)	m_TypePrefix += "volatile ";
 
 		m_TypePrefix += "enum ";
 		m_TypePrefix += Symbol->Name;
@@ -62,15 +43,8 @@ public:
 
 	void VisitUdtType(const SYMBOL* Symbol) override
 	{
-		if (Symbol->IsConst)
-		{
-			m_TypePrefix += "const ";
-		}
-
-		if (Symbol->IsVolatile)
-		{
-			m_TypePrefix += "volatile ";
-		}
+		if (Symbol->IsConst)	m_TypePrefix += "const ";
+		if (Symbol->IsVolatile)	m_TypePrefix += "volatile ";
 
 		m_TypePrefix += PDB::GetUdtKindString(Symbol->u.Udt.Kind);
 		m_TypePrefix += " ";
@@ -85,21 +59,13 @@ public:
 			if (Symbol->u.Pointer.IsReference)
 			{
 				m_MemberName += "& ";
-			}
-			else
+			} else
 			{
 				m_MemberName += "* ";
 			}
 
-			if (Symbol->IsConst)
-			{
-				m_MemberName += " const";
-			}
-
-			if (Symbol->IsVolatile)
-			{
-				m_MemberName += " volatile";
-			}
+			if (Symbol->IsConst)	m_MemberName += " const";
+			if (Symbol->IsVolatile)	m_MemberName += " volatile";
 
 			m_MemberName = "(" + m_MemberName + ")";
 
@@ -109,56 +75,24 @@ public:
 		if (Symbol->u.Pointer.IsReference)
 		{
 			m_TypePrefix += "&";
-		}
-		else
+		} else
 		{
 			m_TypePrefix += "*";
 		}
 
-		if (Symbol->IsConst)
-		{
-			m_TypePrefix += " const";
-		}
-
-		if (Symbol->IsVolatile)
-		{
-			m_TypePrefix += " volatile";
-		}
+		if (Symbol->IsConst)	m_TypePrefix += " const";
+		if (Symbol->IsVolatile)	m_TypePrefix += " volatile";
 	}
 
 	void VisitArrayTypeEnd(const SYMBOL* Symbol) override
 	{
-		//
-		// To my knowledge, array elements can't be declared like that.
-		//
-		//	if (Symbol->IsConst)
-		//	{
-		//		m_TypePrefix += " const";
-		//	}
-		//
-		//	if (Symbol->IsVolatile)
-		//	{
-		//		m_TypePrefix += " volatile";
-		//	}
-		//
-
 		if (Symbol->u.Array.ElementCount == 0)
 		{
-			//
-			// Apparently array with 0 element count can exist in PDB.
-			// But XYZ Name[0] is not compilable.
-			// This hack "converts" the zero-sized array into the pointer.
-			//
-			// Also, size of the symbol is set to 1 instead of 0,
-			// otherwise we would end up in anonymous union.
-			//
-
 			const_cast<SYMBOL*>(Symbol)->Size = 1;
 			m_TypePrefix += "*";
 
 			m_Comment += " /* zero-length array */";
-		}
-		else
+		} else
 		{
 			m_TypeSuffix += "[" + std::to_string(Symbol->u.Array.ElementCount) + "]";
 		}
@@ -187,24 +121,13 @@ public:
 			m_TypePrefix = "virtual " + m_TypePrefix;
 		}
 
-		if (Symbol->u.Function.IsConst)
-		{
-			m_Comment += " const";
-		}
-
-		if (Symbol->u.Function.IsOverride)
-		{
-			m_Comment += " overide";
-		}
-
-		if (Symbol->u.Function.IsPure)
-		{
-			m_Comment += " = 0";
-		}
+		if (Symbol->u.Function.IsConst)		m_Comment += " const";
+		if (Symbol->u.Function.IsOverride)	m_Comment += " override";
+		if (Symbol->u.Function.IsPure)		m_Comment += " = 0";
 
 		if (Symbol->u.Function.IsVirtual)
 		{
-			m_Comment += " /* VO: " + std:to_string(Symbol->u.Function.VirtualOffset) + " */";
+			m_Comment += " /* VO: " + std:to_string(Symbol->u.Function.VirtualOffset) + " */"; //hex
 		}
 
 		if (m_TypeSuffix.size())
@@ -230,7 +153,6 @@ public:
 	void VisitFunctionArgTypeBegin(const SYMBOL* Symbol) override
 	{
 		Function func = m_Funcs.top();
-
 		//TODO
 	}
 
@@ -268,7 +190,6 @@ public:
 	void SetSettings(void* MemberDefinitionSettings) override
 	{
 		static Settings DefaultSettings;
-
 		if (MemberDefinitionSettings == nullptr)
 		{
 			MemberDefinitionSettings = &DefaultSettings;
@@ -289,9 +210,9 @@ private:
 		std::vector<std::string> Args;
 	};
 
-	std::string m_TypePrefix; // "int*"
-	std::string m_MemberName; // "XYZ"
-	std::string m_TypeSuffix; // "[8]"
+	std::string m_TypePrefix;
+	std::string m_MemberName;
+	std::string m_TypeSuffix;
 	std::string m_Comment;
 	std::stack<Function> m_Funcs;
 	std::vector<std::string> m_Args;

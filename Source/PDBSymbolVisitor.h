@@ -36,26 +36,6 @@ private:
 
 	struct AnonymousUdt
 	{
-		//
-		// This structure holds information about
-		// nested anonymous UDTs.
-		// Anonymous UDT (ie. anonymous struct)
-		// is a type which members are in fact members
-		// of the parent UDT.
-		//
-		// struct Foo
-		// {
-		//   struct
-		//   {
-		//     int hi;
-		//     int bye;
-		//   }; // <--- no member name!
-		// };
-		//
-		// Visit http://stackoverflow.com/a/14248127 for more information about differences
-		// between unnamed and anonymous data types.
-		//
-
 		AnonymousUdt(
 			UdtKind Kind,
 			const SYMBOL_UDT_FIELD* FirstUdtField,
@@ -177,53 +157,15 @@ private:
 	static bool Is64BitBasicType(const SYMBOL* Symbol);
 
 private:
-	//
-	// Class properties.
-	//
-
-	//
-	// These three properties are used for padding.
-	// m_SizeOfPreviousUdtField holds the size of the previous
-	// UDT field with respect to nested unnamed and anonymous UDTs.
-	//
-	// m_PreviousUdtField just holds pointer to the previous UDT field.
-	//
-	// m_PreviousBitFieldField holds pointer to the previous bitfield field.
-	//
 	DWORD m_SizeOfPreviousUdtField = 0;
 	const SYMBOL_UDT_FIELD* m_PreviousUdtField = nullptr;
 	const SYMBOL_UDT_FIELD* m_PreviousBitFieldField = nullptr;
-
-	//
-	// This stack holds information about anonymous UDTs.
-	// More information about anonymous UDTs are in documentation
-	// of the AnonymousUdt struct.
-	//
 	AnonymousUdtStack m_AnonymousUdtStack;
-
 	AnonymousUdtStack m_AnonymousUnionStack;
 	AnonymousUdtStack m_AnonymousStructStack;
-
-	//
-	// Holds information about current bitfield.
-	//
 	BitFieldRange m_CurrentBitField;
-
-	//
-	// This stack holds instance of a class which will be responsible
-	// for the formatting of the current member (UDT field) -
-	// - its type, member name, ...
-	//
 	ContextStack m_MemberContextStack;
-
-	//
-	// Settings for this Visit.
-	//
 	PDBReconstructorBase* m_ReconstructVisitor;
-
-	//
-	// Settigs for constructing member definitions.
-	//
 	void* m_MemberDefinitionSettings;
 };
 
