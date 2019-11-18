@@ -26,7 +26,6 @@ public:
 		{
 			MemberStructExpansion       = MemberStructExpansionType::InlineUnnamed;
 			OutputFile                  = &std::cout;
-			TestFile                    = nullptr;
 			PaddingMemberPrefix         = "Padding_";
 			BitFieldPaddingMemberPrefix = "";
 			UnnamedTypePrefix           = "TAG_UNNAMED_";
@@ -41,7 +40,6 @@ public:
 
 		MemberStructExpansionType MemberStructExpansion;
 		std::ostream*             OutputFile;
-		std::ostream*             TestFile;
 		std::string               PaddingMemberPrefix;
 		std::string               BitFieldPaddingMemberPrefix;
 		std::string               UnnamedTypePrefix;
@@ -104,7 +102,6 @@ private:
 	bool HasBeenVisited(const SYMBOL* Symbol) const;
 	void MarkAsVisited(const SYMBOL* Symbol);
 	DWORD GetParentOffset() const;
-	void AppendToTest(const SYMBOL_UDT_FIELD* UdtField);
 	bool ShouldExpand(const SYMBOL* Symbol) const;
 
 private:

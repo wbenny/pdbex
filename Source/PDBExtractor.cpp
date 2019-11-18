@@ -11,24 +11,6 @@
 
 namespace
 {
-	static const char TEST_FILE_HEADER[] =
-		"#include <stdio.h>\n"
-		"#include <stddef.h>\n"
-		"#include <stdint.h>\n"
-		"\n"
-		"typedef long HRESULT;\n"
-		"\n"
-		"#include \"%s\"\n"
-		"\n"
-		"int main()\n"
-		"{\n";
-
-	static const char TEST_FILE_FOOTER[] =
-		"\n"
-		"\treturn 0;\n"
-		"}\n"
-		"\n";
-
 	static const char HEADER_FILE_HEADER[] =
 		"/*\n"
 		" * PDB file: %s\n"
@@ -67,22 +49,17 @@ int PDBExtractor::Run(int argc, char** argv)
 		ParseParameters(argc, argv);
 		OpenPDBFile();
 
-		PrintTestHeader();
-
 		if (m_Settings.SymbolName == "*")
 		{
 			DumpAllSymbols();
-		}
-		else if (m_Settings.SymbolName == "%")
+		} else if (m_Settings.SymbolName == "%")
 		{
 			DumpAllSymbolsOneByOne();
-		}
-		else
+		} else
 		{
 			DumpOneSymbol();
 		}
 
-		PrintTestFooter();
 	} catch (const PDBDumperException& e)
 	{
 		std::cerr << e.what() << std::endl;
@@ -108,7 +85,6 @@ void PDBExtractor::PrintUsage()
 	printf("                     Use '%%' if all symbols should be extracted separately.\n");
 	printf("<path>               Path to the PDB file.\n");
 	printf(" -o filename         Specifies the output file.                       (stdout)\n");
-	printf(" -t filename         Specifies the output test file.                  (off)\n");
 	printf(" -e [n,i,a]          Specifies expansion of nested structures/unions. (i)\n");
 	printf("                       n = none            Only top-most type is printed.\n");
 	printf("                       i = inline unnamed  Unnamed types are nested.\n");
@@ -185,17 +161,6 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 			{
 				m_Settings.PdbHeaderReconstructorSettings.OutputFile = nullptr;
 			}
-			break;
-
-		case 't':
-			if (!NextArgument)
-				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-
-			++ArgumentPointer;
-			m_Settings.TestFilename = NextArgument;
-			m_Settings.PdbHeaderReconstructorSettings.TestFile = new std::ofstream(
-				m_Settings.TestFilename, std::ios::out);
-
 			break;
 
 		case 'e':
@@ -339,27 +304,6 @@ void PDBExtractor::OpenPDBFile()
 	if (m_PDB.Open(m_Settings.PdbPath.c_str()) == FALSE)
 	{
 		throw PDBDumperException(MESSAGE_FILE_NOT_FOUND);
-	}
-}
-
-void PDBExtractor::PrintTestHeader()
-{
-	if (m_Settings.PdbHeaderReconstructorSettings.TestFile != nullptr)
-	{
-		static char TEST_FILE_HEADER_FORMATTED[16 * 1024];
-		sprintf_s(TEST_FILE_HEADER_FORMATTED, TEST_FILE_HEADER,
-			m_Settings.OutputFilename
-			);
-
-		(*m_Settings.PdbHeaderReconstructorSettings.TestFile) << TEST_FILE_HEADER_FORMATTED;
-	}
-}
-
-void PDBExtractor::PrintTestFooter()
-{
-	if (m_Settings.PdbHeaderReconstructorSettings.TestFile != nullptr)
-	{
-		(*m_Settings.PdbHeaderReconstructorSettings.TestFile) << TEST_FILE_FOOTER;
 	}
 }
 
@@ -562,11 +506,6 @@ void PDBExtractor::DumpAllSymbolsOneByOne()
 
 void PDBExtractor::CloseOpenFiles()
 {
-	if (m_Settings.TestFilename)
-	{
-		delete m_Settings.PdbHeaderReconstructorSettings.TestFile;
-	}
-
 	if (m_Settings.OutputFilename)
 	{
 		delete m_Settings.PdbHeaderReconstructorSettings.OutputFile;

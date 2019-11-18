@@ -222,8 +222,6 @@ void PDBHeaderReconstructor::OnUdtFieldBegin(const SYMBOL_UDT_FIELD* UdtField)
 		WriteOffset(UdtField, GetParentOffset());
 	}
 
-	AppendToTest(UdtField);
-
 	m_OffsetStack.push_back(UdtField->Offset);
 }
 
@@ -512,60 +510,6 @@ void PDBHeaderReconstructor::MarkAsVisited(const SYMBOL* Symbol)
 DWORD PDBHeaderReconstructor::GetParentOffset() const
 {
 	return std::accumulate(m_OffsetStack.begin(), m_OffsetStack.end(), (DWORD)0);
-}
-
-void PDBHeaderReconstructor::AppendToTest(const SYMBOL_UDT_FIELD* UdtField)
-{
-	if (m_Settings->TestFile != nullptr &&
-	    m_OffsetStack.empty() &&
-	    UdtField->Bits == 0)
-	{
-		static const char TestFormatString[] =
-			"\t"
-			"printf("
-				"\"[%%c] 0x%%04x - 0x%04x (%s %s.%s)\\n\", "
-				"offsetof(%s %s, %s) == %u ? ' ' : '!', "
-				"(unsigned)offsetof(%s %s, %s)"
-			");";
-
-		static const char TestDelimiterString[] =
-			"\t"
-			"printf("
-			"\"\\n\""
-			");";
-
-		static std::string LastTestedUdt;
-
-		std::string CorrectedSymbolName = GetCorrectedSymbolName(UdtField->Parent);
-
-		if (CorrectedSymbolName != LastTestedUdt)
-		{
-			(*m_Settings->TestFile) << TestDelimiterString << std::endl;
-		}
-
-		LastTestedUdt = CorrectedSymbolName;
-
-		static char FormattedStringBuffer[4096];
-		sprintf_s(FormattedStringBuffer,
-			TestFormatString,
-			UdtField->Offset,
-
-			PDB::GetUdtKindString(UdtField->Parent->u.Udt.Kind),
-			CorrectedSymbolName.c_str(),
-			UdtField->Name,
-
-			PDB::GetUdtKindString(UdtField->Parent->u.Udt.Kind),
-			CorrectedSymbolName.c_str(),
-			UdtField->Name,
-			UdtField->Offset,
-
-			PDB::GetUdtKindString(UdtField->Parent->u.Udt.Kind),
-			CorrectedSymbolName.c_str(),
-			UdtField->Name
-			);
-
-		(*m_Settings->TestFile) << FormattedStringBuffer << std::endl;
-	}
 }
 
 bool PDBHeaderReconstructor::ShouldExpand(const SYMBOL* Symbol) const

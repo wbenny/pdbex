@@ -24,7 +24,6 @@ public:
 		std::string PdbPath;
 
 		const char* OutputFilename = nullptr;
-		const char* TestFilename = nullptr;
 
 		bool PrintReferencedTypes = true;
 		bool PrintHeader = true;
@@ -41,8 +40,6 @@ private:
 	void PrintUsage();
 	void ParseParameters(int argc, char** argv);
 	void OpenPDBFile();
-	void PrintTestHeader();
-	void PrintTestFooter();
 	void PrintPDBHeader();
 	void PrintPDBDeclarations();
 	void PrintPDBDefinitions();
