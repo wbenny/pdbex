@@ -16,7 +16,6 @@ namespace
 		" * PDB file: %s\n"
 		" * Image architecture: %s (0x%04x)\n"
 		" *\n"
-		" * Dumped by pdbex tool v" PDBEX_VERSION_STRING ", by wbenny\n"
 		" */\n\n";
 
 	static const char DEFINITIONS_INCLUDE_STDINT[] = "#include <stdint.h>";
@@ -74,9 +73,8 @@ int PDBExtractor::Run(int argc, char** argv)
 void PDBExtractor::PrintUsage()
 {
 	printf("Extracts types and structures from PDB (Program database).\n");
-	printf("Version v%s\n", PDBEX_VERSION_STRING);
 	printf("\n");
-	printf("pdbex <symbol> <path> [-o <filename>] [-t <filename>] [-e <type>]\n");
+	printf("pdbex <symbol> <path> [-o <filename>] [-e <type>]\n");
 	printf("                     [-u <prefix>] [-s prefix] [-r prefix] [-g suffix]\n");
 	printf("                     [-p] [-x] [-m] [-b] [-d] [-i] [-l]\n");
 	printf("\n");
@@ -302,9 +300,7 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 void PDBExtractor::OpenPDBFile()
 {
 	if (m_PDB.Open(m_Settings.PdbPath.c_str()) == FALSE)
-	{
 		throw PDBDumperException(MESSAGE_FILE_NOT_FOUND);
-	}
 }
 
 void PDBExtractor::PrintPDBHeader()
@@ -403,20 +399,14 @@ void PDBExtractor::PrintPDBFunctions()
 {
 	if (m_Settings.PrintFunctions)
 	{
-		*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-			<< "/*"
-			<< std::endl;
+		*m_Settings.PdbHeaderReconstructorSettings.OutputFile << "/*" << std::endl;
 
 		for (auto&& e : m_PDB.GetFunctionSet())
 		{
-			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-				<< e
-				<< std::endl;
+			*m_Settings.PdbHeaderReconstructorSettings.OutputFile << e << std::endl;
 		}
 
-		*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-			<< "*/"
-			<< std::endl;
+		*m_Settings.PdbHeaderReconstructorSettings.OutputFile << "*/" << std::endl;
 	}
 }
 
@@ -439,9 +429,7 @@ void PDBExtractor::DumpOneSymbol()
 	const SYMBOL* Symbol = m_PDB.GetSymbolByName(m_Settings.SymbolName.c_str());
 
 	if (Symbol == nullptr)
-	{
 		throw PDBDumperException(MESSAGE_SYMBOL_NOT_FOUND);
-	}
 
 	PrintPDBHeader();
 
@@ -450,8 +438,7 @@ void PDBExtractor::DumpOneSymbol()
 	{
 		m_SymbolSorter->Visit(Symbol);
 		PrintPDBDefinitions();
-	}
-	else
+	} else
 	{
 		m_SymbolVisitor->Run(Symbol);
 	}
@@ -468,9 +455,7 @@ void PDBExtractor::DumpAllSymbolsOneByOne()
 
 	m_SymbolSorter->Clear();
 
-	std::string OutputDirectory = m_Settings.OutputFilename
-		? m_Settings.OutputFilename
-		: ".";
+	std::string OutputDirectory = m_Settings.OutputFilename	? m_Settings.OutputFilename : ".";
 
 	if (OutputDirectory[OutputDirectory.length() - 1] != '\\')
 	{
@@ -479,18 +464,14 @@ void PDBExtractor::DumpAllSymbolsOneByOne()
 
 	BOOL Result = CreateDirectory(OutputDirectory.c_str(), NULL);
 	if (!Result && GetLastError() != ERROR_ALREADY_EXISTS)
-	{
 		throw PDBDumperException("Cannot create directory");
-	}
 
 	for (auto&& e : Symbols)
 	{
 		if (!PDB::IsUnnamedSymbol(e))
 		{
 			m_Settings.PdbHeaderReconstructorSettings.OutputFile = new std::ofstream(
-				OutputDirectory + std::string(e->Name) + ".h",
-				std::ios::out
-			);
+				OutputDirectory + std::string(e->Name) + ".h", std::ios::out);
 
 			m_Settings.SymbolName = e->Name;
 			DumpOneSymbol();
