@@ -132,8 +132,7 @@ BOOL SymbolModuleBase::Open(IN const CHAR* Path)
 	if (_wcsicmp(FileExtension, L".pdb") == 0)
 	{
 		Result = m_DataSource->loadDataFromPdb(PathUnicode.get());
-	}
-	else
+	} else
 	{
 		PDBCallback Callback;
 		Callback.AddRef();
@@ -553,13 +552,6 @@ VOID SymbolModule::ProcessSymbolPointer(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Sym
 
 	if (m_MachineType == 0)
 	{
-
-		//
-		// Sometimes the Machine type is not stored in the PDB.
-		// If this is our case, try to guess the machine type
-		// by pointer size.
-		//
-
 		switch (Symbol->Size)
 		{
 			case 4:  m_MachineType = IMAGE_FILE_MACHINE_I386;  break;
@@ -581,26 +573,14 @@ VOID SymbolModule::ProcessSymbolArray(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbo
 
 VOID SymbolModule::ProcessSymbolFunction(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 {
-	//
-	// Calling convention.
-	//
-
 	DWORD CallingConvention;
 	DiaSymbol->get_callingConvention(&CallingConvention);
 
 	Symbol->u.Function.CallingConvention = static_cast<CV_call_e>(CallingConvention);
 
-	//
-	// Return type.
-	//
-
 	CComPtr<IDiaSymbol> DiaReturnTypeSymbol;
 	DiaSymbol->get_type(&DiaReturnTypeSymbol);
 	Symbol->u.Function.ReturnType = GetSymbol(DiaReturnTypeSymbol);
-
-	//
-	// Arguments.
-	//
 
 	CComPtr<IDiaEnumSymbols> DiaSymbolEnumerator;
 
@@ -741,9 +721,6 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 		Index += 1;
 	}
 
-	//
-	// Padding.
-	//
 	if (Symbol->u.Udt.Kind == UdtStruct && Symbol->u.Udt.FieldCount > 0 && Symbol->u.Udt.Fields[Symbol->u.Udt.FieldCount - 1].Type != nullptr)
 	{
 		SYMBOL_UDT_FIELD* LastUdtField = &Symbol->u.Udt.Fields[Symbol->u.Udt.FieldCount - 1];
