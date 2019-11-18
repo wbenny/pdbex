@@ -9,9 +9,7 @@
 
 #include <cassert>
 
-PDBHeaderReconstructor::PDBHeaderReconstructor(
-	Settings* VisitorSettings
-	)
+PDBHeaderReconstructor::PDBHeaderReconstructor(Settings* VisitorSettings)
 {
 	static Settings DefaultSettings;
 
@@ -23,8 +21,7 @@ PDBHeaderReconstructor::PDBHeaderReconstructor(
 	m_Settings = VisitorSettings;
 }
 
-void
-PDBHeaderReconstructor::Clear()
+void PDBHeaderReconstructor::Clear()
 {
 	assert(m_Depth == 0);
 
@@ -36,10 +33,7 @@ PDBHeaderReconstructor::Clear()
 	m_VisitedSymbols.clear();
 }
 
-const std::string&
-PDBHeaderReconstructor::GetCorrectedSymbolName(
-	const SYMBOL* Symbol
-	) const
+const std::string& PDBHeaderReconstructor::GetCorrectedSymbolName(const SYMBOL* Symbol) const
 {
 	if (!m_CorrectedSymbolNames.contains(Symbol))
 	{
@@ -81,10 +75,7 @@ PDBHeaderReconstructor::GetCorrectedSymbolName(
 	return m_CorrectedSymbolNames[Symbol];
 }
 
-bool
-PDBHeaderReconstructor::OnEnumType(
-	const SYMBOL* Symbol
-	)
+bool PDBHeaderReconstructor::OnEnumType(const SYMBOL* Symbol)
 {
 	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
 
@@ -100,10 +91,7 @@ PDBHeaderReconstructor::OnEnumType(
 	return Expand;
 }
 
-void
-PDBHeaderReconstructor::OnEnumTypeBegin(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::OnEnumTypeBegin(const SYMBOL* Symbol)
 {
 	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
 
@@ -125,10 +113,7 @@ PDBHeaderReconstructor::OnEnumTypeBegin(
 	m_Depth += 1;
 }
 
-void
-PDBHeaderReconstructor::OnEnumTypeEnd(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::OnEnumTypeEnd(const SYMBOL* Symbol)
 {
 	m_Depth -= 1;
 
@@ -147,10 +132,7 @@ PDBHeaderReconstructor::OnEnumTypeEnd(
 	}
 }
 
-void
-PDBHeaderReconstructor::OnEnumField(
-	const SYMBOL_ENUM_FIELD* EnumField
-	)
+void PDBHeaderReconstructor::OnEnumField(const SYMBOL_ENUM_FIELD* EnumField)
 {
 	WriteIndent();
 	Write("%s = ", EnumField->Name);
@@ -159,10 +141,7 @@ PDBHeaderReconstructor::OnEnumField(
 	Write(",\n");
 }
 
-bool
-PDBHeaderReconstructor::OnUdt(
-	const SYMBOL* Symbol
-	)
+bool PDBHeaderReconstructor::OnUdt(const SYMBOL* Symbol)
 {
 	bool Expand = ShouldExpand(Symbol);
 
@@ -190,10 +169,7 @@ PDBHeaderReconstructor::OnUdt(
 	return Expand;
 }
 
-void
-PDBHeaderReconstructor::OnUdtBegin(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::OnUdtBegin(const SYMBOL* Symbol)
 {
 	//
 	// Handle begin of the typedef.
@@ -240,10 +216,7 @@ PDBHeaderReconstructor::OnUdtBegin(
 	m_Depth += 1;
 }
 
-void
-PDBHeaderReconstructor::OnUdtEnd(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::OnUdtEnd(const SYMBOL* Symbol)
 {
 	m_Depth -= 1;
 
@@ -269,10 +242,7 @@ PDBHeaderReconstructor::OnUdtEnd(
 	}
 }
 
-void
-PDBHeaderReconstructor::OnUdtFieldBegin(
-	const SYMBOL_UDT_FIELD* UdtField
-	)
+void PDBHeaderReconstructor::OnUdtFieldBegin(const SYMBOL_UDT_FIELD* UdtField)
 {
 	WriteIndent();
 
@@ -298,10 +268,7 @@ PDBHeaderReconstructor::OnUdtFieldBegin(
 	m_OffsetStack.push_back(UdtField->Offset);
 }
 
-void
-PDBHeaderReconstructor::OnUdtFieldEnd(
-	const SYMBOL_UDT_FIELD* UdtField
-	)
+void PDBHeaderReconstructor::OnUdtFieldEnd(const SYMBOL_UDT_FIELD* UdtField)
 {
 	//
 	// Pop offset of the current UDT field.
@@ -310,11 +277,7 @@ PDBHeaderReconstructor::OnUdtFieldEnd(
 	m_OffsetStack.pop_back();
 }
 
-void
-PDBHeaderReconstructor::OnUdtField(
-	const SYMBOL_UDT_FIELD* UdtField,
-	UdtFieldDefinitionBase* MemberDefinition
-	)
+void PDBHeaderReconstructor::OnUdtField(const SYMBOL_UDT_FIELD* UdtField, UdtFieldDefinitionBase* MemberDefinition)
 {
 	Write("%s", MemberDefinition->GetPrintableDefinition().c_str());
 
@@ -337,11 +300,7 @@ PDBHeaderReconstructor::OnUdtField(
 	Write("\n");
 }
 
-void
-PDBHeaderReconstructor::OnAnonymousUdtBegin(
-	UdtKind Kind,
-	const SYMBOL_UDT_FIELD* FirstUdtField
-	)
+void PDBHeaderReconstructor::OnAnonymousUdtBegin(UdtKind Kind, const SYMBOL_UDT_FIELD* FirstUdtField)
 {
 	WriteIndent();
 	Write("%s\n", PDB::GetUdtKindString(Kind));
@@ -352,13 +311,8 @@ PDBHeaderReconstructor::OnAnonymousUdtBegin(
 	m_Depth += 1;
 }
 
-void
-PDBHeaderReconstructor::OnAnonymousUdtEnd(
-	UdtKind Kind,
-	const SYMBOL_UDT_FIELD* FirstUdtField,
-	const SYMBOL_UDT_FIELD* LastUdtField,
-	DWORD Size
-	)
+void PDBHeaderReconstructor::OnAnonymousUdtEnd(UdtKind Kind,
+	const SYMBOL_UDT_FIELD* FirstUdtField, const SYMBOL_UDT_FIELD* LastUdtField, DWORD Size)
 {
 	m_Depth -= 1;
 	WriteIndent();
@@ -373,11 +327,8 @@ PDBHeaderReconstructor::OnAnonymousUdtEnd(
 	Write("\n");
 }
 
-void
-PDBHeaderReconstructor::OnUdtFieldBitFieldBegin(
-	const SYMBOL_UDT_FIELD* FirstUdtFieldBitField,
-	const SYMBOL_UDT_FIELD* LastUdtFieldBitField
-	)
+void PDBHeaderReconstructor::OnUdtFieldBitFieldBegin(
+	const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField)
 {
 	if (m_Settings->AllowBitFieldsInUnion == false)
 	{
@@ -397,11 +348,8 @@ PDBHeaderReconstructor::OnUdtFieldBitFieldBegin(
 	}
 }
 
-void
-PDBHeaderReconstructor::OnUdtFieldBitFieldEnd(
-	const SYMBOL_UDT_FIELD* FirstUdtFieldBitField,
-	const SYMBOL_UDT_FIELD* LastUdtFieldBitField
-	)
+void PDBHeaderReconstructor::OnUdtFieldBitFieldEnd(
+	const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField)
 {
 	if (m_Settings->AllowBitFieldsInUnion == false)
 	{
@@ -415,13 +363,8 @@ PDBHeaderReconstructor::OnUdtFieldBitFieldEnd(
 	}
 }
 
-void
-PDBHeaderReconstructor::OnPaddingMember(
-	const SYMBOL_UDT_FIELD* UdtField,
-	BasicType PaddingBasicType,
-	DWORD PaddingBasicTypeSize,
-	DWORD PaddingSize
-	)
+void PDBHeaderReconstructor::OnPaddingMember(const SYMBOL_UDT_FIELD* UdtField,
+	BasicType PaddingBasicType, DWORD PaddingBasicTypeSize, DWORD PaddingSize)
 {
 	if (m_Settings->CreatePaddingMembers)
 	{
@@ -445,11 +388,8 @@ PDBHeaderReconstructor::OnPaddingMember(
 	}
 }
 
-void
-PDBHeaderReconstructor::OnPaddingBitFieldField(
-	const SYMBOL_UDT_FIELD* UdtField,
-	const SYMBOL_UDT_FIELD* PreviousUdtField
-	)
+void PDBHeaderReconstructor::OnPaddingBitFieldField(
+	const SYMBOL_UDT_FIELD* UdtField, const SYMBOL_UDT_FIELD* PreviousUdtField)
 {
 	WriteIndent();
 
@@ -463,15 +403,13 @@ PDBHeaderReconstructor::OnPaddingBitFieldField(
 
 	if (m_Settings->BitFieldPaddingMemberPrefix.empty())
 	{
-		Write(
-			"%s",
+		Write("%s",
 			PDB::GetBasicTypeString(UdtField->Type) // TODO: UseStdInt
 		);
 	}
 	else
 	{
-		Write(
-			"%s %s%u",
+		Write("%s %s%u",
 			PDB::GetBasicTypeString(UdtField->Type), // TODO: UseStdInt
 			m_Settings->PaddingMemberPrefix.c_str(),
 			m_PaddingMemberCounter++
@@ -501,11 +439,7 @@ PDBHeaderReconstructor::OnPaddingBitFieldField(
 	Write("\n");
 }
 
-void
-PDBHeaderReconstructor::Write(
-	const char* Format,
-	...
-	)
+void PDBHeaderReconstructor::Write(const char* Format, ...)
 {
 	char TempBuffer[8 * 1024];
 
@@ -517,8 +451,7 @@ PDBHeaderReconstructor::Write(
 	m_Settings->OutputFile->write(TempBuffer, strlen(TempBuffer));
 }
 
-void
-PDBHeaderReconstructor::WriteIndent()
+void PDBHeaderReconstructor::WriteIndent()
 {
 	for (DWORD i = 0; i < m_Depth; i++)
 	{
@@ -526,62 +459,56 @@ PDBHeaderReconstructor::WriteIndent()
 	}
 }
 
-void
-PDBHeaderReconstructor::WriteVariant(
-	const VARIANT* v
-	)
+void PDBHeaderReconstructor::WriteVariant(const VARIANT* v)
 {
 	switch (v->vt)
 	{
-		case VT_I1:
-			Write("%d", (INT)v->cVal);
-			break;
+	case VT_I1:
+		Write("%d", (INT)v->cVal);
+		break;
 
-		case VT_UI1:
-			Write("0x%x", (UINT)v->cVal);
-			break;
+	case VT_UI1:
+		Write("0x%x", (UINT)v->cVal);
+		break;
 
-		case VT_I2:
-			Write("%d", (UINT)v->iVal);
-			break;
+	case VT_I2:
+		Write("%d", (UINT)v->iVal);
+		break;
 
-		case VT_UI2:
-			Write("0x%x", (UINT)v->iVal);
-			break;
+	case VT_UI2:
+		Write("0x%x", (UINT)v->iVal);
+		break;
 
-		case VT_INT:
-		case VT_I4:
-			Write("%d", (UINT)v->lVal);
-			break;
+	case VT_INT:
+	case VT_I4:
+		Write("%d", (UINT)v->lVal);
+		break;
 
-		case VT_UINT:
-		case VT_UI4:
-			Write("0x%x", (UINT)v->lVal);
-			break;
+	case VT_UINT:
+	case VT_UI4:
+		Write("0x%x", (UINT)v->lVal);
+		break;
 	}
 }
 
-void
-PDBHeaderReconstructor::WriteUnnamedDataType(
-	UdtKind Kind
-	)
+void PDBHeaderReconstructor::WriteUnnamedDataType(UdtKind Kind)
 {
 	if (m_Settings->AllowAnonymousDataTypes == false)
 	{
 		switch (Kind)
 		{
-			case UdtStruct:
-			case UdtClass:
-				Write(" %s", m_Settings->AnonymousStructPrefix.c_str());
-				break;
+		case UdtStruct:
+		case UdtClass:
+			Write(" %s", m_Settings->AnonymousStructPrefix.c_str());
+			break;
 
-			case UdtUnion:
-				Write(" %s", m_Settings->AnonymousUnionPrefix.c_str());
-				break;
+		case UdtUnion:
+			Write(" %s", m_Settings->AnonymousUnionPrefix.c_str());
+			break;
 
-			default:
-				assert(0);
-				break;
+		default:
+			assert(0);
+			break;
 		}
 
 		if (m_AnonymousDataTypeCounter++ > 0)
@@ -591,10 +518,7 @@ PDBHeaderReconstructor::WriteUnnamedDataType(
 	}
 }
 
-void
-PDBHeaderReconstructor::WriteTypedefBegin(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::WriteTypedefBegin(const SYMBOL* Symbol)
 {
 	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
 	bool UseTypedef = m_Settings->MicrosoftTypedefs && CorrectedName[0] == '_';
@@ -605,10 +529,7 @@ PDBHeaderReconstructor::WriteTypedefBegin(
 	}
 }
 
-void
-PDBHeaderReconstructor::WriteTypedefEnd(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::WriteTypedefEnd(const SYMBOL* Symbol)
 {
 	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
 	bool UseTypedef = m_Settings->MicrosoftTypedefs && CorrectedName[0] == '_';
@@ -619,10 +540,7 @@ PDBHeaderReconstructor::WriteTypedefEnd(
 	}
 }
 
-void
-PDBHeaderReconstructor::WriteConstAndVolatile(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::WriteConstAndVolatile(const SYMBOL* Symbol)
 {
 	if (m_Depth != 0)
 	{
@@ -642,11 +560,7 @@ PDBHeaderReconstructor::WriteConstAndVolatile(
 	}
 }
 
-void
-PDBHeaderReconstructor::WriteOffset(
-	const SYMBOL_UDT_FIELD* UdtField,
-	int PaddingOffset
-	)
+void PDBHeaderReconstructor::WriteOffset(const SYMBOL_UDT_FIELD* UdtField, int PaddingOffset)
 {
 	if (m_Settings->ShowOffsets)
 	{
@@ -654,34 +568,24 @@ PDBHeaderReconstructor::WriteOffset(
 	}
 }
 
-bool
-PDBHeaderReconstructor::HasBeenVisited(
-	const SYMBOL* Symbol
-	) const
+bool PDBHeaderReconstructor::HasBeenVisited(const SYMBOL* Symbol) const
 {
 	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
 	return m_VisitedSymbols.find(CorrectedName) != m_VisitedSymbols.end();
 }
 
-void
-PDBHeaderReconstructor::MarkAsVisited(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::MarkAsVisited(const SYMBOL* Symbol)
 {
 	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
 	m_VisitedSymbols.insert(CorrectedName);
 }
 
-DWORD
-PDBHeaderReconstructor::GetParentOffset() const
+DWORD PDBHeaderReconstructor::GetParentOffset() const
 {
 	return std::accumulate(m_OffsetStack.begin(), m_OffsetStack.end(), (DWORD)0);
 }
 
-void
-PDBHeaderReconstructor::AppendToTest(
-	const SYMBOL_UDT_FIELD* UdtField
-	)
+void PDBHeaderReconstructor::AppendToTest(const SYMBOL_UDT_FIELD* UdtField)
 {
 	//
 	// Test of the current member is produced when:
@@ -753,12 +657,8 @@ PDBHeaderReconstructor::AppendToTest(
 
 		LastTestedUdt = CorrectedSymbolName;
 
-		//
-		// Build the line for the test.
-		//
 		static char FormattedStringBuffer[4096];
-		sprintf_s(
-			FormattedStringBuffer,
+		sprintf_s(FormattedStringBuffer,
 			TestFormatString,
 			UdtField->Offset,
 
@@ -780,27 +680,24 @@ PDBHeaderReconstructor::AppendToTest(
 	}
 }
 
-bool
-PDBHeaderReconstructor::ShouldExpand(
-	const SYMBOL* Symbol
-	) const
+bool PDBHeaderReconstructor::ShouldExpand(const SYMBOL* Symbol) const
 {
 	bool Expand = false;
 
 	switch (m_Settings->MemberStructExpansion)
 	{
-		default:
-		case MemberStructExpansionType::None:
-			Expand = m_Depth == 0;
-			break;
+	default:
+	case MemberStructExpansionType::None:
+		Expand = m_Depth == 0;
+		break;
 
-		case MemberStructExpansionType::InlineUnnamed:
-			Expand = m_Depth == 0 || (Symbol->Tag == SymTagUDT && PDB::IsUnnamedSymbol(Symbol));
-			break;
+	case MemberStructExpansionType::InlineUnnamed:
+		Expand = m_Depth == 0 || (Symbol->Tag == SymTagUDT && PDB::IsUnnamedSymbol(Symbol));
+		break;
 
-		case MemberStructExpansionType::InlineAll:
-			Expand = !HasBeenVisited(Symbol);
-			break;
+	case MemberStructExpansionType::InlineAll:
+		Expand = !HasBeenVisited(Symbol);
+		break;
 	}
 
 	return Expand && Symbol->Size > 0;
