@@ -46,7 +46,6 @@ public:
 		m_TypePrefix += Symbol->Name;
 	}
 
-
 	void VisitPointerTypeEnd(const SYMBOL* Symbol) override
 	{
 		if (Symbol->u.Pointer.Type->Tag == SymTagFunctionType)

@@ -2,7 +2,6 @@
 #include "PDBCallback.h"
 
 #include <dia2.h>       // IDia* interfaces
-#include <atlcomcli.h>
 
 #include <cassert>
 
@@ -16,22 +15,21 @@ public:
 
 	BOOL Open(IN const CHAR* Path);
 	VOID Close();
-	BOOL IsOpen() const;
+	BOOL IsOpen() const { return return m_DataSource && m_Session && m_GlobalSymbol; }
 
 private:
 	HRESULT LoadDiaViaCoCreateInstance();
 	HRESULT LoadDiaViaLoadLibrary();
 
 protected:
-	CComPtr<IDiaDataSource> m_DataSource;
-	CComPtr<IDiaSession>    m_Session;
-	CComPtr<IDiaSymbol>     m_GlobalSymbol;
+	IDiaDataSource *m_DataSource;
+	IDiaSession    *m_Session;
+	IDiaSymbol     *m_GlobalSymbol;
 };
 
 SymbolModuleBase::SymbolModuleBase()
 {
 	HRESULT hr = CoInitialize(nullptr);
-
 	assert(hr == S_OK);
 }
 
@@ -109,40 +107,48 @@ BOOL SymbolModuleBase::Open(IN const CHAR* Path)
 
 	if (FAILED(Result))
 	{
-		goto Error;
+		Close();
+		return FALSE;
 	}
 
 	Result = m_DataSource->openSession(&m_Session);
 	if (FAILED(Result))
 	{
-		goto Error;
+		Close();
+		return FALSE;
 	}
 
 	Result = m_Session->get_globalScope(&m_GlobalSymbol);
 	if (FAILED(Result))
 	{
-		goto Error;
+		Close();
+		return FALSE;
 	}
 
 	return TRUE;
-
-Error:
-	Close();
-	return FALSE;
 }
 
 VOID SymbolModuleBase::Close()
 {
-	m_GlobalSymbol.Release();
-	m_Session.Release();
-	m_DataSource.Release();
+	if (m_GlobalSymbol != NULL)
+	{
+		m_GlobalSymbol->Release();
+		m_GlobalSymbol = NULL;
+	}
+
+	if (m_Session != NULL)
+	{
+		m_Session->Release();
+		m_Session = NULL;
+	}
+
+	if (m_DataSource != NULL)
+	{
+		m_DataSource->Release();
+		m_DataSource = NULL;
+	}
 
 	CoUninitialize();
-}
-
-BOOL SymbolModuleBase::IsOpen() const
-{
-	return m_DataSource && m_Session && m_GlobalSymbol;
 }
 
 class SymbolModule
@@ -153,11 +159,11 @@ public:
 	~SymbolModule();
 
 	BOOL Open(IN const CHAR* Path);
-	BOOL IsOpen() const;
-	const CHAR* GetPath() const;
+	BOOL IsOpen() const { return SymbolModuleBase::IsOpen(); }
+	const CHAR* GetPath() const { return m_Path.c_str(); }
 	VOID Close();
-	DWORD GetMachineType() const;
-	CV_CFL_LANG GetLanguage() const;
+	DWORD GetMachineType() const { return m_MachineType; }
+	CV_CFL_LANG GetLanguage() const { return m_Language; }
 	SYMBOL*	GetSymbolByName(IN const CHAR* SymbolName);
 	SYMBOL* GetSymbolByTypeId(IN DWORD TypeId);
 	SYMBOL* GetSymbol(IN IDiaSymbol* DiaSymbol);
@@ -165,9 +171,9 @@ public:
 	VOID BuildSymbolMapFromEnumerator(IN IDiaEnumSymbols* DiaSymbolEnumerator);
 	VOID BuildFunctionSetFromEnumerator(IN IDiaEnumSymbols* DiaSymbolEnumerator);
 	VOID BuildSymbolMap();
-	const SymbolMap& GetSymbolMap() const;
-	const SymbolNameMap& GetSymbolNameMap() const;
-	const FunctionSet& GetFunctionSet() const;
+	const SymbolMap& GetSymbolMap() const { return m_SymbolMap; }
+	const SymbolNameMap& GetSymbolNameMap() const { return m_SymbolNameMap; }
+	const FunctionSet& GetFunctionSet() const { return m_FunctionSet; }
 
 private:
 	VOID InitSymbol(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol);
@@ -209,9 +215,7 @@ BOOL SymbolModule::Open(IN const CHAR* Path)
 
 	Result = SymbolModuleBase::Open(Path);
 	if (Result == FALSE)
-	{
 		return FALSE;
-	}
 
 	m_GlobalSymbol->get_machineType(&m_MachineType);
 
@@ -222,16 +226,6 @@ BOOL SymbolModule::Open(IN const CHAR* Path)
 	BuildSymbolMap();
 
 	return TRUE;
-}
-
-BOOL SymbolModule::IsOpen() const
-{
-	return SymbolModuleBase::IsOpen();
-}
-
-const CHAR* SymbolModule::GetPath() const
-{
-	return m_Path.c_str();
 }
 
 VOID SymbolModule::Close()
@@ -250,24 +244,12 @@ VOID SymbolModule::Close()
 	m_SymbolSet.clear();
 }
 
-DWORD SymbolModule::GetMachineType() const
-{
-	return m_MachineType;
-}
-
-CV_CFL_LANG SymbolModule::GetLanguage() const
-{
-	return m_Language;
-}
-
 CHAR* SymbolModule::GetSymbolName(IN IDiaSymbol* DiaSymbol)
 {
 	BSTR SymbolNameBstr;
 
 	if (DiaSymbol->get_name(&SymbolNameBstr) != S_OK)
-	{
 		return nullptr;
-	}
 
 	CHAR*  SymbolNameMb;
 	size_t SymbolNameLength;
@@ -300,9 +282,7 @@ SYMBOL* SymbolModule::GetSymbol(IN IDiaSymbol* DiaSymbol)
 
 	auto it = m_SymbolMap.find(TypeId);
 	if (it != m_SymbolMap.end())
-	{
 		return it->second;
-	}
 
 	SYMBOL* Symbol;
 	Symbol = new SYMBOL;
@@ -312,9 +292,7 @@ SYMBOL* SymbolModule::GetSymbol(IN IDiaSymbol* DiaSymbol)
 	InitSymbol(DiaSymbol, Symbol);
 
 	if (Symbol->Name)
-	{
 		m_SymbolNameMap[Symbol->Name] = Symbol;
-	}
 
 	return Symbol;
 }
@@ -326,9 +304,9 @@ VOID SymbolModule::BuildSymbolMapFromEnumerator(IN IDiaEnumSymbols* DiaSymbolEnu
 
 	while (SUCCEEDED(DiaSymbolEnumerator->Next(1, &Result, &FetchedSymbolCount)) && (FetchedSymbolCount == 1))
 	{
-		CComPtr<IDiaSymbol> DiaChildSymbol(Result);
-
+		IDiaSymbol *DiaChildSymbol(Result);
 		GetSymbol(DiaChildSymbol);
+		DiaChildSymbol->Release();
 	}
 }
 
@@ -339,7 +317,7 @@ VOID SymbolModule::BuildFunctionSetFromEnumerator(IN IDiaEnumSymbols* DiaSymbolE
 
 	while (SUCCEEDED(DiaSymbolEnumerator->Next(1, &Result, &FetchedSymbolCount)) && (FetchedSymbolCount == 1))
 	{
-		CComPtr<IDiaSymbol> DiaChildSymbol(Result);
+		IDiaSymbol *DiaChildSymbol(Result);
 
 		BOOL IsFunction;
 		DiaChildSymbol->get_function(&IsFunction);
@@ -355,43 +333,27 @@ VOID SymbolModule::BuildFunctionSetFromEnumerator(IN IDiaEnumSymbols* DiaSymbolE
 			m_FunctionSet.insert(FunctionName);
 			delete[] FunctionName;
 		}
+		DiaChildSymbol->Release();
 	}
-}
+	}
 
 VOID SymbolModule::BuildSymbolMap()
 {
-	if (CComPtr<IDiaEnumSymbols> DiaSymbolEnumerator;
-	    SUCCEEDED(m_GlobalSymbol->findChildren(SymTagPublicSymbol, nullptr, nsNone, &DiaSymbolEnumerator)))
+	IDiaEnumSymbols *DiaSymbolEnumerator;
+
+	if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagPublicSymbol, nullptr, nsNone, &DiaSymbolEnumerator)))
 	{
 		BuildFunctionSetFromEnumerator(DiaSymbolEnumerator);
 	}
-
-	if (CComPtr<IDiaEnumSymbols> DiaSymbolEnumerator;
-	    SUCCEEDED(m_GlobalSymbol->findChildren(SymTagEnum, nullptr, nsNone, &DiaSymbolEnumerator)))
+	if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagEnum, nullptr, nsNone, &DiaSymbolEnumerator)))
 	{
 		BuildSymbolMapFromEnumerator(DiaSymbolEnumerator);
 	}
-
-	if (CComPtr<IDiaEnumSymbols> DiaSymbolEnumerator;
-	    SUCCEEDED(m_GlobalSymbol->findChildren(SymTagUDT, nullptr, nsNone, &DiaSymbolEnumerator)))
+	if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagUDT, nullptr, nsNone, &DiaSymbolEnumerator)))
 	{
 		BuildSymbolMapFromEnumerator(DiaSymbolEnumerator);
 	}
-}
-
-const SymbolMap& SymbolModule::GetSymbolMap() const
-{
-	return m_SymbolMap;
-}
-
-const SymbolNameMap& SymbolModule::GetSymbolNameMap() const
-{
-	return m_SymbolNameMap;
-}
-
-const FunctionSet& SymbolModule::GetFunctionSet() const
-{
-	return m_FunctionSet;
+	DiaSymbolEnumerator->Release();
 }
 
 VOID SymbolModule::InitSymbol(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
@@ -452,12 +414,10 @@ VOID SymbolModule::ProcessSymbolBase(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol
 
 VOID SymbolModule::ProcessSymbolEnum(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 {
-	CComPtr<IDiaEnumSymbols> DiaSymbolEnumerator;
+	IDiaEnumSymbols *DiaSymbolEnumerator;
 
 	if (FAILED(DiaSymbol->findChildren(SymTagNull, nullptr, nsNone, &DiaSymbolEnumerator)))
-	{
 		return;
-	}
 
 	LONG ChildCount;
 	DiaSymbolEnumerator->get_Count(&ChildCount);
@@ -471,7 +431,7 @@ VOID SymbolModule::ProcessSymbolEnum(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol
 
 	while (SUCCEEDED(DiaSymbolEnumerator->Next(1, &Result, &FetchedSymbolCount)) && (FetchedSymbolCount == 1))
 	{
-		CComPtr<IDiaSymbol> DiaChildSymbol(Result);
+		IDiaSymbol *DiaChildSymbol(Result);
 
 		SYMBOL_ENUM_FIELD* EnumValue = &Symbol->u.Enum.Fields[Index];
 
@@ -481,27 +441,32 @@ VOID SymbolModule::ProcessSymbolEnum(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol
 		VariantInit(&EnumValue->Value);
 		DiaChildSymbol->get_value(&EnumValue->Value);
 
+		DiaChildSymbol->Release();
 		Index += 1;
 	}
 }
 
 VOID SymbolModule::ProcessSymbolTypedef(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 {
-	CComPtr<IDiaSymbol> DiaTypedefSymbol;
+	DiaSymbol *DiaTypedefSymbol;
 
 	DiaSymbol->get_type(&DiaTypedefSymbol);
 
 	Symbol->u.Typedef.Type = GetSymbol(DiaTypedefSymbol);
+
+	DiaTypedefSymbol->Release();
 }
 
 VOID SymbolModule::ProcessSymbolPointer(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 {
-	CComPtr<IDiaSymbol> DiaPointerSymbol;
+	IDiaSymbol *DiaPointerSymbol;
 
 	DiaSymbol->get_type(&DiaPointerSymbol);
 	DiaSymbol->get_reference(&Symbol->u.Pointer.IsReference);
 
 	Symbol->u.Pointer.Type = GetSymbol(DiaPointerSymbol);
+
+	DiaPointerSymbol->Release();
 
 	if (m_MachineType == 0)
 	{
@@ -516,12 +481,14 @@ VOID SymbolModule::ProcessSymbolPointer(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Sym
 
 VOID SymbolModule::ProcessSymbolArray(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 {
-	CComPtr<IDiaSymbol> DiaDataTypeSymbol;
+	IDiaSymbol *DiaDataTypeSymbol;
 
 	DiaSymbol->get_type(&DiaDataTypeSymbol);
 	Symbol->u.Array.ElementType = GetSymbol(DiaDataTypeSymbol);
 
 	DiaSymbol->get_count(&Symbol->u.Array.ElementCount);
+
+	DiaDataTypeSymbol->Release();
 }
 
 VOID SymbolModule::ProcessSymbolFunction(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
@@ -531,16 +498,15 @@ VOID SymbolModule::ProcessSymbolFunction(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Sy
 
 	Symbol->u.Function.CallingConvention = static_cast<CV_call_e>(CallingConvention);
 
-	CComPtr<IDiaSymbol> DiaReturnTypeSymbol;
+	IDiaSymbol *DiaReturnTypeSymbol;
 	DiaSymbol->get_type(&DiaReturnTypeSymbol);
 	Symbol->u.Function.ReturnType = GetSymbol(DiaReturnTypeSymbol);
+	DiaReturnTypeSymbol->Release();
 
-	CComPtr<IDiaEnumSymbols> DiaSymbolEnumerator;
+	IDiaEnumSymbols *DiaSymbolEnumerator;
 
 	if (FAILED(DiaSymbol->findChildren(SymTagNull, nullptr, nsNone, &DiaSymbolEnumerator)))
-	{
 		return;
-	}
 
 	LONG ChildCount;
 
@@ -555,22 +521,24 @@ VOID SymbolModule::ProcessSymbolFunction(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Sy
 
 	while (SUCCEEDED(DiaSymbolEnumerator->Next(1, &Result, &FetchedSymbolCount)) && (FetchedSymbolCount == 1))
 	{
-		CComPtr<IDiaSymbol> DiaChildSymbol(Result);
+		IDiaSymbol *DiaChildSymbol(Result);
 
 		SYMBOL* Argument;
 		Argument = GetSymbol(DiaChildSymbol);
 		Symbol->u.Function.Arguments[Index] = Argument;
-
+		DiaChildSymbol->Release();
 		Index += 1;
 	}
+	DiaSymbolEnumerator->Release();
 }
 
 VOID SymbolModule::ProcessSymbolFunctionArg(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 {
-	CComPtr<IDiaSymbol> DiaArgumentTypeSymbol;
+	IDiaSymbol *DiaArgumentTypeSymbol;
 
 	DiaSymbol->get_type(&DiaArgumentTypeSymbol);
 	Symbol->u.FunctionArg.Type = GetSymbol(DiaArgumentTypeSymbol);
+	DiaArgumentTypeSymbol->Release();
 }
 
 VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
@@ -579,12 +547,10 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 	DiaSymbol->get_udtKind(&Kind);
 	Symbol->u.Udt.Kind = static_cast<UdtKind>(Kind);
 
-	CComPtr<IDiaEnumSymbols> DiaSymbolEnumerator;
+	IDiaEnumSymbols *DiaSymbolEnumerator;
 
 	if (FAILED(DiaSymbol->findChildren(SymTagData, nullptr, nsNone, &DiaSymbolEnumerator)))
-	{
 		return;
-	}
 
 	LONG ChildCount;
 
@@ -599,7 +565,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 
 	while (SUCCEEDED(DiaSymbolEnumerator->Next(1, &Result, &FetchedSymbolCount)) && (FetchedSymbolCount == 1))
 	{
-		CComPtr<IDiaSymbol> DiaChildSymbol(Result);
+		IDiaSymbol *DiaChildSymbol(Result);
 
 		DWORD symTag;
 		DiaChildSymbol->get_symTag(&symTag);
@@ -625,9 +591,10 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 
 		if (symTag == SymTagData || symTag == SymTagBaseClass)
 		{
-			CComPtr<IDiaSymbol> MemberTypeDiaSymbol;
+			IDiaSymbol *MemberTypeDiaSymbol;
 			DiaChildSymbol->get_type(&MemberTypeDiaSymbol);
 			Member->Type = GetSymbol(MemberTypeDiaSymbol);
+			MemberTypeDiaSymbol->Release();
 			if (symTag == SymTagBaseClass)
 			{
 				++Symbol->u.Udt.BaseClassCount;
@@ -650,16 +617,16 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 			{
 				if (Member->Type->u.Function.IsOverride && Symbol->u.Udt.BaseClassCount)
 				{
-					for (DWORD i = 0; i < Symbol->u.Udt.BaseClassCount; i++)
+					for (DWORD i = 0; i < Symbol->u.Udt.BaseClassCount; ++i)
 					{
 						SYMBOL *TmpSymbol = Symbol->u.Udt.BaseClassFields[i].Type;
-						for (DWORD j = 0; j < TmpSymbol->u.Udt.FieldCount; j++)
+						for (DWORD j = 0; j < TmpSymbol->u.Udt.FieldCount; ++j)
 						{
-							if (TmpSymbol->u.Udt.Fields->Tag == SymTagFunction &&
-							    strcmp(TmpSymbol->u.Udt.Fields->Name, Member->Type->Name) == 0 &&
-							    TmpSymbol->u.Udt.Fields->Type->u.Function.ArgumentCount == Member->Type->u.Function.ArgumentCount)
+							if (TmpSymbol->u.Udt.Fields[j].Tag == SymTagFunction &&
+							    strcmp(TmpSymbol->u.Udt.Fields[j].Name, Member->Type->Name) == 0 &&
+							    TmpSymbol->u.Udt.Fields[j].Type->u.Function.ArgumentCount == Member->Type->u.Function.ArgumentCount)
 							{
-								Member->Type->u.Function.VirtualOffset = TmpSymbol->u.Udt.Fields->Type->u.Function.VirtualOffset;
+								Member->Type->u.Function.VirtualOffset = TmpSymbol->u.Udt.Fields[j].Type->u.Function.VirtualOffset;
 							}
 						}
 					}
@@ -673,6 +640,8 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 
 		Index += 1;
 	}
+
+	DiaSymbolEnumerator->Release();
 
 	if (Symbol->u.Udt.Kind == UdtStruct && Symbol->u.Udt.FieldCount > 0 && Symbol->u.Udt.Fields[Symbol->u.Udt.FieldCount - 1].Type != nullptr)
 	{
@@ -722,8 +691,6 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 
 VOID SymbolModule::ProcessSymbolFunctionEx(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 {
-	CComPtr<IDiaSymbol> DiaArgumentTypeSymbol;
-
 	BOOL IsStatic = FALSE;
 	DiaSymbol->get_isStatic(&IsStatic);
 	Symbol->u.Function.IsStatic = IsStatic;
@@ -758,36 +725,34 @@ VOID SymbolModule::ProcessSymbolFunctionEx(IN IDiaSymbol* DiaSymbol, IN SYMBOL* 
 	}
 	Symbol->u.Function.IsPure = IsPure;
 	
+	IDiaSymbol *DiaArgumentTypeSymbol;
 	DiaSymbol->get_type(&DiaArgumentTypeSymbol);
 	ProcessSymbolFunction(DiaArgumentTypeSymbol, Symbol);
+	DiaArgumentTypeSymbol->Release();
 }
 
 void SymbolModule::DestroySymbol(IN SYMBOL* Symbol)
 {
-	delete[] Symbol->Name;
+	delete []Symbol->Name;
 
 	switch (Symbol->Tag)
 	{
 	case SymTagUDT:
-		for (DWORD i = 0; i < Symbol->u.Udt.FieldCount; i++)
-		{
-			delete[] Symbol->u.Udt.Fields[i].Name;
-		}
+		for (DWORD i = 0; i < Symbol->u.Udt.FieldCount; ++i)
+			delete []Symbol->u.Udt.Fields[i].Name;
 
 		delete[] Symbol->u.Udt.Fields;
 		break;
 
 	case SymTagEnum:
-		for (DWORD i = 0; i < Symbol->u.Enum.FieldCount; i++)
-		{
-			delete[] Symbol->u.Enum.Fields[i].Name;
-		}
+		for (DWORD i = 0; i < Symbol->u.Enum.FieldCount; ++i)
+			delete []Symbol->u.Enum.Fields[i].Name;
 
 		delete[] Symbol->u.Enum.Fields;
 		break;
 
 	case SymTagFunctionType:
-		delete[] Symbol->u.Function.Arguments;
+		delete []Symbol->u.Function.Arguments;
 		break;
 	}
 }
@@ -828,40 +793,6 @@ BasicTypeMapElement BasicTypeMapMSVC[] = {
 	{ btBool,         0,  "btBool",           "BOOL"             },
 	{ btLong,         4,  "btLong",           "long"             },
 	{ btULong,        4,  "btULong",          "unsigned long"    },
-	{ btCurrency,     0,  "btCurrency",       nullptr            },
-	{ btDate,         0,  "btDate",           "DATE"             },
-	{ btVariant,      0,  "btVariant",        "VARIANT"          },
-	{ btComplex,      0,  "btComplex",        nullptr            },
-	{ btBit,          0,  "btBit",            nullptr            },
-	{ btBSTR,         0,  "btBSTR",           "BSTR"             },
-	{ btHresult,      4,  "btHresult",        "HRESULT"          },
-	{ (BasicType)0,   0,  nullptr,            nullptr            },
-};
-
-BasicTypeMapElement BasicTypeMapStdInt[] = {
-	{ btNoType,       0,  "btNoType",         nullptr            },
-	{ btVoid,         0,  "btVoid",           "void"             },
-	{ btChar,         1,  "btChar",           "char"             },
-	{ btChar16,       2,  "btChar16",         "char16_t"         },
-	{ btChar32,       4,  "btChar32",         "char32_t"         },
-	{ btWChar,        2,  "btWChar",          "wchar_t"          },
-	{ btInt,          1,  "btInt",            "int8_t"           },
-	{ btInt,          2,  "btInt",            "int16_t"          },
-	{ btInt,          4,  "btInt",            "int32_t"          },
-	{ btInt,          8,  "btInt",            "int64_t"          },
-	{ btInt,         16,  "btInt",            "int128_t"         },
-	{ btUInt,         1,  "btUInt",           "uint8_t"          },
-	{ btUInt,         2,  "btUInt",           "uint16_t"         },
-	{ btUInt,         4,  "btUInt",           "uint32_t"         },
-	{ btUInt,         8,  "btUInt",           "uint64_t"         },
-	{ btUInt,        16,  "btUInt",           "uint128_t"        },
-	{ btFloat,        4,  "btFloat",          "float"            },
-	{ btFloat,        8,  "btFloat",          "double"           },
-	{ btFloat,       10,  "btFloat",          "long double"      }, // 80-bit float
-	{ btBCD,          0,  "btBCD",            "BCD"              },
-	{ btBool,         0,  "btBool",           "BOOL"             },
-	{ btLong,         4,  "btLong",           "int32_t"          },
-	{ btULong,        4,  "btULong",          "uint32_t"         },
 	{ btCurrency,     0,  "btCurrency",       nullptr            },
 	{ btDate,         0,  "btDate",           "DATE"             },
 	{ btVariant,      0,  "btVariant",        "VARIANT"          },
@@ -947,7 +878,7 @@ const CHAR* PDB::GetBasicTypeString(IN BasicType BaseType, IN DWORD Size)
 {
 	BasicTypeMapElement* TypeMap = BasicTypeMapMSVC;
 
-	for (int n = 0; TypeMap[n].BasicTypeString != nullptr; n++)
+	for (int n = 0; TypeMap[n].BasicTypeString != nullptr; ++n)
 	{
 		if (TypeMap[n].BaseType == BaseType)
 		{

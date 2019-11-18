@@ -10,15 +10,8 @@ class PDBSymbolSorter
 	: public PDBSymbolSorterBase
 {
 public:
-	std::vector<const SYMBOL*>& GetSortedSymbols() override
-	{
-		return m_SortedSymbols;
-	}
-
-	ImageArchitecture GetImageArchitecture() const override
-	{
-		return m_Architecture;
-	}
+	std::vector<const SYMBOL*>& GetSortedSymbols() override	{ return m_SortedSymbols; }
+	ImageArchitecture GetImageArchitecture() const override { return m_Architecture; }
 
 	void Clear() override
 	{

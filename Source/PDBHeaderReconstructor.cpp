@@ -34,7 +34,8 @@ void PDBHeaderReconstructor::Clear()
 
 const std::string& PDBHeaderReconstructor::GetCorrectedSymbolName(const SYMBOL* Symbol) const
 {
-	if (!m_CorrectedSymbolNames.contains(Symbol))
+	auto CorrectedNameIt = m_CorrectedSymbolNames.find(Symbol);
+	if (CorrectedNameIt == m_CorrectedSymbolNames.end())
 	{
 		std::string CorrectedName;
 
@@ -160,7 +161,7 @@ void PDBHeaderReconstructor::OnUdtBegin(const SYMBOL* Symbol)
 		if (Symbol->u.Udt.BaseClassCount)
 		{
 			std::string FuncName;
-			for (DWORD i = 0; i < Symbol->u.Udt.BaseClassCount; i++)
+			for (DWORD i = 0; i < Symbol->u.Udt.BaseClassCount; ++i)
 			{
 				std::string Access;
 				switch (Symbol->u.Udt.BaseClassFields[i].Access)
@@ -175,7 +176,7 @@ void PDBHeaderReconstructor::OnUdtBegin(const SYMBOL* Symbol)
 				if (FuncName.size()) FuncName += ",";
 				FuncName += Access + Virtual + CorrectFuncName;
 			}
-			Write(" : %s", FuncName);
+			Write(" : %s", FuncName.c_str());
 		}
 	}
 
@@ -340,17 +341,11 @@ void PDBHeaderReconstructor::OnPaddingBitFieldField(
 
 	if (m_Settings->BitFieldPaddingMemberPrefix.empty())
 	{
-		Write("%s",
-			PDB::GetBasicTypeString(UdtField->Type)
-		);
-	}
-	else
+		Write("%s", PDB::GetBasicTypeString(UdtField->Type));
+	} else
 	{
-		Write("%s %s%u",
-			PDB::GetBasicTypeString(UdtField->Type),
-			m_Settings->PaddingMemberPrefix.c_str(),
-			m_PaddingMemberCounter++
-		);
+		Write("%s %s%u", PDB::GetBasicTypeString(UdtField->Type),
+			m_Settings->PaddingMemberPrefix.c_str(), m_PaddingMemberCounter++);
 	}
 
 	DWORD Bits = PreviousUdtField
@@ -383,7 +378,7 @@ void PDBHeaderReconstructor::Write(const char* Format, ...)
 
 void PDBHeaderReconstructor::WriteIndent()
 {
-	for (DWORD i = 0; i < m_Depth; i++)
+	for (DWORD i = 0; i < m_Depth; ++i)
 	{
 		Write("  ");
 	}
@@ -431,11 +426,9 @@ void PDBHeaderReconstructor::WriteUnnamedDataType(UdtKind Kind)
 		case UdtClass:
 			Write(" %s", m_Settings->AnonymousStructPrefix.c_str());
 			break;
-
 		case UdtUnion:
 			Write(" %s", m_Settings->AnonymousUnionPrefix.c_str());
 			break;
-
 		default:
 			assert(0);
 			break;

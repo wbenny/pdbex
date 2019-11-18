@@ -14,12 +14,9 @@ public:
 	{
 		PDBHeaderReconstructor::Settings PdbHeaderReconstructorSettings;
 
-		std::string SymbolName;
 		std::string PdbPath;
 
 		const char* OutputFilename = nullptr;
-
-		bool PrintReferencedTypes = true;
 	};
 
 	int Run(int argc, char** argv);
@@ -32,8 +29,6 @@ private:
 	void PrintPDBDefinitions();
 	void PrintPDBFunctions();
 	void DumpAllSymbols();
-	void DumpOneSymbol();
-	void DumpAllSymbolsOneByOne();
 	void CloseOpenFiles();
 
 private:

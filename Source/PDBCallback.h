@@ -5,10 +5,6 @@ class PDBCallback
 	: public IDiaLoadCallback2
 {
 public:
-	//
-	// IUnknown
-	//
-
 	ULONG STDMETHODCALLTYPE AddRef() override
 	{
 		return m_RefCount++;
@@ -16,7 +12,7 @@ public:
 
 	ULONG STDMETHODCALLTYPE Release() override
 	{
-		if ((--m_RefCount) == 0)
+		if (--m_RefCount == 0)
 		{
 			delete this;
 		}

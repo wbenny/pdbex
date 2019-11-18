@@ -11,10 +11,9 @@ class PDBSymbolVisitor
 	: public PDBSymbolVisitorBase
 {
 public:
-	PDBSymbolVisitor(PDBReconstructorBase* ReconstructVisitor, void* MemberDefinitionSettings = nullptr);
+	PDBSymbolVisitor(PDBReconstructorBase* ReconstructVisitor);
 
 	void Run(const SYMBOL* Symbol);
-
 protected:
 
 	void Visit(const SYMBOL* Symbol) override;
@@ -85,10 +84,7 @@ private:
 
 	struct UdtFieldContext
 	{
-		UdtFieldContext(
-			const SYMBOL_UDT_FIELD* UdtField,
-			BOOL RespectBitFields = TRUE
-			)
+		UdtFieldContext(const SYMBOL_UDT_FIELD* UdtField, BOOL RespectBitFields = TRUE)
 		{
 			SYMBOL_UDT* ParentUdt = &UdtField->Parent->u.Udt;
 			DWORD UdtFieldCount = ParentUdt->FieldCount;
@@ -139,7 +135,6 @@ private:
 	using ContextStack      = std::stack<std::shared_ptr<UdtFieldDefinitionBase>>;
 
 private:
-
 	void CheckForDataFieldPadding(const SYMBOL_UDT_FIELD* UdtField);
 	void CheckForBitFieldFieldPadding(const SYMBOL_UDT_FIELD* UdtField);
 	void CheckForAnonymousUnion(const SYMBOL_UDT_FIELD* UdtField);
@@ -152,7 +147,6 @@ private:
 	void PopAnonymousUdt();
 
 private:
-
 	static const SYMBOL_UDT_FIELD* GetNextUdtFieldWithRespectToBitFields(const SYMBOL_UDT_FIELD* UdtField);
 	static bool Is64BitBasicType(const SYMBOL* Symbol);
 
@@ -166,7 +160,6 @@ private:
 	BitFieldRange m_CurrentBitField;
 	ContextStack m_MemberContextStack;
 	PDBReconstructorBase* m_ReconstructVisitor;
-	void* m_MemberDefinitionSettings;
 };
 
 #include "PDBSymbolVisitor.inl"

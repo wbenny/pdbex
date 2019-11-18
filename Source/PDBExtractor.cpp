@@ -33,18 +33,7 @@ int PDBExtractor::Run(int argc, char** argv)
 	try {
 		ParseParameters(argc, argv);
 		OpenPDBFile();
-
-		if (m_Settings.SymbolName == "*")
-		{
-			DumpAllSymbols();
-		} else if (m_Settings.SymbolName == "%")
-		{
-			DumpAllSymbolsOneByOne();
-		} else
-		{
-			DumpOneSymbol();
-		}
-
+		DumpAllSymbols();
 	} catch (const PDBDumperException& e)
 	{
 		std::cerr << e.what() << std::endl;
@@ -60,13 +49,10 @@ void PDBExtractor::PrintUsage()
 {
 	printf("Extracts types and structures from PDB (Program database).\n");
 	printf("\n");
-	printf("pdbex <symbol> <path> [-o <filename>] [-e <type>]\n");
+	printf("pdbex <path> [-o <filename>] [-e <type>]\n");
 	printf("                     [-u <prefix>] [-s prefix] [-r prefix] [-g suffix]\n");
 	printf("                     [-p] [-x] [-m] [-b] [-d]\n");
 	printf("\n");
-	printf("<symbol>             Symbol name to extract\n");
-	printf("                     Use '*' if all symbols should be extracted.\n");
-	printf("                     Use '%%' if all symbols should be extracted separately.\n");
 	printf("<path>               Path to the PDB file.\n");
 	printf(" -o filename         Specifies the output file.                       (stdout)\n");
 	printf(" -e [n,i,a]          Specifies expansion of nested structures/unions. (i)\n");
@@ -85,7 +71,6 @@ void PDBExtractor::PrintUsage()
 	printf(" -m                  Create Microsoft typedefs.                       (T)\n");
 	printf(" -b                  Allow bitfields in union.                        (F)\n");
 	printf(" -d                  Allow unnamed data types.                        (T)\n");
-	printf(" -j                  Print definitions of referenced types.           (T)\n");
 	printf("\n");
 }
 
@@ -101,7 +86,6 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 
 	int ArgumentPointer = 0;
 
-	m_Settings.SymbolName = argv[++ArgumentPointer];
 	m_Settings.PdbPath = argv[++ArgumentPointer];
 
 	while (++ArgumentPointer < argc)
@@ -130,14 +114,8 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 			++ArgumentPointer;
 			m_Settings.OutputFilename = NextArgument;
 
-			if (m_Settings.SymbolName != "%")
-			{
-				m_Settings.PdbHeaderReconstructorSettings.OutputFile = new std::ofstream(
-					NextArgument, std::ios::out);
-			} else
-			{
-				m_Settings.PdbHeaderReconstructorSettings.OutputFile = nullptr;
-			}
+			m_Settings.PdbHeaderReconstructorSettings.OutputFile = new std::ofstream(
+				NextArgument, std::ios::out);
 			break;
 
 		case 'e':
@@ -221,19 +199,12 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 			m_Settings.PdbHeaderReconstructorSettings.AllowAnonymousDataTypes = !OffSwitch;
 			break;
 
-		case 'j':
-			m_Settings.PrintReferencedTypes = !OffSwitch;
-			break;
-
 		default:
 			throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
 		}
 	}
 
-	m_HeaderReconstructor = std::make_unique<PDBHeaderReconstructor>(
-		&m_Settings.PdbHeaderReconstructorSettings
-		);
-
+	m_HeaderReconstructor = std::make_unique<PDBHeaderReconstructor>(&m_Settings.PdbHeaderReconstructorSettings);
 	m_SymbolVisitor = std::make_unique<PDBSymbolVisitor<UdtFieldDefinition>>(m_HeaderReconstructor.get());
 	m_SymbolSorter = std::make_unique<PDBSymbolSorter>();
 }
@@ -308,64 +279,6 @@ void PDBExtractor::DumpAllSymbols()
 	PrintPDBDeclarations();
 	PrintPDBDefinitions();
 	PrintPDBFunctions();
-}
-
-void PDBExtractor::DumpOneSymbol()
-{
-	const SYMBOL* Symbol = m_PDB.GetSymbolByName(m_Settings.SymbolName.c_str());
-	if (Symbol == nullptr)
-		throw PDBDumperException(MESSAGE_SYMBOL_NOT_FOUND);
-
-	if (m_Settings.PrintReferencedTypes &&
-	    m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion != PDBHeaderReconstructor::MemberStructExpansionType::InlineAll)
-	{
-		m_SymbolSorter->Visit(Symbol);
-		PrintPDBDefinitions();
-	} else
-	{
-		m_SymbolVisitor->Run(Symbol);
-	}
-}
-
-void PDBExtractor::DumpAllSymbolsOneByOne()
-{
-	for (auto&& e : m_PDB.GetSymbolMap())
-	{
-		m_SymbolSorter->Visit(e.second);
-	}
-
-	auto Symbols = m_SymbolSorter->GetSortedSymbols();
-
-	m_SymbolSorter->Clear();
-
-	std::string OutputDirectory = m_Settings.OutputFilename	? m_Settings.OutputFilename : ".";
-
-	if (OutputDirectory[OutputDirectory.length() - 1] != '\\')
-	{
-		OutputDirectory += '\\';
-	}
-
-	BOOL Result = CreateDirectory(OutputDirectory.c_str(), NULL);
-	if (!Result && GetLastError() != ERROR_ALREADY_EXISTS)
-		throw PDBDumperException("Cannot create directory");
-
-	for (auto&& e : Symbols)
-	{
-		if (!PDB::IsUnnamedSymbol(e))
-		{
-			m_Settings.PdbHeaderReconstructorSettings.OutputFile = new std::ofstream(
-				OutputDirectory + std::string(e->Name) + ".h", std::ios::out);
-
-			m_Settings.SymbolName = e->Name;
-			DumpOneSymbol();
-
-			delete m_Settings.PdbHeaderReconstructorSettings.OutputFile;
-
-			m_SymbolSorter->Clear();
-		}
-	}
-
-	m_Settings.PdbHeaderReconstructorSettings.OutputFile = nullptr;
 }
 
 void PDBExtractor::CloseOpenFiles()

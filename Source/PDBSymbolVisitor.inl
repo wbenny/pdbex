@@ -7,11 +7,9 @@
 #include <stack>
 
 template <typename MEMBER_DEFINITION_TYPE>
-PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::PDBSymbolVisitor(
-	PDBReconstructorBase* ReconstructVisitor, void* MemberDefinitionSettings)
+PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::PDBSymbolVisitor(PDBReconstructorBase* ReconstructVisitor)
 {
 	m_ReconstructVisitor = ReconstructVisitor;
-	m_MemberDefinitionSettings = MemberDefinitionSettings;
 }
 
 template <typename MEMBER_DEFINITION_TYPE>
@@ -69,7 +67,6 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitArrayType(const SYMBOL* Symb
 	m_MemberContextStack.top()->VisitArrayTypeBegin(Symbol);
 	PDBSymbolVisitorBase::VisitArrayType(Symbol);
 	m_MemberContextStack.top()->VisitArrayTypeEnd(Symbol);
-
 }
 
 template <typename MEMBER_DEFINITION_TYPE>
@@ -245,13 +242,10 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForDataFieldPadding(const SY
 template <typename MEMBER_DEFINITION_TYPE>
 void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForBitFieldFieldPadding(const SYMBOL_UDT_FIELD* UdtField)
 {
-	BOOL WasPreviousBitFieldMember = m_PreviousBitFieldField
-	  ? m_PreviousBitFieldField->Bits != 0 : FALSE;
+	BOOL WasPreviousBitFieldMember = m_PreviousBitFieldField ? m_PreviousBitFieldField->Bits != 0 : FALSE;
 
 	if (
-
 	  (UdtField->BitPosition != 0 && !WasPreviousBitFieldMember) ||
-
 	  (WasPreviousBitFieldMember &&
 	   UdtField->BitPosition != m_PreviousBitFieldField->BitPosition + m_PreviousBitFieldField->Bits)
 	  )
@@ -426,8 +420,6 @@ template <typename MEMBER_DEFINITION_TYPE>
 std::shared_ptr<UdtFieldDefinitionBase> PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::MemberDefinitionFactory()
 {
 	auto MemberDefinition = std::make_shared<MEMBER_DEFINITION_TYPE>();
-	MemberDefinition->SetSettings(m_MemberDefinitionSettings);
-
 	return MemberDefinition;
 }
 
