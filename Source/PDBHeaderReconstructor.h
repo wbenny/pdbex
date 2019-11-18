@@ -65,31 +65,24 @@ protected:
 	void OnEnumTypeBegin(const SYMBOL* Symbol) override;
 	void OnEnumTypeEnd(const SYMBOL* Symbol) override;
 	void OnEnumField(const SYMBOL_ENUM_FIELD* EnumField) override;
+
 	bool OnUdt(const SYMBOL* Symbol) override;
 	void OnUdtBegin(const SYMBOL* Symbol) override;
 	void OnUdtEnd(const SYMBOL* Symbol) override;
+
 	void OnUdtFieldBegin(const SYMBOL_UDT_FIELD* UdtField) override;
 	void OnUdtFieldEnd(const SYMBOL_UDT_FIELD* UdtField) override;
-	void OnUdtField(
-		const SYMBOL_UDT_FIELD* UdtField, UdtFieldDefinitionBase* MemberDefinition) override;
+	void OnUdtField(const SYMBOL_UDT_FIELD* UdtField, UdtFieldDefinitionBase* MemberDefinition) override;
 
 	void OnAnonymousUdtBegin(UdtKind Kind, const SYMBOL_UDT_FIELD* FirstUdtField) override;
+	void OnAnonymousUdtEnd(UdtKind Kind, const SYMBOL_UDT_FIELD* FirstUdtField, const SYMBOL_UDT_FIELD* LastUdtField, DWORD Size) override;
 
-	void OnAnonymousUdtEnd(UdtKind Kind,
-		const SYMBOL_UDT_FIELD* FirstUdtField, const SYMBOL_UDT_FIELD* LastUdtField, DWORD Size) override;
+	void OnUdtFieldBitFieldBegin(const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField) override;
+	void OnUdtFieldBitFieldEnd(const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField) override;
 
-	void OnUdtFieldBitFieldBegin(const SYMBOL_UDT_FIELD* FirstUdtFieldBitField,
-		const SYMBOL_UDT_FIELD* LastUdtFieldBitField) override;
+	void OnPaddingMember(const SYMBOL_UDT_FIELD* UdtField, BasicType PaddingBasicType, DWORD PaddingBasicTypeSize, DWORD PaddingSize) override;
 
-	void OnUdtFieldBitFieldEnd(const SYMBOL_UDT_FIELD* FirstUdtFieldBitField,
-		const SYMBOL_UDT_FIELD* LastUdtFieldBitField) override;
-
-	void OnPaddingMember(const SYMBOL_UDT_FIELD* UdtField,
-		BasicType PaddingBasicType, DWORD PaddingBasicTypeSize, DWORD PaddingSize) override;
-
-	void OnPaddingBitFieldField(
-		const SYMBOL_UDT_FIELD* UdtField, const SYMBOL_UDT_FIELD* PreviousUdtField) override;
-
+	void OnPaddingBitFieldField(const SYMBOL_UDT_FIELD* UdtField, const SYMBOL_UDT_FIELD* PreviousUdtField) override;
 private:
 	void Write(const char* Format, ...);
 	void WriteIndent();

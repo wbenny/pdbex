@@ -66,13 +66,4 @@ public:
 	{
 		return std::string();
 	}
-
-	virtual	void SetSettings(void* MemberDefinitionSettings)
-	{
-	}
-
-	virtual	void* GetSettings()
-	{
-		return nullptr;
-	}
 };

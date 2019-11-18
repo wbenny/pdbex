@@ -9,10 +9,6 @@
 #include <string>
 #include <memory>
 
-//////////////////////////////////////////////////////////////////////////
-// SymbolModuleBase
-//
-
 class SymbolModuleBase
 {
 public:
@@ -31,10 +27,6 @@ protected:
 	CComPtr<IDiaSession>    m_Session;
 	CComPtr<IDiaSymbol>     m_GlobalSymbol;
 };
-
-//////////////////////////////////////////////////////////////////////////
-// SymbolModuleBase - implementation
-//
 
 SymbolModuleBase::SymbolModuleBase()
 {
@@ -87,47 +79,22 @@ BOOL SymbolModuleBase::Open(IN const CHAR* Path)
 	HRESULT   Result            = S_OK;
 	LPCOLESTR PDBSearchPath     = L"srv*.\\Symbols*https://msdl.microsoft.com/download/symbols";
 
-	//
-	// Load msdia140.dll.
-	// First try registered COM class, if it fails,
-	// do LoadLibrary() directly.
-	//
-
 	if (FAILED(Result = LoadDiaViaCoCreateInstance()) &&
 	    FAILED(Result = LoadDiaViaLoadLibrary()))
 	{
 		return FALSE;
 	}
 
-	//
-	// Convert Path to WCHAR string.
-	//
-
 	int PathUnicodeLength = MultiByteToWideChar(CP_UTF8, 0, Path, -1, NULL, 0);
 	auto PathUnicode       = std::make_unique<WCHAR[]>(PathUnicodeLength);
 	MultiByteToWideChar(CP_UTF8, 0, Path, -1, PathUnicode.get(), PathUnicodeLength);
 
-	//
-	// Parse the file extension.
-	//
-
 	WCHAR FileExtension[8] = { 0 };
-	_wsplitpath_s(
-		PathUnicode.get(),
-		nullptr,
-		0,
-		nullptr,
-		0,
-		nullptr,
-		0,
-		FileExtension,
+	_wsplitpath_s(PathUnicode.get(),
+		nullptr, 0,
+		nullptr, 0,
+		nullptr, 0, FileExtension,
 		_countof(FileExtension));
-
-	//
-	// If PDB file is specified, load it directly.
-	// Otherwise, try to find the corresponding PDB for
-	// the specified file (locally / symbol server).
-	//
 
 	if (_wcsicmp(FileExtension, L".pdb") == 0)
 	{
@@ -177,10 +144,6 @@ BOOL SymbolModuleBase::IsOpen() const
 {
 	return m_DataSource && m_Session && m_GlobalSymbol;
 }
-
-//////////////////////////////////////////////////////////////////////////
-// SymbolModule
-//
 
 class SymbolModule
 	: public SymbolModuleBase
@@ -306,22 +269,12 @@ CHAR* SymbolModule::GetSymbolName(IN IDiaSymbol* DiaSymbol)
 		return nullptr;
 	}
 
-	//
-	// BSTR is essentially a wide char string.
-	// Since we work in multibyte character set,
-	// we need to convert it.
-	//
-
 	CHAR*  SymbolNameMb;
 	size_t SymbolNameLength;
 
 	SymbolNameLength = (size_t)SysStringLen(SymbolNameBstr) + 1;
 	SymbolNameMb = new CHAR[SymbolNameLength];
 	wcstombs(SymbolNameMb, SymbolNameBstr, SymbolNameLength);
-
-	//
-	// BSTR is supposed to be freed by this call.
-	//
 
 	SysFreeString(SymbolNameBstr);
 
@@ -990,9 +943,9 @@ const FunctionSet& PDB::GetFunctionSet() const
 	return m_Impl->GetFunctionSet();
 }
 
-const CHAR* PDB::GetBasicTypeString(IN BasicType BaseType, IN DWORD Size, IN BOOL UseStdInt)
+const CHAR* PDB::GetBasicTypeString(IN BasicType BaseType, IN DWORD Size)
 {
-	BasicTypeMapElement* TypeMap = UseStdInt ? BasicTypeMapStdInt : BasicTypeMapMSVC;
+	BasicTypeMapElement* TypeMap = BasicTypeMapMSVC;
 
 	for (int n = 0; TypeMap[n].BasicTypeString != nullptr; n++)
 	{
@@ -1009,9 +962,9 @@ const CHAR* PDB::GetBasicTypeString(IN BasicType BaseType, IN DWORD Size, IN BOO
 	return nullptr;
 }
 
-const CHAR* PDB::GetBasicTypeString(IN const SYMBOL* Symbol, IN BOOL UseStdInt)
+const CHAR* PDB::GetBasicTypeString(IN const SYMBOL* Symbol)
 {
-	return GetBasicTypeString(Symbol->BaseType, Symbol->Size, UseStdInt);
+	return GetBasicTypeString(Symbol->BaseType, Symbol->Size);
 }
 
 const CHAR* PDB::GetUdtKindString(IN UdtKind Kind)

@@ -16,7 +16,6 @@ public:
 
 	virtual void OnEnumTypeBegin(const SYMBOL* Symbol)
 	{
-
 	}
 
 	virtual void OnEnumTypeEnd(const SYMBOL* Symbol)
@@ -56,32 +55,23 @@ public:
 	{
 	}
 
-	virtual	void OnAnonymousUdtEnd(
-		UdtKind Kind,
-		const SYMBOL_UDT_FIELD* FirstUdtField, const SYMBOL_UDT_FIELD* LastUdtField,
-		DWORD Size)
+	virtual	void OnAnonymousUdtEnd(UdtKind Kind, const SYMBOL_UDT_FIELD* FirstUdtField, const SYMBOL_UDT_FIELD* LastUdtField, DWORD Size)
 	{
 	}
 
-	virtual	void OnUdtFieldBitFieldBegin(
-		const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField)
+	virtual	void OnUdtFieldBitFieldBegin(const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField)
 	{
 	}
 
-	virtual	void OnUdtFieldBitFieldEnd(
-		const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField)
-	{
-
-	}
-
-	virtual	void OnPaddingMember(
-		const SYMBOL_UDT_FIELD* UdtField,
-		BasicType PaddingBasicType, DWORD PaddingBasicTypeSize, DWORD PaddingSize)
+	virtual	void OnUdtFieldBitFieldEnd(const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField)
 	{
 	}
 
-	virtual void OnPaddingBitFieldField(
-		const SYMBOL_UDT_FIELD* UdtField, const SYMBOL_UDT_FIELD* PreviousUdtField)
+	virtual	void OnPaddingMember(const SYMBOL_UDT_FIELD* UdtField, BasicType PaddingBasicType, DWORD PaddingBasicTypeSize, DWORD PaddingSize)
+	{
+	}
+
+	virtual void OnPaddingBitFieldField(const SYMBOL_UDT_FIELD* UdtField, const SYMBOL_UDT_FIELD* PreviousUdtField)
 	{
 	}
 };

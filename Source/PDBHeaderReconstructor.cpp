@@ -17,7 +17,6 @@ PDBHeaderReconstructor::PDBHeaderReconstructor(Settings* VisitorSettings)
 	{
 		VisitorSettings = &DefaultSettings;
 	}
-
 	m_Settings = VisitorSettings;
 }
 

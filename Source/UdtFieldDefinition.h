@@ -9,11 +9,6 @@ class UdtFieldDefinition
 	: public UdtFieldDefinitionBase
 {
 public:
-	struct Settings
-	{
-		bool UseStdInt = false;
-	};
-
 	void VisitBaseType(const SYMBOL* Symbol) override
 	{
 		if (Symbol->BaseType == btFloat && Symbol->Size == 10)
@@ -24,7 +19,7 @@ public:
 		if (Symbol->IsConst)	m_TypePrefix += "const ";
 		if (Symbol->IsVolatile)	m_TypePrefix += "volatile ";
 
-		m_TypePrefix += PDB::GetBasicTypeString(Symbol, m_Settings->UseStdInt);
+		m_TypePrefix += PDB::GetBasicTypeString(Symbol);
 	}
 
 	void VisitTypedefTypeEnd(const SYMBOL* Symbol) override
@@ -187,22 +182,6 @@ public:
 		return m_TypePrefix + " " + m_MemberName + m_TypeSuffix + m_Comment;
 	}
 
-	void SetSettings(void* MemberDefinitionSettings) override
-	{
-		static Settings DefaultSettings;
-		if (MemberDefinitionSettings == nullptr)
-		{
-			MemberDefinitionSettings = &DefaultSettings;
-		}
-
-		m_Settings = static_cast<Settings*>(MemberDefinitionSettings);
-	}
-
-	virtual void* GetSettings() override
-	{
-		return &m_Settings;
-	}
-
 private:
 	struct Function
 	{
@@ -216,6 +195,4 @@ private:
 	std::string m_Comment;
 	std::stack<Function> m_Funcs;
 	std::vector<std::string> m_Args;
-
-	Settings* m_Settings;
 };

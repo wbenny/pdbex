@@ -13,7 +13,6 @@ public:
 	struct Settings
 	{
 		PDBHeaderReconstructor::Settings PdbHeaderReconstructorSettings;
-		UdtFieldDefinition::Settings UdtFieldDefinitionSettings;
 
 		std::string SymbolName;
 		std::string PdbPath;
@@ -21,12 +20,6 @@ public:
 		const char* OutputFilename = nullptr;
 
 		bool PrintReferencedTypes = true;
-		bool PrintHeader = true;
-		bool PrintDeclarations = true;
-		bool PrintDefinitions = true;
-		bool PrintFunctions = false;
-		bool PrintPragmaPack = true;
-		bool Sort = false;
 	};
 
 	int Run(int argc, char** argv);
@@ -35,7 +28,6 @@ private:
 	void PrintUsage();
 	void ParseParameters(int argc, char** argv);
 	void OpenPDBFile();
-	void PrintPDBHeader();
 	void PrintPDBDeclarations();
 	void PrintPDBDefinitions();
 	void PrintPDBFunctions();

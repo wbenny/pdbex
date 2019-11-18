@@ -142,8 +142,8 @@ public:
 	const SymbolMap& GetSymbolMap() const;
 	const SymbolNameMap& GetSymbolNameMap() const;
 	const FunctionSet& GetFunctionSet() const;
-	static const CHAR* GetBasicTypeString(IN BasicType BaseType, IN DWORD Size, IN BOOL UseStdInt = FALSE);
-	static const CHAR* GetBasicTypeString(IN const SYMBOL* Symbol, IN BOOL UseStdInt = FALSE);
+	static const CHAR* GetBasicTypeString(IN BasicType BaseType, IN DWORD Size);
+	static const CHAR* GetBasicTypeString(IN const SYMBOL* Symbol);
 	static const CHAR* GetUdtKindString(IN UdtKind Kind);
 	static BOOL IsUnnamedSymbol(const SYMBOL* Symbol);
 

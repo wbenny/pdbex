@@ -2,7 +2,6 @@
 #include "PDBHeaderReconstructor.h"
 #include "PDBSymbolVisitor.h"
 #include "PDBSymbolSorter.h"
-#include "PDBSymbolSorterAlphabetical.h"
 #include "UdtFieldDefinition.h"
 
 #include <iostream>
@@ -11,19 +10,6 @@
 
 namespace
 {
-	static const char HEADER_FILE_HEADER[] =
-		"/*\n"
-		" * PDB file: %s\n"
-		" * Image architecture: %s (0x%04x)\n"
-		" *\n"
-		" */\n\n";
-
-	static const char DEFINITIONS_INCLUDE_STDINT[] = "#include <stdint.h>";
-
-	static const char DEFINITIONS_PRAGMA_PACK_BEGIN[] = "#include <pshpack1.h>";
-
-	static const char DEFINITIONS_PRAGMA_PACK_END[] = "#include <poppack.h>";
-
 	static const char* MESSAGE_INVALID_PARAMETERS = "Invalid parameters";
 	static const char* MESSAGE_FILE_NOT_FOUND = "File not found";
 	static const char* MESSAGE_SYMBOL_NOT_FOUND = "Symbol not found";
@@ -76,7 +62,7 @@ void PDBExtractor::PrintUsage()
 	printf("\n");
 	printf("pdbex <symbol> <path> [-o <filename>] [-e <type>]\n");
 	printf("                     [-u <prefix>] [-s prefix] [-r prefix] [-g suffix]\n");
-	printf("                     [-p] [-x] [-m] [-b] [-d] [-i] [-l]\n");
+	printf("                     [-p] [-x] [-m] [-b] [-d]\n");
 	printf("\n");
 	printf("<symbol>             Symbol name to extract\n");
 	printf("                     Use '*' if all symbols should be extracted.\n");
@@ -99,14 +85,7 @@ void PDBExtractor::PrintUsage()
 	printf(" -m                  Create Microsoft typedefs.                       (T)\n");
 	printf(" -b                  Allow bitfields in union.                        (F)\n");
 	printf(" -d                  Allow unnamed data types.                        (T)\n");
-	printf(" -i                  Use types from stdint.h instead of native types. (F)\n");
 	printf(" -j                  Print definitions of referenced types.           (T)\n");
-	printf(" -k                  Print header.                                    (T)\n");
-	printf(" -n                  Print declarations.                              (T)\n");
-	printf(" -l                  Print definitions.                               (T)\n");
-	printf(" -f                  Print functions.                                 (F)\n");
-	printf(" -z                  Print #pragma pack directives.                   (T)\n");
-	printf(" -y                  Sort declarations and definitions.               (F)\n");
 	printf("\n");
 }
 
@@ -242,36 +221,8 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 			m_Settings.PdbHeaderReconstructorSettings.AllowAnonymousDataTypes = !OffSwitch;
 			break;
 
-		case 'i':
-			m_Settings.UdtFieldDefinitionSettings.UseStdInt = !OffSwitch;
-			break;
-
 		case 'j':
 			m_Settings.PrintReferencedTypes = !OffSwitch;
-			break;
-
-		case 'k':
-			m_Settings.PrintHeader = !OffSwitch;
-			break;
-
-		case 'n':
-			m_Settings.PrintDeclarations = !OffSwitch;
-			break;
-
-		case 'l':
-			m_Settings.PrintDefinitions = !OffSwitch;
-			break;
-
-		case 'f':
-			m_Settings.PrintFunctions = !OffSwitch;
-			break;
-
-		case 'z':
-			m_Settings.PrintPragmaPack = !OffSwitch;
-			break;
-
-		case 'y':
-			m_Settings.Sort = !OffSwitch;
 			break;
 
 		default:
@@ -283,18 +234,8 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 		&m_Settings.PdbHeaderReconstructorSettings
 		);
 
-	m_SymbolVisitor = std::make_unique<PDBSymbolVisitor<UdtFieldDefinition>>(
-		m_HeaderReconstructor.get(),
-		&m_Settings.UdtFieldDefinitionSettings
-		);
-
-	if (m_Settings.Sort)
-	{
-		m_SymbolSorter = std::make_unique<PDBSymbolSorterAlphabetical>();
-	} else
-	{
-		m_SymbolSorter = std::make_unique<PDBSymbolSorter>();
-	}
+	m_SymbolVisitor = std::make_unique<PDBSymbolVisitor<UdtFieldDefinition>>(m_HeaderReconstructor.get());
+	m_SymbolSorter = std::make_unique<PDBSymbolSorter>();
 }
 
 void PDBExtractor::OpenPDBFile()
@@ -303,117 +244,62 @@ void PDBExtractor::OpenPDBFile()
 		throw PDBDumperException(MESSAGE_FILE_NOT_FOUND);
 }
 
-void PDBExtractor::PrintPDBHeader()
-{
-	if (m_Settings.PrintHeader)
-	{
-		static const char* const ArchitectureString =
-			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_I386  ? "i386"  :
-			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_AMD64 ? "AMD64" :
-			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_IA64  ? "IA64"  :
-			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_ARMNT ? "ArmNT" :
-			                                                     "Unknown";
-
-		static char HEADER_FILE_HEADER_FORMATTED[16 * 1024];
-
-		sprintf_s(HEADER_FILE_HEADER_FORMATTED, HEADER_FILE_HEADER,
-			m_Settings.PdbPath.c_str(),
-			ArchitectureString,
-			m_PDB.GetMachineType()
-			);
-
-		*m_Settings.PdbHeaderReconstructorSettings.OutputFile << HEADER_FILE_HEADER_FORMATTED;
-	}
-}
-
 void PDBExtractor::PrintPDBDeclarations()
 {
-	if (m_Settings.PrintDeclarations)
+	for (auto&& e : m_SymbolSorter->GetSortedSymbols())
 	{
-		for (auto&& e : m_SymbolSorter->GetSortedSymbols())
+		if (e->Tag == SymTagUDT && !PDB::IsUnnamedSymbol(e))
 		{
-			if (e->Tag == SymTagUDT && !PDB::IsUnnamedSymbol(e))
-			{
-				*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-					<< PDB::GetUdtKindString(e->u.Udt.Kind)
-					<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
-					<< std::endl;
-			} else if (e->Tag == SymTagEnum)
-			{
-				*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-					<< "enum"
-					<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
-					<< std::endl;
-			}
+			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
+				<< PDB::GetUdtKindString(e->u.Udt.Kind)
+				<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
+				<< std::endl;
+		} else if (e->Tag == SymTagEnum)
+		{
+			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
+				<< "enum"
+				<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
+				<< std::endl;
 		}
-
-		*m_Settings.PdbHeaderReconstructorSettings.OutputFile << std::endl;
 	}
+
+	*m_Settings.PdbHeaderReconstructorSettings.OutputFile << std::endl;
 }
 
 void PDBExtractor::PrintPDBDefinitions()
 {
-	if (m_Settings.PrintDefinitions)
+	for (auto&& e : m_SymbolSorter->GetSortedSymbols())
 	{
-		if (m_Settings.UdtFieldDefinitionSettings.UseStdInt)
+		bool Expand = true;
+
+		if (m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion == PDBHeaderReconstructor::MemberStructExpansionType::InlineUnnamed &&
+		    e->Tag == SymTagUDT &&
+		    PDB::IsUnnamedSymbol(e))
 		{
-			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-				<< DEFINITIONS_INCLUDE_STDINT
-				<< std::endl;
+			Expand = false;
 		}
 
-		if (m_Settings.PrintPragmaPack)
+		if (Expand)
 		{
-			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-				<< DEFINITIONS_PRAGMA_PACK_BEGIN
-				<< std::endl;
-		}
-
-		for (auto&& e : m_SymbolSorter->GetSortedSymbols())
-		{
-			bool Expand = true;
-
-			if (m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion == PDBHeaderReconstructor::MemberStructExpansionType::InlineUnnamed &&
-			    e->Tag == SymTagUDT &&
-			    PDB::IsUnnamedSymbol(e))
-			{
-				Expand = false;
-			}
-
-			if (Expand)
-			{
-				m_SymbolVisitor->Run(e);
-			}
-		}
-
-		if (m_Settings.PrintPragmaPack)
-		{
-			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-				<< DEFINITIONS_PRAGMA_PACK_END
-				<< std::endl;
+			m_SymbolVisitor->Run(e);
 		}
 	}
 }
 
 void PDBExtractor::PrintPDBFunctions()
 {
-	if (m_Settings.PrintFunctions)
+	*m_Settings.PdbHeaderReconstructorSettings.OutputFile << "/*" << std::endl;
+
+	for (auto&& e : m_PDB.GetFunctionSet())
 	{
-		*m_Settings.PdbHeaderReconstructorSettings.OutputFile << "/*" << std::endl;
-
-		for (auto&& e : m_PDB.GetFunctionSet())
-		{
-			*m_Settings.PdbHeaderReconstructorSettings.OutputFile << e << std::endl;
-		}
-
-		*m_Settings.PdbHeaderReconstructorSettings.OutputFile << "*/" << std::endl;
+		*m_Settings.PdbHeaderReconstructorSettings.OutputFile << e << std::endl;
 	}
+
+	*m_Settings.PdbHeaderReconstructorSettings.OutputFile << "*/" << std::endl;
 }
 
 void PDBExtractor::DumpAllSymbols()
 {
-	PrintPDBHeader();
-
 	for (auto&& e : m_PDB.GetSymbolMap())
 	{
 		m_SymbolSorter->Visit(e.second);
@@ -427,11 +313,8 @@ void PDBExtractor::DumpAllSymbols()
 void PDBExtractor::DumpOneSymbol()
 {
 	const SYMBOL* Symbol = m_PDB.GetSymbolByName(m_Settings.SymbolName.c_str());
-
 	if (Symbol == nullptr)
 		throw PDBDumperException(MESSAGE_SYMBOL_NOT_FOUND);
-
-	PrintPDBHeader();
 
 	if (m_Settings.PrintReferencedTypes &&
 	    m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion != PDBHeaderReconstructor::MemberStructExpansionType::InlineAll)
