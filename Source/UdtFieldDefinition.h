@@ -52,10 +52,10 @@ public:
 		{
 			if (Symbol->u.Pointer.IsReference)
 			{
-				m_MemberName += "& ";
+				m_MemberName = "& " + m_MemberName;
 			} else
 			{
-				m_MemberName += "* ";
+				m_MemberName = "* " + m_MemberName;
 			}
 
 			if (Symbol->IsConst)	m_MemberName += " const";
@@ -110,7 +110,7 @@ public:
 		{
 			m_TypePrefix = "static " + m_TypePrefix;
 		} else
-		if (Symbol->u.Udt.BaseClassCount)
+		if (Symbol->u.Function.IsVirtual)
 		{
 			m_TypePrefix = "virtual " + m_TypePrefix;
 		}
@@ -159,7 +159,7 @@ public:
 			m_TypePrefix = "";
 		} else
 		{
-			m_TypeSuffix = 	GetPrintableDefinition();
+			m_TypeSuffix = GetPrintableDefinition();
 			m_Args.push_back(m_TypeSuffix);
 			m_TypeSuffix = "";
 			m_TypePrefix = "";

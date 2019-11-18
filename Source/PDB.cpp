@@ -546,10 +546,12 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 	DWORD Kind;
 	DiaSymbol->get_udtKind(&Kind);
 	Symbol->u.Udt.Kind = static_cast<UdtKind>(Kind);
+	Symbol->u.Udt.BaseClassCount = 0;
+	Symbol->u.Udt.BaseClassFields = 0;
 
 	IDiaEnumSymbols *DiaSymbolEnumerator;
 
-	if (FAILED(DiaSymbol->findChildren(SymTagData, nullptr, nsNone, &DiaSymbolEnumerator)))
+	if (FAILED(DiaSymbol->findChildren(SymTagNull, nullptr, nsNone, &DiaSymbolEnumerator)))
 		return;
 
 	LONG ChildCount;
@@ -599,8 +601,8 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 			{
 				++Symbol->u.Udt.BaseClassCount;
 				if (Symbol->u.Udt.BaseClassFields == 0)
-					Symbol->u.Udt.BaseClassFields = malloc(sizeof(SYMBOL_UDT_BASECLASS));
-				else	Symbol->u.Udt.BaseClassFields = realloc(Symbol->u.Udt.BaseClassFields, sizeof(SYMBOL_UDT_BASECLASS)*Symbol->u.Udt.BaseClassCount);
+					Symbol->u.Udt.BaseClassFields = (SYMBOL_UDT_BASECLASS *)malloc(sizeof(SYMBOL_UDT_BASECLASS));
+				else	Symbol->u.Udt.BaseClassFields = (SYMBOL_UDT_BASECLASS *)realloc(Symbol->u.Udt.BaseClassFields, sizeof(SYMBOL_UDT_BASECLASS)*Symbol->u.Udt.BaseClassCount);
 				Symbol->u.Udt.BaseClassFields[Symbol->u.Udt.BaseClassCount-1].Type = Member->Type;
 				DWORD Access = 0;
 				DiaChildSymbol->get_access(&Access);
@@ -637,7 +639,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 				Member->Type->u.Function.IsOverride = TRUE;
 			}
 		}
-
+		DiaChildSymbol->Release();
 		Index += 1;
 	}
 
@@ -724,7 +726,7 @@ VOID SymbolModule::ProcessSymbolFunctionEx(IN IDiaSymbol* DiaSymbol, IN SYMBOL* 
 		DiaSymbol->get_pure(&IsPure);
 	}
 	Symbol->u.Function.IsPure = IsPure;
-	
+
 	IDiaSymbol *DiaArgumentTypeSymbol;
 	DiaSymbol->get_type(&DiaArgumentTypeSymbol);
 	ProcessSymbolFunction(DiaArgumentTypeSymbol, Symbol);
@@ -741,14 +743,14 @@ void SymbolModule::DestroySymbol(IN SYMBOL* Symbol)
 		for (DWORD i = 0; i < Symbol->u.Udt.FieldCount; ++i)
 			delete []Symbol->u.Udt.Fields[i].Name;
 
-		delete[] Symbol->u.Udt.Fields;
+		delete []Symbol->u.Udt.Fields;
 		break;
 
 	case SymTagEnum:
 		for (DWORD i = 0; i < Symbol->u.Enum.FieldCount; ++i)
 			delete []Symbol->u.Enum.Fields[i].Name;
 
-		delete[] Symbol->u.Enum.Fields;
+		delete []Symbol->u.Enum.Fields;
 		break;
 
 	case SymTagFunctionType:
@@ -770,11 +772,11 @@ struct BasicTypeMapElement
 };
 
 BasicTypeMapElement BasicTypeMapMSVC[] = {
-	{ btNoType,       0,  "btNoType",         nullptr            },
+	{ btNoType,       0,  "btNoType",         "<NoType>"         }, //nullptr
 	{ btVoid,         0,  "btVoid",           "void"             },
 	{ btChar,         1,  "btChar",           "char"             },
-	{ btChar16,       2,  "btChar16",         "char16_t"         },
-	{ btChar32,       4,  "btChar32",         "char32_t"         },
+//	{ btChar16,       2,  "btChar16",         "char16_t"         },
+//	{ btChar32,       4,  "btChar32",         "char32_t"         },
 	{ btWChar,        2,  "btWChar",          "wchar_t"          },
 	{ btInt,          1,  "btInt",            "char"             },
 	{ btInt,          2,  "btInt",            "short"            },
@@ -885,7 +887,7 @@ const CHAR* PDB::GetBasicTypeString(IN BasicType BaseType, IN DWORD Size)
 			if (TypeMap[n].Length == Size ||
 			    TypeMap[n].Length == 0)
 			{
-				return TypeMap[n].TypeString;
+				return TypeMap[n].TypeString; //TODO NULL ???
 			}
 		}
 	}

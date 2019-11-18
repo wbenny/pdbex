@@ -75,6 +75,7 @@ protected:
 		{
 			Visit(Symbol->u.Function.Arguments[i]);
 		}
+		Visit(Symbol->u.Function.ReturnType);
 	}
 
 	virtual void VisitFunctionArgType(const SYMBOL* Symbol)

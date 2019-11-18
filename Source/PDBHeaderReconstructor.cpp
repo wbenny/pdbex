@@ -160,23 +160,23 @@ void PDBHeaderReconstructor::OnUdtBegin(const SYMBOL* Symbol)
 
 		if (Symbol->u.Udt.BaseClassCount)
 		{
-			std::string FuncName;
+			std::string ClassName;
 			for (DWORD i = 0; i < Symbol->u.Udt.BaseClassCount; ++i)
 			{
 				std::string Access;
 				switch (Symbol->u.Udt.BaseClassFields[i].Access)
 				{
-				case 1: Access = "private"; break;
-				case 2: Access = "protected"; break;
-				case 3: Access = "public"; break;
+				case 1: Access = "private "; break;
+				case 2: Access = "protected "; break;
+				case 3: Access = "public "; break;
 				}
 				std::string Virtual;
-				if (Symbol->u.Udt.BaseClassFields[i].IsVirtual) Virtual = "virtual";
+				if (Symbol->u.Udt.BaseClassFields[i].IsVirtual) Virtual = "virtual ";
 				std::string CorrectFuncName = GetCorrectedSymbolName(Symbol->u.Udt.BaseClassFields[i].Type);
-				if (FuncName.size()) FuncName += ",";
-				FuncName += Access + Virtual + CorrectFuncName;
+				if (ClassName.size()) ClassName += ", ";
+				ClassName += Access + Virtual + CorrectFuncName;
 			}
-			Write(" : %s", FuncName.c_str());
+			Write(" : %s", ClassName.c_str());
 		}
 	}
 
