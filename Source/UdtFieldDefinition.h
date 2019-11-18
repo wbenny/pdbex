@@ -43,7 +43,7 @@ class UdtFieldDefinition
 		}
 
 		void
-		VisitPointerTypeEnd(
+		VisitTypedefTypeEnd(
 			const SYMBOL* Symbol
 			) override
 		{
@@ -228,7 +228,7 @@ class UdtFieldDefinition
 
 			if (Symbol->u.Function.IsVirtual)
 			{
-				m_Comment += " /* VO: " + std:to_string(Symbol->u.Function.virtualBaseOffset) + " */";
+				m_Comment += " /* VO: " + std:to_string(Symbol->u.Function.VirtualOffset) + " */";
 			}
 
 			if (m_TypeSuffix.size())
@@ -241,7 +241,7 @@ class UdtFieldDefinition
 				if (m_TypeSuffix.size()) m_TypeSuffix += ", ";
 				m_TypeSuffix += e;
 			}
-			m_TypeSuffix = "(" + m_TypeSuffix ")";
+			m_TypeSuffix = "(" + m_TypeSuffix + ")";
 
 			Function func = m_Funcs.top();
 
