@@ -11,10 +11,6 @@
 
 namespace
 {
-	//
-	// Headers & footers for test file and reconstructed header.
-	//
-
 	static const char TEST_FILE_HEADER[] =
 		"#include <stdio.h>\n"
 		"#include <stddef.h>\n"
@@ -41,54 +37,33 @@ namespace
 		" * Dumped by pdbex tool v" PDBEX_VERSION_STRING ", by wbenny\n"
 		" */\n\n";
 
-	static const char DEFINITIONS_INCLUDE_STDINT[] =
-		"#include <stdint.h>";
+	static const char DEFINITIONS_INCLUDE_STDINT[] = "#include <stdint.h>";
 
-	static const char DEFINITIONS_PRAGMA_PACK_BEGIN[] =
-		"#include <pshpack1.h>";
+	static const char DEFINITIONS_PRAGMA_PACK_BEGIN[] = "#include <pshpack1.h>";
 
-	static const char DEFINITIONS_PRAGMA_PACK_END[] =
-		"#include <poppack.h>";
+	static const char DEFINITIONS_PRAGMA_PACK_END[] = "#include <poppack.h>";
 
-	//
-	// Error messages.
-	//
-
-	static const char* MESSAGE_INVALID_PARAMETERS =
-		"Invalid parameters";
-
-	static const char* MESSAGE_FILE_NOT_FOUND =
-		"File not found";
-
-	static const char* MESSAGE_SYMBOL_NOT_FOUND =
-		"Symbol not found";
-
-	//
-	// Our exception class.
-	//
+	static const char* MESSAGE_INVALID_PARAMETERS = "Invalid parameters";
+	static const char* MESSAGE_FILE_NOT_FOUND = "File not found";
+	static const char* MESSAGE_SYMBOL_NOT_FOUND = "Symbol not found";
 
 	class PDBDumperException
 		: public std::runtime_error
 	{
-		public:
-			PDBDumperException(const char* Message)
-				: std::runtime_error(Message)
-			{
+	public:
+		PDBDumperException(const char* Message)
+			: std::runtime_error(Message)
+		{
 
-			}
+		}
 	};
 }
 
-int
-PDBExtractor::Run(
-	int argc,
-	char** argv
-	)
+int PDBExtractor::Run(int argc, char** argv)
 {
 	int Result = ERROR_SUCCESS;
 
-	try
-	{
+	try {
 		ParseParameters(argc, argv);
 		OpenPDBFile();
 
@@ -108,8 +83,7 @@ PDBExtractor::Run(
 		}
 
 		PrintTestFooter();
-	}
-	catch (const PDBDumperException& e)
+	} catch (const PDBDumperException& e)
 	{
 		std::cerr << e.what() << std::endl;
 		Result = EXIT_FAILURE;
@@ -120,8 +94,7 @@ PDBExtractor::Run(
 	return Result;
 }
 
-void
-PDBExtractor::PrintUsage()
+void PDBExtractor::PrintUsage()
 {
 	printf("Extracts types and structures from PDB (Program database).\n");
 	printf("Version v%s\n", PDBEX_VERSION_STRING);
@@ -163,26 +136,13 @@ PDBExtractor::PrintUsage()
 	printf("\n");
 }
 
-void
-PDBExtractor::ParseParameters(
-	int argc,
-	char** argv
-	)
+void PDBExtractor::ParseParameters(int argc, char** argv)
 {
-	//
-	// Early check for help parameter.
-	//
-
 	if ( argc == 1 ||
 	    (argc == 2 && strcmp(argv[1], "-h") == 0) ||
 	    (argc == 2 && strcmp(argv[1], "--help") == 0))
 	{
 		PrintUsage();
-
-		//
-		// Kitten died when I wrote this.
-		//
-
 		exit(EXIT_SUCCESS);
 	}
 
@@ -217,174 +177,170 @@ PDBExtractor::ParseParameters(
 
 		bool OffSwitch = CurrentArgumentLength == 3 && CurrentArgument[2] == '-';
 
-		//
-		// Handling of options.
-		//
-
 		switch (CurrentArgument[1])
 		{
-			case 'o':
-				if (!NextArgument)
-				{
-					throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-				}
+		case 'o':
+			if (!NextArgument)
+			{
+				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
+			}
 
-				++ArgumentPointer;
-				m_Settings.OutputFilename = NextArgument;
+			++ArgumentPointer;
+			m_Settings.OutputFilename = NextArgument;
 
-				if (m_Settings.SymbolName != "%")
-				{
-					m_Settings.PdbHeaderReconstructorSettings.OutputFile = new std::ofstream(
-						NextArgument,
-						std::ios::out
-						);
-				}
-				else
-				{
-					m_Settings.PdbHeaderReconstructorSettings.OutputFile = nullptr;
-				}
-				break;
-
-			case 't':
-				if (!NextArgument)
-				{
-					throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-				}
-
-				++ArgumentPointer;
-				m_Settings.TestFilename = NextArgument;
-				m_Settings.PdbHeaderReconstructorSettings.TestFile = new std::ofstream(
-					m_Settings.TestFilename,
+			if (m_Settings.SymbolName != "%")
+			{
+				m_Settings.PdbHeaderReconstructorSettings.OutputFile = new std::ofstream(
+					NextArgument,
 					std::ios::out
 					);
+			}
+			else
+			{
+				m_Settings.PdbHeaderReconstructorSettings.OutputFile = nullptr;
+			}
+			break;
 
-				break;
-
-			case 'e':
-				if (!NextArgument)
-				{
-					throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-				}
-
-				++ArgumentPointer;
-				switch (NextArgument[0])
-				{
-					case 'n':
-						m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
-							PDBHeaderReconstructor::MemberStructExpansionType::None;
-						break;
-
-					case 'i':
-						m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
-							PDBHeaderReconstructor::MemberStructExpansionType::InlineUnnamed;
-						break;
-
-					case 'a':
-						m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
-							PDBHeaderReconstructor::MemberStructExpansionType::InlineAll;
-						break;
-
-					default:
-						m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
-							PDBHeaderReconstructor::MemberStructExpansionType::InlineUnnamed;
-						break;
-				}
-				break;
-
-			case 'u':
-				if (!NextArgument)
-				{
-					throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-				}
-
-				++ArgumentPointer;
-				m_Settings.PdbHeaderReconstructorSettings.AnonymousUnionPrefix = NextArgument;
-				break;
-
-			case 's':
-				if (!NextArgument)
-				{
-					throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-				}
-
-				++ArgumentPointer;
-				m_Settings.PdbHeaderReconstructorSettings.AnonymousStructPrefix = NextArgument;
-				break;
-
-			case 'r':
-				if (!NextArgument)
-				{
-					throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-				}
-
-				++ArgumentPointer;
-				m_Settings.PdbHeaderReconstructorSettings.SymbolPrefix = NextArgument;
-				break;
-
-			case 'g':
-				if (!NextArgument)
-				{
-					throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
-				}
-
-				++ArgumentPointer;
-				m_Settings.PdbHeaderReconstructorSettings.SymbolSuffix = NextArgument;
-				break;
-
-			case 'p':
-				m_Settings.PdbHeaderReconstructorSettings.CreatePaddingMembers = !OffSwitch;
-				break;
-
-			case 'x':
-				m_Settings.PdbHeaderReconstructorSettings.ShowOffsets = !OffSwitch;
-				break;
-
-			case 'm':
-				m_Settings.PdbHeaderReconstructorSettings.MicrosoftTypedefs = !OffSwitch;
-				break;
-
-			case 'b':
-				m_Settings.PdbHeaderReconstructorSettings.AllowBitFieldsInUnion = !OffSwitch;
-				break;
-
-			case 'd':
-				m_Settings.PdbHeaderReconstructorSettings.AllowAnonymousDataTypes = !OffSwitch;
-				break;
-
-			case 'i':
-				m_Settings.UdtFieldDefinitionSettings.UseStdInt = !OffSwitch;
-				break;
-
-			case 'j':
-				m_Settings.PrintReferencedTypes = !OffSwitch;
-				break;
-
-			case 'k':
-				m_Settings.PrintHeader = !OffSwitch;
-				break;
-
-			case 'n':
-				m_Settings.PrintDeclarations = !OffSwitch;
-				break;
-
-			case 'l':
-				m_Settings.PrintDefinitions = !OffSwitch;
-				break;
-
-			case 'f':
-				m_Settings.PrintFunctions = !OffSwitch;
-				break;
-
-			case 'z':
-				m_Settings.PrintPragmaPack = !OffSwitch;
-				break;
-
-			case 'y':
-				m_Settings.Sort = !OffSwitch;
-				break;
-
-			default:
+		case 't':
+			if (!NextArgument)
+			{
 				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
+			}
+
+			++ArgumentPointer;
+			m_Settings.TestFilename = NextArgument;
+			m_Settings.PdbHeaderReconstructorSettings.TestFile = new std::ofstream(
+				m_Settings.TestFilename,
+				std::ios::out
+				);
+
+			break;
+
+		case 'e':
+			if (!NextArgument)
+			{
+				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
+			}
+
+			++ArgumentPointer;
+			switch (NextArgument[0])
+			{
+				case 'n':
+					m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
+						PDBHeaderReconstructor::MemberStructExpansionType::None;
+					break;
+
+				case 'i':
+					m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
+						PDBHeaderReconstructor::MemberStructExpansionType::InlineUnnamed;
+					break;
+
+				case 'a':
+					m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
+						PDBHeaderReconstructor::MemberStructExpansionType::InlineAll;
+					break;
+
+				default:
+					m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion =
+						PDBHeaderReconstructor::MemberStructExpansionType::InlineUnnamed;
+					break;
+			}
+			break;
+
+		case 'u':
+			if (!NextArgument)
+			{
+				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
+			}
+
+			++ArgumentPointer;
+			m_Settings.PdbHeaderReconstructorSettings.AnonymousUnionPrefix = NextArgument;
+			break;
+
+		case 's':
+			if (!NextArgument)
+			{
+				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
+			}
+
+			++ArgumentPointer;
+			m_Settings.PdbHeaderReconstructorSettings.AnonymousStructPrefix = NextArgument;
+			break;
+
+		case 'r':
+			if (!NextArgument)
+			{
+				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
+			}
+
+			++ArgumentPointer;
+			m_Settings.PdbHeaderReconstructorSettings.SymbolPrefix = NextArgument;
+			break;
+
+		case 'g':
+			if (!NextArgument)
+			{
+				throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
+			}
+
+			++ArgumentPointer;
+			m_Settings.PdbHeaderReconstructorSettings.SymbolSuffix = NextArgument;
+			break;
+
+		case 'p':
+			m_Settings.PdbHeaderReconstructorSettings.CreatePaddingMembers = !OffSwitch;
+			break;
+
+		case 'x':
+			m_Settings.PdbHeaderReconstructorSettings.ShowOffsets = !OffSwitch;
+			break;
+
+		case 'm':
+			m_Settings.PdbHeaderReconstructorSettings.MicrosoftTypedefs = !OffSwitch;
+			break;
+
+		case 'b':
+			m_Settings.PdbHeaderReconstructorSettings.AllowBitFieldsInUnion = !OffSwitch;
+			break;
+
+		case 'd':
+			m_Settings.PdbHeaderReconstructorSettings.AllowAnonymousDataTypes = !OffSwitch;
+			break;
+
+		case 'i':
+			m_Settings.UdtFieldDefinitionSettings.UseStdInt = !OffSwitch;
+			break;
+
+		case 'j':
+			m_Settings.PrintReferencedTypes = !OffSwitch;
+			break;
+
+		case 'k':
+			m_Settings.PrintHeader = !OffSwitch;
+			break;
+
+		case 'n':
+			m_Settings.PrintDeclarations = !OffSwitch;
+			break;
+
+		case 'l':
+			m_Settings.PrintDefinitions = !OffSwitch;
+			break;
+
+		case 'f':
+			m_Settings.PrintFunctions = !OffSwitch;
+			break;
+
+		case 'z':
+			m_Settings.PrintPragmaPack = !OffSwitch;
+			break;
+
+		case 'y':
+			m_Settings.Sort = !OffSwitch;
+			break;
+
+		default:
+			throw PDBDumperException(MESSAGE_INVALID_PARAMETERS);
 		}
 	}
 
@@ -407,8 +363,7 @@ PDBExtractor::ParseParameters(
 	}
 }
 
-void
-PDBExtractor::OpenPDBFile()
+void PDBExtractor::OpenPDBFile()
 {
 	if (m_PDB.Open(m_Settings.PdbPath.c_str()) == FALSE)
 	{
@@ -416,8 +371,7 @@ PDBExtractor::OpenPDBFile()
 	}
 }
 
-void
-PDBExtractor::PrintTestHeader()
+void PDBExtractor::PrintTestHeader()
 {
 	if (m_Settings.PdbHeaderReconstructorSettings.TestFile != nullptr)
 	{
@@ -431,8 +385,7 @@ PDBExtractor::PrintTestHeader()
 	}
 }
 
-void
-PDBExtractor::PrintTestFooter()
+void PDBExtractor::PrintTestFooter()
 {
 	if (m_Settings.PdbHeaderReconstructorSettings.TestFile != nullptr)
 	{
@@ -440,8 +393,7 @@ PDBExtractor::PrintTestFooter()
 	}
 }
 
-void
-PDBExtractor::PrintPDBHeader()
+void PDBExtractor::PrintPDBHeader()
 {
 	if (m_Settings.PrintHeader)
 	{
@@ -465,13 +417,8 @@ PDBExtractor::PrintPDBHeader()
 	}
 }
 
-void
-PDBExtractor::PrintPDBDeclarations()
+void PDBExtractor::PrintPDBDeclarations()
 {
-	//
-	// Write declarations.
-	//
-
 	if (m_Settings.PrintDeclarations)
 	{
 		for (auto&& e : m_SymbolSorter->GetSortedSymbols())
@@ -496,13 +443,8 @@ PDBExtractor::PrintPDBDeclarations()
 	}
 }
 
-void
-PDBExtractor::PrintPDBDefinitions()
+void PDBExtractor::PrintPDBDefinitions()
 {
-	//
-	// Write definitions.
-	//
-
 	if (m_Settings.PrintDefinitions)
 	{
 		if (m_Settings.UdtFieldDefinitionSettings.UseStdInt)
@@ -549,13 +491,8 @@ PDBExtractor::PrintPDBDefinitions()
 	}
 }
 
-void
-PDBExtractor::PrintPDBFunctions()
+void PDBExtractor::PrintPDBFunctions()
 {
-	//
-	// Write definitions.
-	//
-
 	if (m_Settings.PrintFunctions)
 	{
 		*m_Settings.PdbHeaderReconstructorSettings.OutputFile
@@ -575,13 +512,8 @@ PDBExtractor::PrintPDBFunctions()
 	}
 }
 
-void
-PDBExtractor::DumpAllSymbols()
+void PDBExtractor::DumpAllSymbols()
 {
-	//
-	// We are going to print all symbols.
-	//
-
 	PrintPDBHeader();
 
 	for (auto&& e : m_PDB.GetSymbolMap())
@@ -594,8 +526,7 @@ PDBExtractor::DumpAllSymbols()
 	PrintPDBFunctions();
 }
 
-void
-PDBExtractor::DumpOneSymbol()
+void PDBExtractor::DumpOneSymbol()
 {
 	const SYMBOL* Symbol = m_PDB.GetSymbolByName(m_Settings.SymbolName.c_str());
 
@@ -606,37 +537,20 @@ PDBExtractor::DumpOneSymbol()
 
 	PrintPDBHeader();
 
-	//
-	// InlineAll supresses PrintReferencedTypes.
-	//
-
 	if (m_Settings.PrintReferencedTypes &&
 	    m_Settings.PdbHeaderReconstructorSettings.MemberStructExpansion != PDBHeaderReconstructor::MemberStructExpansionType::InlineAll)
 	{
 		m_SymbolSorter->Visit(Symbol);
-
-		//
-		// Print header only when PrintReferencedTypes == true.
-		//
-
 		PrintPDBDefinitions();
 	}
 	else
 	{
-		//
-		// Print only the specified symbol.
-		//
-
 		m_SymbolVisitor->Run(Symbol);
 	}
 }
 
-void
-PDBExtractor::DumpAllSymbolsOneByOne()
+void PDBExtractor::DumpAllSymbolsOneByOne()
 {
-	//
-	// Copy all symbols locally.
-	//
 	for (auto&& e : m_PDB.GetSymbolMap())
 	{
 		m_SymbolSorter->Visit(e.second);
@@ -646,9 +560,6 @@ PDBExtractor::DumpAllSymbolsOneByOne()
 
 	m_SymbolSorter->Clear();
 
-	//
-	// Create output directory.
-	//
 	std::string OutputDirectory = m_Settings.OutputFilename
 		? m_Settings.OutputFilename
 		: ".";
@@ -685,14 +596,8 @@ PDBExtractor::DumpAllSymbolsOneByOne()
 	m_Settings.PdbHeaderReconstructorSettings.OutputFile = nullptr;
 }
 
-void
-PDBExtractor::CloseOpenFiles()
+void PDBExtractor::CloseOpenFiles()
 {
-	//
-	// We want to free the memory only if the filename was specified,
-	// because OutputFile or TestFile may be std::cout.
-	//
-
 	if (m_Settings.TestFilename)
 	{
 		delete m_Settings.PdbHeaderReconstructorSettings.TestFile;
