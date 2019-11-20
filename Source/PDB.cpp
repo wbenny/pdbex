@@ -51,7 +51,7 @@ HRESULT SymbolModuleBase::LoadDiaViaLoadLibrary()
 	if (!Module)
 	{
 		Result = HRESULT_FROM_WIN32(GetLastError());
-		return FALSE;
+		return Result;
 	}
 
 	using PDLLGETCLASSOBJECT_ROUTINE = HRESULT(WINAPI*)(REFCLSID, REFIID, LPVOID);
@@ -59,14 +59,14 @@ HRESULT SymbolModuleBase::LoadDiaViaLoadLibrary()
 	if (!DllGetClassObject)
 	{
 		Result = HRESULT_FROM_WIN32(GetLastError());
-		return FALSE;
+		return Result;
 	}
 
 	IClassFactory *ClassFactory;
 	Result = DllGetClassObject(__uuidof(DiaSource), __uuidof(IClassFactory), &ClassFactory);
 	if (FAILED(Result))
 	{
-		return FALSE;
+		return Result;
 	}
 
 	return ClassFactory->CreateInstance(nullptr, __uuidof(IDiaDataSource), (void**)& m_DataSource);
@@ -625,7 +625,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 						SYMBOL *TmpSymbol = Symbol->u.Udt.BaseClassFields[i].Type;
 						for (DWORD j = 0; j < TmpSymbol->u.Udt.FieldCount; ++j)
 						{
-							if (TmpSymbol->u.Udt.Fields[j].Tag->Type == SymTagFunction &&
+							if (TmpSymbol->u.Udt.Fields[j].Type->Tag == SymTagFunction &&
 							    strcmp(TmpSymbol->u.Udt.Fields[j].Name, Member->Type->Name) == 0 &&
 							    TmpSymbol->u.Udt.Fields[j].Type->u.Function.ArgumentCount == Member->Type->u.Function.ArgumentCount)
 							{
@@ -777,8 +777,8 @@ BasicTypeMapElement BasicTypeMapMSVC[] = {
 	{ btNoType,       0,  "btNoType",         "<NoType>"         }, //nullptr
 	{ btVoid,         0,  "btVoid",           "void"             },
 	{ btChar,         1,  "btChar",           "char"             },
-//	{ btChar16,       2,  "btChar16",         "char16_t"         },
-//	{ btChar32,       4,  "btChar32",         "char32_t"         },
+	{ btChar16,       2,  "btChar16",         "char16_t"         },
+	{ btChar32,       4,  "btChar32",         "char32_t"         },
 	{ btWChar,        2,  "btWChar",          "wchar_t"          },
 	{ btInt,          1,  "btInt",            "char"             },
 	{ btInt,          2,  "btInt",            "short"            },
@@ -797,14 +797,14 @@ BasicTypeMapElement BasicTypeMapMSVC[] = {
 	{ btBool,         0,  "btBool",           "BOOL"             },
 	{ btLong,         4,  "btLong",           "long"             },
 	{ btULong,        4,  "btULong",          "unsigned long"    },
-	{ btCurrency,     0,  "btCurrency",       nullptr            },
+	{ btCurrency,     0,  "btCurrency",       "<NoType>"         }, //nullptr
 	{ btDate,         0,  "btDate",           "DATE"             },
 	{ btVariant,      0,  "btVariant",        "VARIANT"          },
-	{ btComplex,      0,  "btComplex",        nullptr            },
-	{ btBit,          0,  "btBit",            nullptr            },
+	{ btComplex,      0,  "btComplex",        "<NoType>"         }, //nullptr
+	{ btBit,          0,  "btBit",            "<NoType>"         }, //nullptr
 	{ btBSTR,         0,  "btBSTR",           "BSTR"             },
 	{ btHresult,      4,  "btHresult",        "HRESULT"          },
-	{ (BasicType)0,   0,  nullptr,            nullptr            },
+	{ (BasicType)0,   0,  nullptr,            "<NoType>"         }, //nullptr
 };
 
 PDB::PDB()
@@ -894,7 +894,7 @@ const CHAR* PDB::GetBasicTypeString(IN BasicType BaseType, IN DWORD Size)
 		}
 	}
 
-	return nullptr;
+	return "<NoType>"; //nullptr;
 }
 
 const CHAR* PDB::GetBasicTypeString(IN const SYMBOL* Symbol)
