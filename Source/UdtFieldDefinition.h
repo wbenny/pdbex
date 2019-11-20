@@ -12,9 +12,7 @@ public:
 	void VisitBaseType(const SYMBOL* Symbol) override
 	{
 		if (Symbol->BaseType == btFloat && Symbol->Size == 10)
-		{
 			m_Comment += " /* 80-bit float */";
-		}
 
 		if (Symbol->IsConst)	m_TypePrefix += "const ";
 		if (Symbol->IsVolatile)	m_TypePrefix += "volatile ";
@@ -51,12 +49,8 @@ public:
 		if (Symbol->u.Pointer.Type->Tag == SymTagFunctionType)
 		{
 			if (Symbol->u.Pointer.IsReference)
-			{
 				m_MemberName = "& " + m_MemberName;
-			} else
-			{
-				m_MemberName = "* " + m_MemberName;
-			}
+			else	m_MemberName = "* " + m_MemberName;
 
 			if (Symbol->IsConst)	m_MemberName += " const";
 			if (Symbol->IsVolatile)	m_MemberName += " volatile";
@@ -67,12 +61,8 @@ public:
 		}
 
 		if (Symbol->u.Pointer.IsReference)
-		{
 			m_TypePrefix += "&";
-		} else
-		{
-			m_TypePrefix += "*";
-		}
+		else	m_TypePrefix += "*";
 
 		if (Symbol->IsConst)	m_TypePrefix += " const";
 		if (Symbol->IsVolatile)	m_TypePrefix += " volatile";
@@ -120,9 +110,7 @@ public:
 		if (Symbol->u.Function.IsPure)		m_Comment += " = 0";
 
 		if (Symbol->u.Function.IsVirtual)
-		{
 			m_Comment += " /* VO: " + std::to_string(Symbol->u.Function.VirtualOffset) + " */"; //hex
-		}
 
 		if (m_TypeSuffix.size())
 			m_TypePrefix = GetPrintableDefinition();
