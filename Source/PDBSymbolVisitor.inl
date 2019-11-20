@@ -102,7 +102,6 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdt(const SYMBOL* Symbol)
 			m_AnonymousUdtStack.swap(AnonymousUDTStackBackup);
 			m_AnonymousUnionStack.swap(AnonymousUnionStackBackup);
 			m_AnonymousStructStack.swap(AnonymousStructStackBackup);
-
 			{
 				m_MemberContextStack.push(MemberDefinitionFactory());
 
@@ -112,7 +111,6 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdt(const SYMBOL* Symbol)
 
 				m_MemberContextStack.pop();
 			}
-
 			m_AnonymousStructStack.swap(AnonymousStructStackBackup);
 			m_AnonymousUnionStack.swap(AnonymousUnionStackBackup);
 			m_AnonymousUdtStack.swap(AnonymousUDTStackBackup);
@@ -298,15 +296,11 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForAnonymousStruct(const SYM
 	}
 
 	do {
-		if (
-		     UdtFieldCtx.NextUdtField->Offset == UdtField->Offset ||
-		     (
-		       !m_AnonymousUdtStack.empty() &&
+		if (UdtFieldCtx.NextUdtField->Offset == UdtField->Offset ||
+		     (!m_AnonymousUdtStack.empty() &&
 		       UdtFieldCtx.NextUdtField->Offset < m_AnonymousUdtStack.top()->First->Offset + m_AnonymousUdtStack.top()->Size
-		     )
-		)
+		     ) )
 		{
-
 			do {
 				bool IsEndOfAnonymousStruct =
 					UdtFieldCtx.IsLast() ||
