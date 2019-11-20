@@ -37,21 +37,21 @@ private:
 	{
 		AnonymousUdt(
 			UdtKind Kind,
-			const SYMBOL_UDT_FIELD* FirstUdtField,
-			const SYMBOL_UDT_FIELD* LastUdtField,
+			const SYMBOL_UDT_FIELD* First,
+			const SYMBOL_UDT_FIELD* Last,
 			DWORD Size = 0,
 			DWORD MemberCount = 0
 			)
 		{
 			this->Kind          = Kind;
-			this->FirstUdtField = FirstUdtField;
-			this->LastUdtField  = LastUdtField;
+			this->First         = First;
+			this->Last          = Last;
 			this->Size          = Size;
 			this->MemberCount   = MemberCount;
 		}
 
-		const SYMBOL_UDT_FIELD* FirstUdtField;
-		const SYMBOL_UDT_FIELD* LastUdtField;
+		const SYMBOL_UDT_FIELD* First;
+		const SYMBOL_UDT_FIELD* Last;
 		DWORD Size;
 		DWORD MemberCount;
 		UdtKind Kind;
@@ -59,26 +59,23 @@ private:
 
 	struct BitFieldRange
 	{
-		const SYMBOL_UDT_FIELD* FirstUdtFieldBitField;
-		const SYMBOL_UDT_FIELD* LastUdtFieldBitField;
+		const SYMBOL_UDT_FIELD* First;
+		const SYMBOL_UDT_FIELD* Last;
 
-		BitFieldRange()
-			: FirstUdtFieldBitField(nullptr)
-			, LastUdtFieldBitField(nullptr)
+		BitFieldRange()	: First(nullptr), Last(nullptr)
 		{
-
 		}
 
 		void Clear()
 		{
-			FirstUdtFieldBitField = nullptr;
-			LastUdtFieldBitField = nullptr;
+			First = nullptr;
+			Last = nullptr;
 		}
 
 		bool HasValue() const
 		{
-			return /*FirstUdtFieldBitField != nullptr &&*/
-			       LastUdtFieldBitField  != nullptr;
+			return /*First != nullptr &&*/
+			       Last  != nullptr;
 		}
 	};
 

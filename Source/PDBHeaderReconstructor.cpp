@@ -249,7 +249,7 @@ void PDBHeaderReconstructor::OnUdtField(const SYMBOL_UDT_FIELD* UdtField, UdtFie
 	Write("\n");
 }
 
-void PDBHeaderReconstructor::OnAnonymousUdtBegin(UdtKind Kind, const SYMBOL_UDT_FIELD* FirstUdtField)
+void PDBHeaderReconstructor::OnAnonymousUdtBegin(UdtKind Kind, const SYMBOL_UDT_FIELD* First)
 {
 	WriteIndent();
 	Write("%s\n", PDB::GetUdtKindString(Kind));
@@ -261,7 +261,7 @@ void PDBHeaderReconstructor::OnAnonymousUdtBegin(UdtKind Kind, const SYMBOL_UDT_
 }
 
 void PDBHeaderReconstructor::OnAnonymousUdtEnd(UdtKind Kind,
-	const SYMBOL_UDT_FIELD* FirstUdtField, const SYMBOL_UDT_FIELD* LastUdtField, DWORD Size)
+	const SYMBOL_UDT_FIELD* First, const SYMBOL_UDT_FIELD* Last, DWORD Size)
 {
 	m_Depth -= 1;
 	WriteIndent();
@@ -274,12 +274,11 @@ void PDBHeaderReconstructor::OnAnonymousUdtEnd(UdtKind Kind,
 	Write("\n");
 }
 
-void PDBHeaderReconstructor::OnUdtFieldBitFieldBegin(
-	const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField)
+void PDBHeaderReconstructor::OnUdtFieldBitFieldBegin(const SYMBOL_UDT_FIELD* First, const SYMBOL_UDT_FIELD* Last)
 {
 	if (m_Settings->AllowBitFieldsInUnion == false)
 	{
-		if (FirstUdtFieldBitField != LastUdtFieldBitField)
+		if (First != Last)
 		{
 			WriteIndent();
 			Write("%s /* bitfield */\n", PDB::GetUdtKindString(UdtStruct));
@@ -292,12 +291,11 @@ void PDBHeaderReconstructor::OnUdtFieldBitFieldBegin(
 	}
 }
 
-void PDBHeaderReconstructor::OnUdtFieldBitFieldEnd(
-	const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField)
+void PDBHeaderReconstructor::OnUdtFieldBitFieldEnd(const SYMBOL_UDT_FIELD* First, const SYMBOL_UDT_FIELD* Last)
 {
 	if (m_Settings->AllowBitFieldsInUnion == false)
 	{
-		if (FirstUdtFieldBitField != LastUdtFieldBitField)
+		if (First != Last)
 		{
 			m_Depth -= 1;
 

@@ -160,13 +160,10 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdtField(const SYMBOL_UDT_FI
 
 		assert(m_CurrentBitField.HasValue() == false);
 
-		m_CurrentBitField.FirstUdtFieldBitField = IsFirstBitFieldMemberPadding ? nullptr : UdtField;
-		m_CurrentBitField.LastUdtFieldBitField = GetNextUdtFieldWithRespectToBitFields(UdtField) - 1;
+		m_CurrentBitField.First = IsFirstBitFieldMemberPadding ? nullptr : UdtField;
+		m_CurrentBitField.Last = GetNextUdtFieldWithRespectToBitFields(UdtField) - 1;
 
-		m_ReconstructVisitor->OnUdtFieldBitFieldBegin(
-			m_CurrentBitField.FirstUdtFieldBitField,
-			m_CurrentBitField.LastUdtFieldBitField
-			);
+		m_ReconstructVisitor->OnUdtFieldBitFieldBegin(m_CurrentBitField.First, m_CurrentBitField.Last);
 	}
 
 	if (IsBitFieldMember)
@@ -197,12 +194,9 @@ template <typename MEMBER_DEFINITION_TYPE>
 void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdtFieldBitFieldEnd(const SYMBOL_UDT_FIELD* UdtField)
 {
 	assert(m_CurrentBitField.HasValue() == true);
-	assert(m_CurrentBitField.LastUdtFieldBitField == UdtField);
+	assert(m_CurrentBitField.Last == UdtField);
 
-	m_ReconstructVisitor->OnUdtFieldBitFieldEnd(
-		m_CurrentBitField.FirstUdtFieldBitField,
-		m_CurrentBitField.LastUdtFieldBitField
-		);
+	m_ReconstructVisitor->OnUdtFieldBitFieldEnd(m_CurrentBitField.First, m_CurrentBitField.Last);
 
 	m_CurrentBitField.Clear();
 
@@ -273,7 +267,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForAnonymousUnion(const SYMB
 		if (UdtFieldCtx.NextUdtField->Offset == UdtField->Offset)
 		{
 			if (m_AnonymousStructStack.empty() ||
-			  (!m_AnonymousStructStack.empty() && UdtFieldCtx.NextUdtField <= m_AnonymousStructStack.top()->LastUdtField))
+			  (!m_AnonymousStructStack.empty() && UdtFieldCtx.NextUdtField <= m_AnonymousStructStack.top()->Last))
 			{
 				PushAnonymousUdt(std::make_shared<AnonymousUdt>(UdtUnion, UdtField, nullptr, UdtField->Type->Size));
 				m_ReconstructVisitor->OnAnonymousUdtBegin(UdtUnion, UdtField);
@@ -308,7 +302,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForAnonymousStruct(const SYM
 		     UdtFieldCtx.NextUdtField->Offset == UdtField->Offset ||
 		     (
 		       !m_AnonymousUdtStack.empty() &&
-		       UdtFieldCtx.NextUdtField->Offset < m_AnonymousUdtStack.top()->FirstUdtField->Offset + m_AnonymousUdtStack.top()->Size
+		       UdtFieldCtx.NextUdtField->Offset < m_AnonymousUdtStack.top()->First->Offset + m_AnonymousUdtStack.top()->Size
 		     )
 		)
 		{
@@ -378,8 +372,8 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForEndOfAnonymousUdt(const S
 
 			IsEndOfAnonymousUdt = IsEndOfAnonymousUdt || (
 			    LastAnonymousUnion != nullptr &&
-			   (LastAnonymousUnion->FirstUdtField->Offset + LastAnonymousUnion->Size == UdtField->Offset + UdtField->Type->Size ||
-			    LastAnonymousUnion->FirstUdtField->Offset + LastAnonymousUnion->Size == UdtFieldCtx.NextUdtField->Offset) &&
+			   (LastAnonymousUnion->First->Offset + LastAnonymousUnion->Size == UdtField->Offset + UdtField->Type->Size ||
+			    LastAnonymousUnion->First->Offset + LastAnonymousUnion->Size == UdtFieldCtx.NextUdtField->Offset) &&
 			    LastAnonymousUdt->MemberCount >= 2
 			);
 		}
@@ -387,12 +381,12 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForEndOfAnonymousUdt(const S
 		if (IsEndOfAnonymousUdt)
 		{
 			m_SizeOfPreviousUdtField = LastAnonymousUdt->Size;
-			LastAnonymousUdt->LastUdtField = UdtField;
+			LastAnonymousUdt->Last = UdtField;
 
 			m_ReconstructVisitor->OnAnonymousUdtEnd(
 				LastAnonymousUdt->Kind,
-				LastAnonymousUdt->FirstUdtField,
-				LastAnonymousUdt->LastUdtField,
+				LastAnonymousUdt->First,
+				LastAnonymousUdt->Last,
 				LastAnonymousUdt->Size
 				);
 
@@ -405,7 +399,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForEndOfAnonymousUdt(const S
 		{
 			if (m_AnonymousUdtStack.top()->Kind == UdtUnion)
 			{
-				UdtField = m_AnonymousUdtStack.top()->FirstUdtField;
+				UdtField = m_AnonymousUdtStack.top()->First;
 				m_PreviousUdtField = UdtField;
 			} else
 			{

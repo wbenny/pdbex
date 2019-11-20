@@ -74,11 +74,11 @@ protected:
 	void OnUdtFieldEnd(const SYMBOL_UDT_FIELD* UdtField) override;
 	void OnUdtField(const SYMBOL_UDT_FIELD* UdtField, UdtFieldDefinitionBase* MemberDefinition) override;
 
-	void OnAnonymousUdtBegin(UdtKind Kind, const SYMBOL_UDT_FIELD* FirstUdtField) override;
-	void OnAnonymousUdtEnd(UdtKind Kind, const SYMBOL_UDT_FIELD* FirstUdtField, const SYMBOL_UDT_FIELD* LastUdtField, DWORD Size) override;
+	void OnAnonymousUdtBegin(UdtKind Kind, const SYMBOL_UDT_FIELD* First) override;
+	void OnAnonymousUdtEnd(UdtKind Kind, const SYMBOL_UDT_FIELD* First, const SYMBOL_UDT_FIELD* Last, DWORD Size) override;
 
-	void OnUdtFieldBitFieldBegin(const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField) override;
-	void OnUdtFieldBitFieldEnd(const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField) override;
+	void OnUdtFieldBitFieldBegin(const SYMBOL_UDT_FIELD* First, const SYMBOL_UDT_FIELD* Last) override;
+	void OnUdtFieldBitFieldEnd(const SYMBOL_UDT_FIELD* First, const SYMBOL_UDT_FIELD* Last) override;
 
 	void OnPaddingMember(const SYMBOL_UDT_FIELD* UdtField, BasicType PaddingBasicType, DWORD PaddingBasicTypeSize, DWORD PaddingSize) override;
 

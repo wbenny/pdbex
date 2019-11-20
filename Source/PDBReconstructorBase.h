@@ -19,11 +19,11 @@ public:
 	virtual	void OnUdtFieldEnd(const SYMBOL_UDT_FIELD* UdtField) {}
 	virtual void OnUdtField(const SYMBOL_UDT_FIELD* UdtField, UdtFieldDefinitionBase* MemberDefinition) {}
 
-	virtual void OnAnonymousUdtBegin(UdtKind Kind,	const SYMBOL_UDT_FIELD* FirstUdtField) {}
-	virtual	void OnAnonymousUdtEnd(UdtKind Kind, const SYMBOL_UDT_FIELD* FirstUdtField, const SYMBOL_UDT_FIELD* LastUdtField, DWORD Size) {}
+	virtual void OnAnonymousUdtBegin(UdtKind Kind,	const SYMBOL_UDT_FIELD* First) {}
+	virtual	void OnAnonymousUdtEnd(UdtKind Kind, const SYMBOL_UDT_FIELD* First, const SYMBOL_UDT_FIELD* Last, DWORD Size) {}
 
-	virtual	void OnUdtFieldBitFieldBegin(const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField) {}
-	virtual	void OnUdtFieldBitFieldEnd(const SYMBOL_UDT_FIELD* FirstUdtFieldBitField, const SYMBOL_UDT_FIELD* LastUdtFieldBitField) {}
+	virtual	void OnUdtFieldBitFieldBegin(const SYMBOL_UDT_FIELD* First, const SYMBOL_UDT_FIELD* Last) {}
+	virtual	void OnUdtFieldBitFieldEnd(const SYMBOL_UDT_FIELD* First, const SYMBOL_UDT_FIELD* Last) {}
 
 	virtual	void OnPaddingMember(const SYMBOL_UDT_FIELD* UdtField, BasicType PaddingBasicType, DWORD PaddingBasicTypeSize, DWORD PaddingSize) {}
 
