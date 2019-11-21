@@ -216,7 +216,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForDataFieldPadding(const SY
 		SizeOfPreviousUdtField = m_SizeOfPreviousUdtField;
 	}
 
-	if (PreviousUdtFieldOffset + SizeOfPreviousUdtField < UdtField->Offset)
+	if (PreviousUdtFieldOffset + SizeOfPreviousUdtField < UdtField->Offset && UdtField->Offset != -1)
 	{
 		DWORD Difference = UdtField->Offset - (PreviousUdtFieldOffset + SizeOfPreviousUdtField);
 
@@ -262,7 +262,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForAnonymousUnion(const SYMB
 	}
 
 	do {
-		if (UdtFieldCtx.NextUdtField->Offset == UdtField->Offset)
+		if (UdtFieldCtx.NextUdtField->Offset == UdtField->Offset && UdtField->Offset != -1)
 		{
 			if (m_AnonymousStructStack.empty() ||
 			  (!m_AnonymousStructStack.empty() && UdtFieldCtx.NextUdtField <= m_AnonymousStructStack.top()->Last))
@@ -299,7 +299,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForAnonymousStruct(const SYM
 		if (UdtFieldCtx.NextUdtField->Offset == UdtField->Offset ||
 		     (!m_AnonymousUdtStack.empty() &&
 		       UdtFieldCtx.NextUdtField->Offset < m_AnonymousUdtStack.top()->First->Offset + m_AnonymousUdtStack.top()->Size
-		     ) )
+		     ) && UdtField->Offset != -1)
 		{
 			do {
 				bool IsEndOfAnonymousStruct =

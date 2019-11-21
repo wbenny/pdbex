@@ -578,9 +578,15 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 		Member->Parent = Symbol;
 		Member->IsBaseClass = FALSE;
 
-		LONG Offset = 0;
-		DiaChildSymbol->get_offset(&Offset);
-		Member->Offset = static_cast<DWORD>(Offset);
+		if (symTag != SymTagData)
+		{
+			Member->Offset = -1;
+		} else
+		{
+			LONG Offset = 0;
+			DiaChildSymbol->get_offset(&Offset);
+			Member->Offset = static_cast<DWORD>(Offset);
+		}
 
 		ULONGLONG Bits = 0;
 		if (symTag == SymTagData)
