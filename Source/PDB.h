@@ -20,6 +20,7 @@ typedef struct _SYMBOL_ENUM_FIELD
 
 typedef struct _SYMBOL_UDT_FIELD
 {
+	enum SymTagEnum      Tag;
 	CHAR*                Name;
 	SYMBOL*              Type;
 	DWORD                Offset;

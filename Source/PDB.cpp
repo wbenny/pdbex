@@ -248,8 +248,10 @@ CHAR* SymbolModule::GetSymbolName(IN IDiaSymbol* DiaSymbol)
 {
 	BSTR SymbolNameBstr;
 
-	if (DiaSymbol->get_name(&SymbolNameBstr) != S_OK)
-		return nullptr;
+	if (DiaSymbol->get_undecoratedName(&SymbolNameBstr) != S_OK) {
+		if (DiaSymbol->get_name(&SymbolNameBstr) != S_OK)
+			return nullptr;
+	}
 
 	CHAR*  SymbolNameMb;
 	size_t SymbolNameLength;
@@ -578,15 +580,11 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 		Member->Parent = Symbol;
 		Member->IsBaseClass = FALSE;
 
-		if (symTag != SymTagData)
-		{
-			Member->Offset = -1;
-		} else
-		{
-			LONG Offset = 0;
-			DiaChildSymbol->get_offset(&Offset);
-			Member->Offset = static_cast<DWORD>(Offset);
-		}
+		Member->Tag = static_cast<enum SymTagEnum>(symTag);
+
+		LONG Offset = 0;
+		DiaChildSymbol->get_offset(&Offset);
+		Member->Offset = static_cast<DWORD>(Offset);
 
 		ULONGLONG Bits = 0;
 		if (symTag == SymTagData)
