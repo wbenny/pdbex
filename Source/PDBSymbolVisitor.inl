@@ -216,7 +216,8 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForDataFieldPadding(const SY
 		SizeOfPreviousUdtField = m_SizeOfPreviousUdtField;
 	}
 
-	if (PreviousUdtFieldOffset + SizeOfPreviousUdtField < UdtField->Offset && UdtField->Tag == SymTagData)
+	if (PreviousUdtFieldOffset + SizeOfPreviousUdtField < UdtField->Offset
+		&& UdtField->Tag == SymTagData)
 	{
 		DWORD Difference = UdtField->Offset - (PreviousUdtFieldOffset + SizeOfPreviousUdtField);
 
@@ -251,9 +252,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForAnonymousUnion(const SYMB
 {
 	UdtFieldContext UdtFieldCtx(UdtField);
 	if (UdtFieldCtx.IsLast())
-	{
 		return;
-	}
 
 	if (!m_AnonymousUdtStack.empty() &&
 	     m_AnonymousUdtStack.top()->Kind == UdtUnion)
@@ -281,9 +280,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForAnonymousStruct(const SYM
 {
 	UdtFieldContext UdtFieldCtx(UdtField);
 	if (UdtFieldCtx.IsLast())
-	{
 		return;
-	}
 
 	if (!m_AnonymousUdtStack.empty() &&
 	     m_AnonymousUdtStack.top()->Kind != UdtUnion)
@@ -292,9 +289,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForAnonymousStruct(const SYM
 	}
 
 	if (UdtFieldCtx.NextUdtField->Offset <= UdtField->Offset)
-	{
 		return;
-	}
 
 	do {
 		if ((UdtFieldCtx.NextUdtField->Offset == UdtField->Offset ||
@@ -310,9 +305,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForAnonymousStruct(const SYM
 					UdtFieldCtx.NextUdtField->Offset <= UdtField->Offset;
 
 				if (IsEndOfAnonymousStruct)
-				{
 					break;
-				}
 			} while (UdtFieldCtx.GetNext());
 
 			PushAnonymousUdt(std::make_shared<AnonymousUdt>(UdtStruct, UdtField, UdtFieldCtx.CurrentUdtField));
@@ -329,9 +322,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForEndOfAnonymousUdt(const S
 	m_SizeOfPreviousUdtField = UdtField->Type->Size;
 
 	if (m_AnonymousUdtStack.empty())
-	{
 		return;
-	}
 
 	UdtFieldContext UdtFieldCtx(UdtField, FALSE);
 
@@ -363,9 +354,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForEndOfAnonymousUdt(const S
 				UdtFieldCtx.NextUdtField->Offset <= UdtField->Offset;
 
 			AnonymousUdt* LastAnonymousUnion =
-				m_AnonymousUnionStack.empty()
-				? nullptr
-				: m_AnonymousUnionStack.top().get();
+				m_AnonymousUnionStack.empty() ? nullptr : m_AnonymousUnionStack.top().get();
 
 			IsEndOfAnonymousUdt = IsEndOfAnonymousUdt || (
 			    LastAnonymousUnion != nullptr &&
@@ -382,10 +371,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForEndOfAnonymousUdt(const S
 
 			m_ReconstructVisitor->OnAnonymousUdtEnd(
 				LastAnonymousUdt->Kind,
-				LastAnonymousUdt->First,
-				LastAnonymousUdt->Last,
-				LastAnonymousUdt->Size
-				);
+				LastAnonymousUdt->First, LastAnonymousUdt->Last, LastAnonymousUdt->Size);
 
 			PopAnonymousUdt();
 
@@ -418,27 +404,17 @@ template <typename MEMBER_DEFINITION_TYPE>
 void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::PushAnonymousUdt(std::shared_ptr<AnonymousUdt> Item)
 {
 	m_AnonymousUdtStack.push(Item);
-
 	if (Item->Kind == UdtUnion)
-	{
 		m_AnonymousUnionStack.push(Item);
-	} else
-	{
-		m_AnonymousStructStack.push(Item);
-	}
+	else	m_AnonymousStructStack.push(Item);
 }
 
 template <typename MEMBER_DEFINITION_TYPE>
 void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::PopAnonymousUdt()
 {
 	if (m_AnonymousUdtStack.top()->Kind == UdtUnion)
-	{
 		m_AnonymousUnionStack.pop();
-	} else
-	{
-		m_AnonymousStructStack.pop();
-	}
-
+	else	m_AnonymousStructStack.pop();
 	m_AnonymousUdtStack.pop();
 }
 
@@ -453,10 +429,7 @@ PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::GetNextUdtFieldWithRespectToBitFields(
 	const SYMBOL_UDT_FIELD* EndOfUdtField = &ParentUdt->Fields[UdtFieldCount];
 
 	if (NextUdtField >= EndOfUdtField)
-	{
 		return EndOfUdtField;
-	}
-
 	do {
 		if (NextUdtField->BitPosition == 0)
 		{

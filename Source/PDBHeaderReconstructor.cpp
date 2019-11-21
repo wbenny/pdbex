@@ -232,6 +232,9 @@ void PDBHeaderReconstructor::OnUdtFieldEnd(const SYMBOL_UDT_FIELD* UdtField)
 
 void PDBHeaderReconstructor::OnUdtField(const SYMBOL_UDT_FIELD* UdtField, UdtFieldDefinitionBase* MemberDefinition)
 {
+	if (UdtField->DataKind == DataIsStaticMember) //TODO
+		Write("static ");
+
 	Write("%s", MemberDefinition->GetPrintableDefinition().c_str());
 
 	if (UdtField->Bits != 0)

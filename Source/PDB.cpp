@@ -367,9 +367,6 @@ VOID SymbolModule::InitSymbol(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 	DiaSymbol->get_symTag(&DwordResult);
 	Symbol->Tag = static_cast<enum SymTagEnum>(DwordResult);
 
-	DiaSymbol->get_dataKind(&DwordResult);
-	Symbol->DataKind = static_cast<enum DataKind>(DwordResult);
-
 	DiaSymbol->get_baseType(&DwordResult);
 	Symbol->BaseType = static_cast<BasicType>(DwordResult);
 
@@ -581,6 +578,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 		Member->IsBaseClass = FALSE;
 
 		Member->Tag = static_cast<enum SymTagEnum>(symTag);
+		Member->DataKind = static_cast<enum DataKind>(0); //???
 
 		LONG Offset = 0;
 		DiaChildSymbol->get_offset(&Offset);
@@ -597,6 +595,10 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 
 		if (symTag == SymTagData || symTag == SymTagBaseClass)
 		{
+			DWORD DwordResult;
+			DiaChildSymbol->get_dataKind(&DwordResult);
+			Member->DataKind = static_cast<enum DataKind>(DwordResult);
+
 			IDiaSymbol *MemberTypeDiaSymbol;
 			DiaChildSymbol->get_type(&MemberTypeDiaSymbol);
 			Member->Type = GetSymbol(MemberTypeDiaSymbol);
@@ -750,6 +752,8 @@ void SymbolModule::DestroySymbol(IN SYMBOL* Symbol)
 			delete []Symbol->u.Udt.Fields[i].Name;
 
 		delete []Symbol->u.Udt.Fields;
+		if (Symbol->u.Udt.BaseClassCount)
+			free(Symbol->u.Udt.BaseClassFields);
 		break;
 
 	case SymTagEnum:

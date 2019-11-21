@@ -21,6 +21,7 @@ typedef struct _SYMBOL_ENUM_FIELD
 typedef struct _SYMBOL_UDT_FIELD
 {
 	enum SymTagEnum      Tag;
+	enum DataKind        DataKind;
 	CHAR*                Name;
 	SYMBOL*              Type;
 	DWORD                Offset;
@@ -99,7 +100,6 @@ typedef struct _SYMBOL_UDT
 struct _SYMBOL
 {
 	enum SymTagEnum      Tag;
-	enum DataKind        DataKind;
 	BasicType            BaseType;
 	DWORD                TypeId;
 	DWORD                Size;
