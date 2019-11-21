@@ -248,10 +248,10 @@ CHAR* SymbolModule::GetSymbolName(IN IDiaSymbol* DiaSymbol)
 {
 	BSTR SymbolNameBstr;
 
-	if (DiaSymbol->get_undecoratedName(&SymbolNameBstr) != S_OK) {
+	//if (DiaSymbol->get_undecoratedName(&SymbolNameBstr) != S_OK) {
 		if (DiaSymbol->get_name(&SymbolNameBstr) != S_OK)
 			return nullptr;
-	}
+	//}
 
 	CHAR*  SymbolNameMb;
 	size_t SymbolNameLength;
