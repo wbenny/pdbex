@@ -427,19 +427,17 @@ const SYMBOL_UDT_FIELD*
 PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::GetNextUdtFieldWithRespectToBitFields(const SYMBOL_UDT_FIELD* UdtField)
 {
 	const SYMBOL_UDT* ParentUdt = &UdtField->Parent->u.Udt;
-	DWORD UdtFieldCount = ParentUdt->FieldCount;
 
-	const SYMBOL_UDT_FIELD* NextUdtField = UdtField + 1;
-	const SYMBOL_UDT_FIELD* EndOfUdtField = &ParentUdt->Fields[UdtFieldCount];
+	const SYMBOL_UDT_FIELD* NextUdtField = UdtField;
+	const SYMBOL_UDT_FIELD* EndOfUdtField = &ParentUdt->Fields[ParentUdt->FieldCount];
 
-	if (NextUdtField >= EndOfUdtField)
-		return EndOfUdtField;
-	do {
+	while (++NextUdtField < EndOfUdtField)
+	{
 		if (NextUdtField->BitPosition == 0)
 		{
 			break;
 		}
-	} while (++NextUdtField < EndOfUdtField);
+	}
 
 	return NextUdtField;
 }
