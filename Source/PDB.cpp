@@ -621,6 +621,16 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 		} else
 		{
 			Member->Type = GetSymbol(DiaChildSymbol);
+
+			if (symTag == SymTagFunction)
+			{
+				const char *s = strstr(Member->Name, Symbol->Name);
+				if ((s != nullptr && s[-1] == '~') ||
+					strcmp(Member->Name, Symbol->Name)==0)
+				{
+					Member->Type->u.Function.ReturnType = 0;
+				}
+			}
 		#if 0
 			if (symTag == SymTagFunction)
 			{
