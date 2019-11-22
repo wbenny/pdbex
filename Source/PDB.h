@@ -99,6 +99,14 @@ typedef struct _SYMBOL_UDT
 	const SYMBOL_UDT_FIELD*    FieldNext(const SYMBOL_UDT_FIELD* Field) const
 						{ return Field == FieldLast() ? FieldLast() : &Field[1]; }
 
+	const SYMBOL_UDT_FIELD*    FindFieldNext(const SYMBOL_UDT_FIELD* Field) const
+				{
+					while ((Field=FieldNext(Field)) != FieldLast()
+						&& (Field->Tag != SymTagData)
+						&& (Field->DataKind == DataIsStaticMember));
+					return Field;
+				}
+
 	DWORD                BaseClassCount;
 	SYMBOL_UDT_BASECLASS *BaseClassFields;
 

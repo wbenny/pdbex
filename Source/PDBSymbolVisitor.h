@@ -85,7 +85,7 @@ private:
 
 			PreviousUdtField = &UdtField[-1];
 			CurrentUdtField  = &UdtField[ 0];
-			NextUdtField     = UdtField->Parent->u.Udt.FieldNext(UdtField);
+			NextUdtField     = UdtField->Parent->u.Udt.FindFieldNext(UdtField);
 
 			this->RespectBitFields = RespectBitFields;
 
@@ -102,7 +102,7 @@ private:
 		{
 			PreviousUdtField = CurrentUdtField;
 			CurrentUdtField  = NextUdtField;
-			NextUdtField     = UdtField->Parent->u.Udt.FieldNext(CurrentUdtField);
+			NextUdtField     = UdtField->Parent->u.Udt.FindFieldNext(CurrentUdtField);
 
 			if (RespectBitFields && IsLast() == false)
 			{

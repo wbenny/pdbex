@@ -216,8 +216,7 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForDataFieldPadding(const SY
 		SizeOfPreviousUdtField = m_SizeOfPreviousUdtField;
 	}
 
-	if (PreviousUdtFieldOffset + SizeOfPreviousUdtField < UdtField->Offset
-		&& UdtField->Tag == SymTagData)
+	if (PreviousUdtFieldOffset + SizeOfPreviousUdtField < UdtField->Offset)
 	{
 		DWORD Difference = UdtField->Offset - (PreviousUdtFieldOffset + SizeOfPreviousUdtField);
 
@@ -427,16 +426,15 @@ const SYMBOL_UDT_FIELD*
 PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::GetNextUdtFieldWithRespectToBitFields(const SYMBOL_UDT_FIELD* UdtField)
 {
 	const SYMBOL_UDT_FIELD* NextUdtField = UdtField;
-	const SYMBOL_UDT_FIELD* EndOfUdtField = UdtField->Parent->u.Udt.FieldLast();
 
-	while (++NextUdtField < EndOfUdtField)
+	while ((NextUdtField=UdtField->Parent->u.Udt.FindFieldNext(NextUdtField))
+			< UdtField->Parent->u.Udt.FieldLast())
 	{
 		if (NextUdtField->BitPosition == 0)
 		{
 			break;
 		}
 	}
-
 	return NextUdtField;
 }
 
