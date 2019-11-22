@@ -38,8 +38,8 @@ public:
 		if (Symbol->IsConst)	m_TypePrefix += "const ";
 		if (Symbol->IsVolatile)	m_TypePrefix += "volatile ";
 
-		m_TypePrefix += PDB::GetUdtKindString(Symbol->u.Udt.Kind);
-		m_TypePrefix += " ";
+		//m_TypePrefix += PDB::GetUdtKindString(Symbol->u.Udt.Kind);
+		//m_TypePrefix += " ";
 		m_TypePrefix += Symbol->Name;
 	}
 
