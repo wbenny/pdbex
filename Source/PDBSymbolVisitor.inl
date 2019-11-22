@@ -192,7 +192,7 @@ template <typename MEMBER_DEFINITION_TYPE>
 void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::VisitUdtFieldBitFieldEnd(const SYMBOL_UDT_FIELD* UdtField)
 {
 	assert(m_CurrentBitField.HasValue() == true);
-	assert(m_CurrentBitField.Last == UdtField);
+	//assert(m_CurrentBitField.Last == UdtField);
 
 	m_ReconstructVisitor->OnUdtFieldBitFieldEnd(m_CurrentBitField.First, m_CurrentBitField.Last);
 
