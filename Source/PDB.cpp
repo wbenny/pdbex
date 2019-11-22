@@ -793,7 +793,7 @@ struct BasicTypeMapElement
 };
 
 BasicTypeMapElement BasicTypeMapMSVC[] = {
-	{ btNoType,       0,  "btNoType",         "<NoType>"         }, //nullptr
+	{ btNoType,       0,  "btNoType",         "..."              }, //nullptr
 	{ btVoid,         0,  "btVoid",           "void"             },
 	{ btChar,         1,  "btChar",           "char"             },
 	{ btChar16,       2,  "btChar16",         "char16_t"         },
