@@ -426,10 +426,8 @@ template <typename MEMBER_DEFINITION_TYPE>
 const SYMBOL_UDT_FIELD*
 PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::GetNextUdtFieldWithRespectToBitFields(const SYMBOL_UDT_FIELD* UdtField)
 {
-	const SYMBOL_UDT* ParentUdt = &UdtField->Parent->u.Udt;
-
 	const SYMBOL_UDT_FIELD* NextUdtField = UdtField;
-	const SYMBOL_UDT_FIELD* EndOfUdtField = &ParentUdt->Fields[ParentUdt->FieldCount];
+	const SYMBOL_UDT_FIELD* EndOfUdtField = UdtField->Parent->u.Udt.FieldLast();
 
 	while (++NextUdtField < EndOfUdtField)
 	{

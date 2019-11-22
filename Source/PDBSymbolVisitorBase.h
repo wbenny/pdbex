@@ -92,7 +92,7 @@ protected:
 		}
 
 		const SYMBOL_UDT_FIELD* UdtField = Symbol->u.Udt.Fields;
-		const SYMBOL_UDT_FIELD* EndOfUdtField = &Symbol->u.Udt.Fields[Symbol->u.Udt.FieldCount];
+		const SYMBOL_UDT_FIELD* EndOfUdtField = Symbol->u.Udt.FieldLast();
 
 		do {
 			if (UdtField->Bits == 0)

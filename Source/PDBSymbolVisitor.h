@@ -35,10 +35,8 @@ private:
 
 	struct AnonymousUdt
 	{
-		AnonymousUdt(
-			UdtKind Kind,
-			const SYMBOL_UDT_FIELD* First,
-			const SYMBOL_UDT_FIELD* Last,
+		AnonymousUdt(UdtKind Kind,
+			const SYMBOL_UDT_FIELD* First, const SYMBOL_UDT_FIELD* Last,
 			DWORD Size = 0,
 			DWORD MemberCount = 0
 			)
@@ -83,43 +81,37 @@ private:
 	{
 		UdtFieldContext(const SYMBOL_UDT_FIELD* UdtField, BOOL RespectBitFields = TRUE)
 		{
-			SYMBOL_UDT* ParentUdt = &UdtField->Parent->u.Udt;
-			DWORD UdtFieldCount = ParentUdt->FieldCount;
-
-			FirstUdtField    = &ParentUdt->Fields[0];
-			EndOfUdtField    = &ParentUdt->Fields[UdtFieldCount];
+			this->UdtField = UdtField;
 
 			PreviousUdtField = &UdtField[-1];
 			CurrentUdtField  = &UdtField[ 0];
-			NextUdtField     = &UdtField[ 1];
+			NextUdtField     = UdtField->Parent->u.Udt.FieldNext(UdtField);
 
 			this->RespectBitFields = RespectBitFields;
 
 			if (RespectBitFields)
 			{
-				NextUdtField   = GetNextUdtFieldWithRespectToBitFields(UdtField);
+				NextUdtField = GetNextUdtFieldWithRespectToBitFields(UdtField);
 			}
 		}
 
-		bool IsFirst() const { return PreviousUdtField < FirstUdtField;	}
-		bool IsLast() const { return NextUdtField == EndOfUdtField; }
+		bool IsFirst() const { return PreviousUdtField < UdtField->Parent->u.Udt.FieldFirst();	}
+		bool IsLast() const { return NextUdtField == UdtField->Parent->u.Udt.FieldLast(); }
 
 		bool GetNext()
 		{
 			PreviousUdtField = CurrentUdtField;
 			CurrentUdtField  = NextUdtField;
-			NextUdtField     = &CurrentUdtField[1];
+			NextUdtField     = UdtField->Parent->u.Udt.FieldNext(CurrentUdtField);
 
 			if (RespectBitFields && IsLast() == false)
 			{
 				NextUdtField = GetNextUdtFieldWithRespectToBitFields(CurrentUdtField);
 			}
-
 			return IsLast() == false;
 		}
 
-		const SYMBOL_UDT_FIELD* FirstUdtField;
-		const SYMBOL_UDT_FIELD* EndOfUdtField;
+		const SYMBOL_UDT_FIELD* UdtField;
 
 		const SYMBOL_UDT_FIELD* PreviousUdtField;
 		const SYMBOL_UDT_FIELD* CurrentUdtField;

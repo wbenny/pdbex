@@ -90,8 +90,15 @@ typedef struct _SYMBOL_UDT_BASECLASS
 typedef struct _SYMBOL_UDT
 {
 	UdtKind              Kind;
+
 	DWORD                FieldCount;
 	SYMBOL_UDT_FIELD*    Fields;
+
+	SYMBOL_UDT_FIELD*    FieldFirst() const { return &Fields[0]; }
+	SYMBOL_UDT_FIELD*    FieldLast() const { return &Fields[FieldCount]; }
+	const SYMBOL_UDT_FIELD*    FieldNext(const SYMBOL_UDT_FIELD* Field) const
+						{ return Field == FieldLast() ? FieldLast() : &Field[1]; }
+
 	DWORD                BaseClassCount;
 	SYMBOL_UDT_BASECLASS *BaseClassFields;
 
