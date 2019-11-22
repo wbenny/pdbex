@@ -629,7 +629,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 					for (DWORD i = 0; i < Symbol->u.Udt.BaseClassCount; ++i)
 					{
 						SYMBOL *TmpSymbol = Symbol->u.Udt.BaseClassFields[i].Type;
-						for (DWORD j = 0; j < TmpSymbol->u.Udt.FieldCount; ++j)
+						for (DWORD j = 0; j < min(TmpSymbol->u.Udt.FieldCount, Index); ++j)
 						{
 							if (TmpSymbol->u.Udt.Fields[j].Type->Tag == SymTagFunction &&
 							    strcmp(TmpSymbol->u.Udt.Fields[j].Name, Member->Type->Name) == 0 &&
