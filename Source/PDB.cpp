@@ -421,7 +421,7 @@ VOID SymbolModule::ProcessSymbolEnum(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol
 	LONG ChildCount;
 	DiaSymbolEnumerator->get_Count(&ChildCount);
 
-	Symbol->u.Enum.FieldCount = static_cast<DWORD>(ChildCount);
+	Symbol->u.Enum.FieldCount = 0; //static_cast<DWORD>(ChildCount);
 	Symbol->u.Enum.Fields = new SYMBOL_ENUM_FIELD[ChildCount];
 
 	IDiaSymbol* Result;
@@ -442,6 +442,7 @@ VOID SymbolModule::ProcessSymbolEnum(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol
 
 		DiaChildSymbol->Release();
 		Index += 1;
+		Symbol->u.Enum.FieldCount += 1;
 	}
 }
 
@@ -557,7 +558,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 
 	DiaSymbolEnumerator->get_Count(&ChildCount);
 
-	Symbol->u.Udt.FieldCount = static_cast<DWORD>(ChildCount);
+	Symbol->u.Udt.FieldCount = 0; //static_cast<DWORD>(ChildCount);
 	Symbol->u.Udt.Fields = new SYMBOL_UDT_FIELD[ChildCount + 1];
 
 	IDiaSymbol* Result;
@@ -631,7 +632,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 					Member->Type->u.Function.ReturnType = 0;
 				}
 			}
-		#if 0
+
 			if (symTag == SymTagFunction)
 			{
 				if (Member->Type->u.Function.IsOverride && Symbol->u.Udt.BaseClassCount)
@@ -639,10 +640,10 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 					for (DWORD i = 0; i < Symbol->u.Udt.BaseClassCount; ++i)
 					{
 						SYMBOL *TmpSymbol = Symbol->u.Udt.BaseClassFields[i].Type;
-						for (DWORD j = 0; j < min(TmpSymbol->u.Udt.FieldCount, Index); ++j)
+						for (DWORD j = 0; j < TmpSymbol->u.Udt.FieldCount, Index; ++j)
 						{
 							if (TmpSymbol->u.Udt.Fields[j].Type->Tag == SymTagFunction &&
-							    strcmp(TmpSymbol->u.Udt.Fields[j].Name, Member->Type->Name) == 0 &&
+							    strcmp(TmpSymbol->u.Udt.Fields[j].Name, Member->Name) == 0 &&
 							    TmpSymbol->u.Udt.Fields[j].Type->u.Function.ArgumentCount == Member->Type->u.Function.ArgumentCount)
 							{
 								Member->Type->u.Function.VirtualOffset = TmpSymbol->u.Udt.Fields[j].Type->u.Function.VirtualOffset;
@@ -651,7 +652,6 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 					}
 				}
 			} else
-		#endif
 			if (symTag == SymTagUDT)
 			{
 				Member->Type->u.Function.IsOverride = TRUE;
@@ -659,6 +659,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 		}
 		DiaChildSymbol->Release();
 		Index += 1;
+		Symbol->u.Udt.FieldCount += 1;
 	}
 
 	DiaSymbolEnumerator->Release();
