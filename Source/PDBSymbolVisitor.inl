@@ -262,7 +262,11 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForAnonymousUnion(const SYMB
 
 	do {
 		if (UdtFieldCtx.NextUdtField->Offset == UdtField->Offset
-			&& UdtField->Tag == SymTagData)
+			&& UdtFieldCtx.NextUdtField->Tag == SymTagData
+			&& UdtField->Tag == SymTagData
+			&& UdtFieldCtx.NextUdtField->DataKind != DataIsStaticMember
+			&& UdtField->DataKind != DataIsStaticMember
+			)
 		{
 			if (m_AnonymousStructStack.empty() ||
 			  (!m_AnonymousStructStack.empty() && UdtFieldCtx.NextUdtField <= m_AnonymousStructStack.top()->Last))
