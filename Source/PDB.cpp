@@ -167,7 +167,7 @@ public:
 	SYMBOL*	GetSymbolByName(IN const CHAR* SymbolName);
 	SYMBOL* GetSymbolByTypeId(IN DWORD TypeId);
 	SYMBOL* GetSymbol(IN IDiaSymbol* DiaSymbol);
-	CHAR* GetSymbolName(IN IDiaSymbol* DiaSymbol);
+	CHAR* GetSymbolName(IN IDiaSymbol* DiaSymbol, bool raw = true);
 	VOID BuildSymbolMapFromEnumerator(IN IDiaEnumSymbols* DiaSymbolEnumerator);
 	VOID BuildFunctionSetFromEnumerator(IN IDiaEnumSymbols* DiaSymbolEnumerator);
 	VOID BuildSymbolMap();
@@ -244,14 +244,14 @@ VOID SymbolModule::Close()
 	m_SymbolSet.clear();
 }
 
-CHAR* SymbolModule::GetSymbolName(IN IDiaSymbol* DiaSymbol)
+CHAR* SymbolModule::GetSymbolName(IN IDiaSymbol* DiaSymbol, bool raw)
 {
 	BSTR SymbolNameBstr;
 
-	//if (DiaSymbol->get_undecoratedName(&SymbolNameBstr) != S_OK) {
+	if (raw || (DiaSymbol->get_undecoratedName(&SymbolNameBstr) != S_OK)) {
 		if (DiaSymbol->get_name(&SymbolNameBstr) != S_OK)
 			return nullptr;
-	//}
+	}
 
 	CHAR*  SymbolNameMb;
 	size_t SymbolNameLength;
@@ -326,7 +326,7 @@ VOID SymbolModule::BuildFunctionSetFromEnumerator(IN IDiaEnumSymbols* DiaSymbolE
 
 		if (IsFunction)
 		{
-			CHAR* FunctionName = GetSymbolName(DiaChildSymbol);
+			CHAR* FunctionName = GetSymbolName(DiaChildSymbol, false);
 
 			DWORD DwordResult;
 			DiaChildSymbol->get_symTag(&DwordResult);
