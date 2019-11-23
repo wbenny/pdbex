@@ -679,10 +679,16 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 			if (FirstUdtField->Tag == SymTagData
 				&& FirstUdtField->DataKind != DataIsStaticMember)
 			{
-				if (PrevOffset != FirstUdtField->Offset)
+				if (PrevOffset != FirstUdtField->Offset || PrevOffset==0)
 				{
-					PrevSize = FirstUdtField->Type->Size;
-					Size += FirstUdtField->Type->Size;
+#ifndef align_up
+#define align_up(num, align) \
+    (((num) + ((align) - 1)) & ~((align) - 1))
+#endif
+					if (FirstUdtField != LastUdtField)
+						PrevSize = align_up(FirstUdtField->Type->Size,4);
+					else	PrevSize = FirstUdtField->Type->Size;
+					Size += PrevSize;
 				} else
 				{
 					if (PrevSize < FirstUdtField->Type->Size)
