@@ -676,18 +676,13 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 		DWORD Size = 0;
 		while (FirstUdtField <= LastUdtField)
 		{
-			if (FirstUdtField->Tag == SymTagData
+			if ((FirstUdtField->Tag == SymTagData
+				|| FirstUdtField->Tag == SymTagVTable)
 				&& FirstUdtField->DataKind != DataIsStaticMember)
 			{
 				if (PrevOffset != FirstUdtField->Offset || PrevOffset==0)
 				{
-#ifndef align_up
-#define align_up(num, align) \
-    (((num) + ((align) - 1)) & ~((align) - 1))
-#endif
-					if (FirstUdtField != LastUdtField)
-						PrevSize = align_up(FirstUdtField->Type->Size,4);
-					else	PrevSize = FirstUdtField->Type->Size;
+					PrevSize = FirstUdtField->Offset - PrevOffset;
 					Size += PrevSize;
 				} else
 				{
@@ -700,7 +695,6 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 				}
 				PrevOffset = FirstUdtField->Offset;
 			}
-
 			++FirstUdtField;
 		}
 		
