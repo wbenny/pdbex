@@ -321,8 +321,16 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForAnonymousStruct(const SYM
 template <typename MEMBER_DEFINITION_TYPE>
 void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForEndOfAnonymousUdt(const SYMBOL_UDT_FIELD* UdtField)
 {
-	m_PreviousUdtField       = UdtField;
-	m_SizeOfPreviousUdtField = UdtField->Type->Size;
+	m_PreviousUdtField       = ((UdtField->Tag == SymTagData
+				|| UdtField->Tag == SymTagBaseClass
+				|| UdtField->Tag == SymTagVTable
+				) && UdtField->DataKind != DataIsStaticMember)
+		? UdtField : m_PreviousUdtField;
+	m_SizeOfPreviousUdtField = ((UdtField->Tag == SymTagData
+				|| UdtField->Tag == SymTagBaseClass
+				|| UdtField->Tag == SymTagVTable
+				) && UdtField->DataKind != DataIsStaticMember)
+		? UdtField->Type->Size : m_SizeOfPreviousUdtField;
 
 	if (m_AnonymousUdtStack.empty())
 		return;
