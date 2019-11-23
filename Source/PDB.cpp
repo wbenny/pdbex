@@ -684,6 +684,9 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 				{
 					PrevSize = FirstUdtField->Offset - PrevOffset;
 					Size += PrevSize;
+				//last field use size,all remain will padding
+					if (FirstUdtField == LastUdtField)
+						Size += FirstUdtField->Type->Size;
 				} else
 				{
 					if (PrevSize < FirstUdtField->Type->Size)
