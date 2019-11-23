@@ -670,12 +670,31 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 		SYMBOL_UDT_FIELD* LastUdtField = &Symbol->u.Udt.Fields[Symbol->u.Udt.FieldCount - 1];
 		SYMBOL_UDT_FIELD* PaddingUdtField = &Symbol->u.Udt.Fields[Symbol->u.Udt.FieldCount];
 
+		//TODO rewrite to visitor for more precise
+		DWORD PrevOffset = 0;
+		DWORD PrevSize = 0;
 		DWORD Size = 0;
 		while (FirstUdtField <= LastUdtField)
 		{
 			if (FirstUdtField->Tag == SymTagData
 				&& FirstUdtField->DataKind != DataIsStaticMember)
-				Size += FirstUdtField->Type->Size;
+			{
+				if (PrevOffset != FirstUdtField->Offset)
+				{
+					PrevSize = FirstUdtField->Type->Size;
+					Size += FirstUdtField->Type->Size;
+				} else
+				{
+					if (PrevSize < FirstUdtField->Type->Size)
+					{
+						Size -= PrevSize;
+						PrevSize = FirstUdtField->Type->Size;
+						Size += PrevSize;
+					}
+				}
+				PrevOffset = FirstUdtField->Offset;
+			}
+
 			++FirstUdtField;
 		}
 		
