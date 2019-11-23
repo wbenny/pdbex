@@ -324,11 +324,13 @@ void PDBSymbolVisitor<MEMBER_DEFINITION_TYPE>::CheckForEndOfAnonymousUdt(const S
 	m_PreviousUdtField       = ((UdtField->Tag == SymTagData
 				|| UdtField->Tag == SymTagBaseClass
 				|| UdtField->Tag == SymTagVTable
+				|| UdtField->Tag == SymTagTypedef
 				) && UdtField->DataKind != DataIsStaticMember)
 		? UdtField : m_PreviousUdtField;
 	m_SizeOfPreviousUdtField = ((UdtField->Tag == SymTagData
 				|| UdtField->Tag == SymTagBaseClass
 				|| UdtField->Tag == SymTagVTable
+				|| UdtField->Tag == SymTagTypedef
 				) && UdtField->DataKind != DataIsStaticMember)
 		? UdtField->Type->Size : m_SizeOfPreviousUdtField;
 
