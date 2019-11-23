@@ -685,6 +685,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 				{
 					PrevSize = FirstUdtField->Offset - PrevOffset;
 					Size += PrevSize;
+					LastSize = FirstUdtField->Type->Size;
 				} else
 				{
 					if (PrevSize < FirstUdtField->Type->Size)
@@ -692,10 +693,10 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 						Size -= PrevSize;
 						PrevSize = FirstUdtField->Type->Size;
 						Size += PrevSize;
-					}
+					} else
+						LastSize = PrevSize;
 				}
 				PrevOffset = FirstUdtField->Offset;
-				LastSize = FirstUdtField->Type->Size;
 			}
 			++FirstUdtField;
 		}
