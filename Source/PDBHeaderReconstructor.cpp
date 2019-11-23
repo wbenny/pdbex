@@ -406,12 +406,12 @@ void PDBHeaderReconstructor::WriteVariant(const VARIANT* v)
 		break;
 
 	case VT_INT:
-	case VT_I4:
 		Write("%d", (UINT)v->lVal);
 		break;
 
 	case VT_UINT:
 	case VT_UI4:
+	case VT_I4:
 		Write("0x%x", (UINT)v->lVal);
 		break;
 	}
