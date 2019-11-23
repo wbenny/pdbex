@@ -674,6 +674,7 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 		DWORD PrevOffset = 0;
 		DWORD PrevSize = 0;
 		DWORD Size = 0;
+		DWORD LastSize = 0
 		while (FirstUdtField <= LastUdtField)
 		{
 			if ((FirstUdtField->Tag == SymTagData
@@ -684,9 +685,6 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 				{
 					PrevSize = FirstUdtField->Offset - PrevOffset;
 					Size += PrevSize;
-				//last field use size,all remain will padding
-					if (FirstUdtField == LastUdtField)
-						Size += FirstUdtField->Type->Size;
 				} else
 				{
 					if (PrevSize < FirstUdtField->Type->Size)
@@ -697,11 +695,12 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 					}
 				}
 				PrevOffset = FirstUdtField->Offset;
+				LastSize = FirstUdtField->Type->Size;
 			}
 			++FirstUdtField;
 		}
 		
-		DWORD PaddingSize = Symbol->Size - Size;
+		DWORD PaddingSize = Symbol->Size - Size-LastSize;
 
 		if (PaddingSize > 0)
 		{
