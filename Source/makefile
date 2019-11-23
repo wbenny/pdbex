@@ -48,6 +48,9 @@ OBJS = \
 
 all : $(ODIR)\dia2dump.exe
 
+#use as prefix for cl
+#D:\LLVM-9.0.0-win32\bin\clang-
+#D:\LLVM-9.0.0-win64\bin\clang-
 
 {}.cpp{$(ODIR)\}.obj::
     cl $(CFLAGS) /std:c++latest $(MPBUILDFLAGS) $(PCHFLAGS) -Fo$(ODIR)\ -FR$(ODIR)\ $<
