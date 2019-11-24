@@ -100,6 +100,15 @@ public:
 			m_TypePrefix = "virtual " + m_TypePrefix;
 		}
 
+		std::string Access;
+		switch (Symbol->u.Function.Access)
+		{
+		case 1: Access = "private "; break;
+		case 2: Access = "protected "; break;
+		case 3: Access = "public "; break;
+		}
+		m_TypePrefix = Access + m_TypePrefix;
+
 		if (Symbol->u.Function.IsConst)		m_Comment += " const";
 		if (Symbol->u.Function.IsOverride)	m_Comment += " override";
 		if (Symbol->u.Function.IsPure)		m_Comment += " = 0";
