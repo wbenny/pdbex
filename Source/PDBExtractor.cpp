@@ -210,28 +210,6 @@ void PDBExtractor::OpenPDBFile()
 		throw PDBDumperException(MESSAGE_FILE_NOT_FOUND);
 }
 
-void PDBExtractor::PrintPDBDeclarations()
-{
-	for (auto&& e : m_SymbolSorter->GetSortedSymbols())
-	{
-		if (e->Tag == SymTagUDT && !PDB::IsUnnamedSymbol(e))
-		{
-			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-				<< PDB::GetUdtKindString(e->u.Udt.Kind)
-				<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
-				<< std::endl;
-		} else if (e->Tag == SymTagEnum && !PDB::IsUnnamedSymbol(e))
-		{
-			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
-				<< "enum"
-				<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
-				<< std::endl;
-		}
-	}
-
-	*m_Settings.PdbHeaderReconstructorSettings.OutputFile << std::endl;
-}
-
 void PDBExtractor::PrintPDBDefinitions()
 {
 	for (auto&& e : m_SymbolSorter->GetSortedSymbols())
@@ -271,7 +249,6 @@ void PDBExtractor::DumpAllSymbols()
 		m_SymbolSorter->Visit(e.second);
 	}
 
-	PrintPDBDeclarations();
 	PrintPDBDefinitions();
 	PrintPDBFunctions();
 }

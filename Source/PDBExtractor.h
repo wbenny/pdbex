@@ -25,7 +25,6 @@ private:
 	void PrintUsage();
 	void ParseParameters(int argc, char** argv);
 	void OpenPDBFile();
-	void PrintPDBDeclarations();
 	void PrintPDBDefinitions();
 	void PrintPDBFunctions();
 	void DumpAllSymbols();
