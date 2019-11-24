@@ -741,6 +741,10 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 
 VOID SymbolModule::ProcessSymbolFunctionEx(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 {
+	DWORD dwAccess = 0;
+	DiaSymbol->get_access(&dwAccess);
+	Symbol->u.Function.Access = dwAccess;
+
 	BOOL IsStatic = FALSE;
 	DiaSymbol->get_isStatic(&IsStatic);
 	Symbol->u.Function.IsStatic = IsStatic;

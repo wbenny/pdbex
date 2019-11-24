@@ -69,6 +69,7 @@ typedef struct _SYMBOL_FUNCTION
 	BOOL                 IsOverride;
 	BOOL                 IsConst;
 	BOOL                 IsPure;
+	DWORD                Access;
 	DWORD                ArgumentCount;
 	SYMBOL**             Arguments;
 
