@@ -33,7 +33,6 @@ public:
 			AnonymousUnionPrefix        = "u";  // DUMMYUNIONNAME  (up to 9)
 			CreatePaddingMembers        = true;
 			ShowOffsets                 = true;
-			MicrosoftTypedefs           = true;
 			AllowBitFieldsInUnion       = false;
 			AllowAnonymousDataTypes     = true;
 		}
@@ -49,7 +48,6 @@ public:
 		std::string               AnonymousUnionPrefix;
 		bool                      CreatePaddingMembers    : 1;
 		bool                      ShowOffsets             : 1;
-		bool                      MicrosoftTypedefs       : 1;
 		bool                      AllowBitFieldsInUnion   : 1;
 		bool                      AllowAnonymousDataTypes : 1;
 	};

@@ -43,11 +43,6 @@ const std::string& PDBHeaderReconstructor::GetCorrectedSymbolName(const SYMBOL* 
 
 		if (PDB::IsUnnamedSymbol(Symbol))
 		{
-			if (m_Settings->MicrosoftTypedefs)
-			{
-				CorrectedName += "_";
-			}
-
 			m_UnnamedSymbols.insert(Symbol);
 
 			CorrectedName += m_Settings->UnnamedTypePrefix + std::to_string(m_UnnamedSymbols.size());
@@ -444,24 +439,10 @@ void PDBHeaderReconstructor::WriteUnnamedDataType(UdtKind Kind)
 
 void PDBHeaderReconstructor::WriteTypedefBegin(const SYMBOL* Symbol)
 {
-	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
-	bool UseTypedef = m_Settings->MicrosoftTypedefs && CorrectedName[0] == '_';
-
-	if (UseTypedef && m_Depth == 0)
-	{
-		Write("typedef ");
-	}
 }
 
 void PDBHeaderReconstructor::WriteTypedefEnd(const SYMBOL* Symbol)
 {
-	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
-	bool UseTypedef = m_Settings->MicrosoftTypedefs && CorrectedName[0] == '_';
-
-	if (UseTypedef && m_Depth == 0)
-	{
-		Write(" %s, *P%s", &CorrectedName[1], &CorrectedName[1]);
-	}
 }
 
 void PDBHeaderReconstructor::WriteConstAndVolatile(const SYMBOL* Symbol)

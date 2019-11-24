@@ -51,7 +51,7 @@ void PDBExtractor::PrintUsage()
 	printf("\n");
 	printf("pdbex <path> [-o <filename>] [-e <type>]\n");
 	printf("                     [-u <prefix>] [-s prefix] [-r prefix] [-g suffix]\n");
-	printf("                     [-p] [-x] [-m] [-b] [-d]\n");
+	printf("                     [-p] [-x] [-b] [-d]\n");
 	printf("\n");
 	printf("<path>               Path to the PDB file.\n");
 	printf(" -o filename         Specifies the output file.                       (stdout)\n");
@@ -68,7 +68,6 @@ void PDBExtractor::PrintUsage()
 	printf("Example: -p-\n");
 	printf(" -p                  Create padding members.                          (T)\n");
 	printf(" -x                  Show offsets.                                    (T)\n");
-	printf(" -m                  Create Microsoft typedefs.                       (T)\n");
 	printf(" -b                  Allow bitfields in union.                        (F)\n");
 	printf(" -d                  Allow unnamed data types.                        (T)\n");
 	printf("\n");
@@ -185,10 +184,6 @@ void PDBExtractor::ParseParameters(int argc, char** argv)
 
 		case 'x':
 			m_Settings.PdbHeaderReconstructorSettings.ShowOffsets = !OffSwitch;
-			break;
-
-		case 'm':
-			m_Settings.PdbHeaderReconstructorSettings.MicrosoftTypedefs = !OffSwitch;
 			break;
 
 		case 'b':
