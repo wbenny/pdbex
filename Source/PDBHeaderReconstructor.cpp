@@ -202,6 +202,17 @@ void PDBHeaderReconstructor::OnUdtFieldBegin(const SYMBOL_UDT_FIELD* UdtField)
 		WriteOffset(UdtField, GetParentOffset());
 	}
 
+	if (UdtField->Parent->Kind == UdtClass)
+	{
+		std::string Access;
+		switch (UdtField->Access)
+		{
+		case 1: Write("private "); break;
+		case 2: Write("protected "); break;
+		case 3: Write("public "); break;
+		}
+	}
+
 	m_OffsetStack.push_back(UdtField->Offset);
 }
 

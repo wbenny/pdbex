@@ -99,7 +99,7 @@ public:
 		{
 			m_TypePrefix = "virtual " + m_TypePrefix;
 		}
-
+	#if 0
 		std::string Access;
 		switch (Symbol->u.Function.Access)
 		{
@@ -108,7 +108,7 @@ public:
 		case 3: Access = "public "; break;
 		}
 		m_TypePrefix = Access + m_TypePrefix;
-
+	#endif
 		if (Symbol->u.Function.IsConst)		m_Comment += " const";
 		if (Symbol->u.Function.IsOverride)	m_Comment += " override";
 		if (Symbol->u.Function.IsPure)		m_Comment += " = 0";

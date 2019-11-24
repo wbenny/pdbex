@@ -28,6 +28,7 @@ typedef struct _SYMBOL_UDT_FIELD
 	DWORD                Bits;
 	DWORD                BitPosition;
 	SYMBOL*              Parent;
+	DWORD                Access;
 	BOOL                 IsBaseClass;
 
 } SYMBOL_UDT_FIELD, *PSYMBOL_UDT_FIELD;

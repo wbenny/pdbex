@@ -664,6 +664,11 @@ VOID SymbolModule::ProcessSymbolUdt(IN IDiaSymbol* DiaSymbol, IN SYMBOL* Symbol)
 		{
 			DiaChildSymbol->get_length(&Bits);
 		}
+
+		DWORD dwAccess = 0;
+		DiaChildSymbol->get_access(&dwAccess);
+		Member->Access = dwAccess;
+
 		Member->Bits = static_cast<DWORD>(Bits);
 
 		DiaChildSymbol->get_bitPosition(&Member->BitPosition);
