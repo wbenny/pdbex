@@ -168,6 +168,7 @@ public:
 	SYMBOL* GetSymbolByTypeId(IN DWORD TypeId);
 	SYMBOL* GetSymbol(IN IDiaSymbol* DiaSymbol);
 	CHAR* GetSymbolName(IN IDiaSymbol* DiaSymbol, bool raw = true);
+	VOID UpdateSymbolMapFromEnumerator(IN IDiaEnumSymbols* DiaSymbolEnumerator);
 	VOID BuildSymbolMapFromEnumerator(IN IDiaEnumSymbols* DiaSymbolEnumerator);
 	VOID BuildFunctionSetFromEnumerator(IN IDiaEnumSymbols* DiaSymbolEnumerator);
 	VOID BuildSymbolMap();
@@ -299,6 +300,76 @@ SYMBOL* SymbolModule::GetSymbol(IN IDiaSymbol* DiaSymbol)
 	return Symbol;
 }
 
+VOID SymbolModule::UpdateSymbolMapFromEnumerator(IN IDiaEnumSymbols* DiaSymbolEnumerator)
+{
+	IDiaSymbol* Result;
+	ULONG FetchedSymbolCount = 0;
+
+	while (SUCCEEDED(DiaSymbolEnumerator->Next(1, &Result, &FetchedSymbolCount)) && (FetchedSymbolCount == 1))
+	{
+		IDiaSymbol *DiaChildSymbol(Result);
+		IDiaEnumSymbols *DiaSymbolEnumerator1;
+		if (SUCCEEDED(DiaChildSymbol->findChildren(SymTagNull, nullptr, nsNone, &DiaSymbolEnumerator1)))
+		{
+			IDiaSymbol* Result1;
+			ULONG FetchedSymbolCount1 = 0;
+
+			while (SUCCEEDED(DiaSymbolEnumerator1->Next(1, &Result1, &FetchedSymbolCount1)) && (FetchedSymbolCount1 == 1))
+			{
+				IDiaSymbol *DiaChildSymbol1(Result1);
+				DWORD DwordResult;
+				DiaChildSymbol1->get_symTag(&DwordResult);
+				auto Tag = static_cast<enum SymTagEnum>(DwordResult);
+				if (Tag == SymTagFunction)
+				{
+					DWORD TypeId2;
+					DiaChildSymbol1->get_symIndexId(&TypeId2);
+					auto it = m_SymbolMap.find(TypeId2);
+					if (it == m_SymbolMap.end()) continue;
+					IDiaEnumSymbols *DiaSymbolEnumeratorF;
+
+					if (FAILED(DiaChildSymbol1->findChildren(SymTagNull, nullptr, nsNone, &DiaSymbolEnumeratorF)))
+						continue;
+
+					if (it->second->u.Function.ArgumentCount == 0) continue;
+					IDiaSymbol* ResultF;
+					ULONG FetchedSymbolCountF = 0;
+					DWORD IndexF = 0;
+					DWORD Argc = 0;
+					while (SUCCEEDED(DiaSymbolEnumeratorF->Next(1, &ResultF, &FetchedSymbolCountF)) && (FetchedSymbolCountF == 1))
+					{
+						IDiaSymbol *DiaChildSymbolF(ResultF);
+
+						DWORD symTag;
+						DiaChildSymbolF->get_symTag(&symTag);
+						if (symTag == SymTagData)
+						{
+							DWORD DwordResult;
+							DiaChildSymbolF->get_dataKind(&DwordResult);
+							if (DwordResult == DataIsParam)
+							{
+								if (it->second->u.Function.Arguments[Argc]->Name)
+								{
+									SYMBOL *tmp = it->second->u.Function.Arguments[Argc];
+									it->second->u.Function.Arguments[Argc] = new SYMBOL;
+									*(it->second->u.Function.Arguments[Argc]) = *tmp;
+								}
+								it->second->u.Function.Arguments[Argc++]->Name = GetSymbolName(DiaChildSymbolF);
+							}
+						}
+						DiaChildSymbolF->Release();
+						IndexF += 1;
+					}
+					DiaSymbolEnumeratorF->Release();
+				}
+				DiaChildSymbol1->Release();
+			}
+		}
+		DiaSymbolEnumerator1->Release();
+		DiaChildSymbol->Release();
+	}
+}
+
 VOID SymbolModule::BuildSymbolMapFromEnumerator(IN IDiaEnumSymbols* DiaSymbolEnumerator)
 {
 	IDiaSymbol* Result;
@@ -355,6 +426,10 @@ VOID SymbolModule::BuildSymbolMap()
 	if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagUDT, nullptr, nsNone, &DiaSymbolEnumerator)))
 	{
 		BuildSymbolMapFromEnumerator(DiaSymbolEnumerator);
+	}
+	if (SUCCEEDED(m_GlobalSymbol->findChildren(SymTagCompiland, nullptr, nsNone, &DiaSymbolEnumerator)))
+	{
+		UpdateSymbolMapFromEnumerator(DiaSymbolEnumerator);
 	}
 	DiaSymbolEnumerator->Release();
 }
