@@ -72,9 +72,7 @@ public:
 		if (Symbol->u.Array.ElementCount == 0)
 		{
 			const_cast<SYMBOL*>(Symbol)->Size = 1;
-			m_TypePrefix += "[]";
-
-			m_Comment += " /* zero-length array */";
+			m_TypeSuffix += "[]";
 		} else
 		{
 			m_TypeSuffix += "[" + std::to_string(Symbol->u.Array.ElementCount) + "]";
