@@ -321,19 +321,20 @@ VOID SymbolModule::BuildFunctionSetFromEnumerator(IN IDiaEnumSymbols* DiaSymbolE
 	{
 		IDiaSymbol *DiaChildSymbol(Result);
 
-		BOOL IsFunction;
-		DiaChildSymbol->get_function(&IsFunction);
-
-		if (IsFunction)
+		DWORD DwordResult;
+		DiaChildSymbol->get_symTag(&DwordResult);
+		auto Tag = static_cast<enum SymTagEnum>(DwordResult);
+		if (Tag != SymTagThunk)
 		{
-			CHAR* FunctionName = GetSymbolName(DiaChildSymbol, false);
+			//BOOL IsFunction;
+			//DiaChildSymbol->get_function(&IsFunction);
+			//if (IsFunction)
+			{
+				CHAR* FunctionName = GetSymbolName(DiaChildSymbol, false);
 
-			DWORD DwordResult;
-			DiaChildSymbol->get_symTag(&DwordResult);
-			// auto Tag = static_cast<enum SymTagEnum>(DwordResult);
-
-			m_FunctionSet.insert(FunctionName);
-			delete[] FunctionName;
+				m_FunctionSet.insert(FunctionName);
+				delete[] FunctionName;
+			}
 		}
 		DiaChildSymbol->Release();
 	}
