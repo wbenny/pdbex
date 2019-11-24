@@ -28,8 +28,6 @@ public:
 	{
 		if (Symbol->IsConst)	m_TypePrefix += "const ";
 		if (Symbol->IsVolatile)	m_TypePrefix += "volatile ";
-
-		m_TypePrefix += "enum ";
 		m_TypePrefix += Symbol->Name;
 	}
 
