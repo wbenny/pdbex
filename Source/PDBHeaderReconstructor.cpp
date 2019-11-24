@@ -202,7 +202,7 @@ void PDBHeaderReconstructor::OnUdtFieldBegin(const SYMBOL_UDT_FIELD* UdtField)
 		WriteOffset(UdtField, GetParentOffset());
 	}
 
-	if (UdtField->Parent->Kind == UdtClass)
+	if (UdtField->Parent->u.Udt.Kind == UdtClass)
 	{
 		std::string Access;
 		switch (UdtField->Access)
