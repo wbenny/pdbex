@@ -107,7 +107,11 @@ public:
 		if (Symbol->u.Function.IsPure)		m_Comment += " = 0";
 
 		if (Symbol->u.Function.IsVirtual)
-			m_Comment += " /* VO: " + std::to_string(Symbol->u.Function.VirtualOffset) + " */"; //hex
+		{
+			char hexbuf[16];
+			snprintf(hexbuf, sizeof(hexbuf), " 0x%02x ", Symbol->u.Function.VirtualOffset);
+			m_Comment += " /*" + std::string(hexbuf) + "*/";
+		}
 
 		if (m_TypeSuffix.size())
 			m_TypePrefix = GetPrintableDefinition();
