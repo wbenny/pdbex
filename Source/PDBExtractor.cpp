@@ -220,7 +220,7 @@ void PDBExtractor::PrintPDBDeclarations()
 				<< PDB::GetUdtKindString(e->u.Udt.Kind)
 				<< " " << m_HeaderReconstructor->GetCorrectedSymbolName(e) << ";"
 				<< std::endl;
-		} else if (e->Tag == SymTagEnum)
+		} else if (e->Tag == SymTagEnum && !PDB::IsUnnamedSymbol(e))
 		{
 			*m_Settings.PdbHeaderReconstructorSettings.OutputFile
 				<< "enum"
