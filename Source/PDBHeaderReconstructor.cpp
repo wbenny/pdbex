@@ -194,14 +194,6 @@ void PDBHeaderReconstructor::OnUdtFieldBegin(const SYMBOL_UDT_FIELD* UdtField)
 {
 	WriteIndent();
 
-	if (UdtField->Type->Tag != SymTagFunction &&
-	    UdtField->Type->Tag != SymTagTypedef &&
-	    (UdtField->Type->Tag != SymTagUDT ||
-	    ShouldExpand(UdtField->Type) == false))
-	{
-		WriteOffset(UdtField, GetParentOffset());
-	}
-
 	if (UdtField->Parent->u.Udt.Kind == UdtClass)
 	{
 		std::string Access;
@@ -211,6 +203,14 @@ void PDBHeaderReconstructor::OnUdtFieldBegin(const SYMBOL_UDT_FIELD* UdtField)
 		case 2: Write("protected "); break;
 		case 3: Write("public "); break;
 		}
+	}
+
+	if (UdtField->Type->Tag != SymTagFunction &&
+	    UdtField->Type->Tag != SymTagTypedef &&
+	    (UdtField->Type->Tag != SymTagUDT ||
+	    ShouldExpand(UdtField->Type) == false))
+	{
+		WriteOffset(UdtField, GetParentOffset());
 	}
 
 	m_OffsetStack.push_back(UdtField->Offset);
