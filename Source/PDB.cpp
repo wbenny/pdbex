@@ -348,12 +348,10 @@ VOID SymbolModule::UpdateSymbolMapFromEnumerator(IN IDiaEnumSymbols* DiaSymbolEn
 							DiaChildSymbolF->get_dataKind(&DwordResult);
 							if (DwordResult == DataIsParam)
 							{
-								if (it->second->u.Function.Arguments[Argc]->Name)
-								{
-									SYMBOL *tmp = it->second->u.Function.Arguments[Argc];
-									it->second->u.Function.Arguments[Argc] = new SYMBOL;
-									*(it->second->u.Function.Arguments[Argc]) = *tmp;
-								}
+								SYMBOL *tmp = it->second->u.Function.Arguments[Argc];
+								it->second->u.Function.Arguments[Argc] = new SYMBOL;
+								*(it->second->u.Function.Arguments[Argc]) = *tmp;
+
 								it->second->u.Function.Arguments[Argc++]->Name = GetSymbolName(DiaChildSymbolF);
 							}
 						}
