@@ -36,9 +36,7 @@ const std::string& PDBHeaderReconstructor::GetCorrectedSymbolName(const SYMBOL* 
 	auto CorrectedNameIt = m_CorrectedSymbolNames.find(Symbol);
 	if (CorrectedNameIt == m_CorrectedSymbolNames.end())
 	{
-		std::string CorrectedName;
-
-		CorrectedName += m_Settings->SymbolPrefix;
+		std::string CorrectedName = m_Settings->SymbolPrefix;
 
 		if (PDB::IsUnnamedSymbol(Symbol))
 		{
@@ -49,10 +47,8 @@ const std::string& PDBHeaderReconstructor::GetCorrectedSymbolName(const SYMBOL* 
 		}
 
 		CorrectedName += m_Settings->SymbolSuffix;
-
 		m_CorrectedSymbolNames[Symbol] = CorrectedName;
 	}
-
 	return m_CorrectedSymbolNames[Symbol];
 }
 
@@ -230,7 +226,7 @@ void PDBHeaderReconstructor::OnUdtField(const SYMBOL_UDT_FIELD* UdtField, UdtFie
 
 	if (UdtField->Bits != 0)
 	{
-		Write(" /* bit position: %i */", UdtField->BitPosition);
+		Write("   /* %i */", UdtField->BitPosition);
 	}
 
 	Write("\n");
@@ -345,7 +341,7 @@ void PDBHeaderReconstructor::OnPaddingBitFieldField(
 
 	Write(" : %i", Bits);
 	Write(";");
-	Write(" /* bit position: %i */", BitPosition);
+	Write("   /* %i */", BitPosition);
 	Write("\n");
 }
 
