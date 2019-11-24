@@ -28,7 +28,6 @@ public:
 			OutputFile                  = &std::cout;
 			PaddingMemberPrefix         = "Padding_";
 			BitFieldPaddingMemberPrefix = "";
-			UnnamedTypePrefix           = "TAG_UNNAMED_";
 			AnonymousStructPrefix       = "s";  // DUMMYSTRUCTNAME (up to 6)
 			AnonymousUnionPrefix        = "u";  // DUMMYUNIONNAME  (up to 9)
 			CreatePaddingMembers        = true;
@@ -86,8 +85,6 @@ private:
 	void WriteIndent();
 	void WriteVariant(const VARIANT* v);
 	void WriteUnnamedDataType(UdtKind Kind);
-	void WriteTypedefBegin(const SYMBOL* Symbol);
-	void WriteTypedefEnd(const SYMBOL* Symbol);
 	void WriteConstAndVolatile(const SYMBOL* Symbol);
 	void WriteOffset(const SYMBOL_UDT_FIELD* UdtField, int PaddingOffset);
 	bool HasBeenVisited(const SYMBOL* Symbol) const;
@@ -103,7 +100,6 @@ private:
 	DWORD m_AnonymousDataTypeCounter = 0;
 	DWORD m_PaddingMemberCounter = 0;
 
-	mutable std::set<const SYMBOL*> m_UnnamedSymbols;
 	mutable std::map<const SYMBOL*, std::string> m_CorrectedSymbolNames;
 
 	std::set<std::string> m_VisitedSymbols;

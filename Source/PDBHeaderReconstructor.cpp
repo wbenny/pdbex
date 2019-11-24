@@ -27,7 +27,6 @@ void PDBHeaderReconstructor::Clear()
 	m_AnonymousDataTypeCounter = 0;
 	m_PaddingMemberCounter = 0;
 
-	m_UnnamedSymbols.clear();
 	m_CorrectedSymbolNames.clear();
 	m_VisitedSymbols.clear();
 }
@@ -43,9 +42,7 @@ const std::string& PDBHeaderReconstructor::GetCorrectedSymbolName(const SYMBOL* 
 
 		if (PDB::IsUnnamedSymbol(Symbol))
 		{
-			m_UnnamedSymbols.insert(Symbol);
-
-			CorrectedName += m_Settings->UnnamedTypePrefix + std::to_string(m_UnnamedSymbols.size());
+			//
 		} else
 		{
 			CorrectedName += Symbol->Name;
@@ -79,8 +76,6 @@ void PDBHeaderReconstructor::OnEnumTypeBegin(const SYMBOL* Symbol)
 {
 	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
 
-	WriteTypedefBegin(Symbol);
-
 	Write("enum");
 
 	Write(" %s", CorrectedName.c_str());
@@ -99,8 +94,6 @@ void PDBHeaderReconstructor::OnEnumTypeEnd(const SYMBOL* Symbol)
 
 	WriteIndent();
 	Write("}");
-
-	WriteTypedefEnd(Symbol);
 
 	if (m_Depth == 0)
 	{
@@ -142,8 +135,6 @@ bool PDBHeaderReconstructor::OnUdt(const SYMBOL* Symbol)
 
 void PDBHeaderReconstructor::OnUdtBegin(const SYMBOL* Symbol)
 {
-	WriteTypedefBegin(Symbol);
-
 	WriteConstAndVolatile(Symbol);
 
 	Write("%s", PDB::GetUdtKindString(Symbol->u.Udt.Kind));
@@ -189,8 +180,6 @@ void PDBHeaderReconstructor::OnUdtEnd(const SYMBOL* Symbol)
 
 	WriteIndent();
 	Write("}");
-
-	WriteTypedefEnd(Symbol);
 
 	if (m_Depth == 0)
 	{
@@ -435,14 +424,6 @@ void PDBHeaderReconstructor::WriteUnnamedDataType(UdtKind Kind)
 			Write("%u", m_AnonymousDataTypeCounter);
 		}
 	}
-}
-
-void PDBHeaderReconstructor::WriteTypedefBegin(const SYMBOL* Symbol)
-{
-}
-
-void PDBHeaderReconstructor::WriteTypedefEnd(const SYMBOL* Symbol)
-{
 }
 
 void PDBHeaderReconstructor::WriteConstAndVolatile(const SYMBOL* Symbol)
