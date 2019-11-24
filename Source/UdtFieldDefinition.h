@@ -139,15 +139,18 @@ public:
 
 	void VisitFunctionArgTypeEnd(const SYMBOL* Symbol) override
 	{
+		std::string ArgName;
+		if (Symbol->Name) ArgName = std::string(" ") + Symbol->Name;
+
 		if (m_MemberName.find('(') == std::string::npos)
 		{
-			m_Args.push_back(m_TypePrefix);
+			m_Args.push_back(m_TypePrefix + ArgName);
 			m_TypeSuffix = "";
 			m_TypePrefix = "";
 		} else
 		{
 			m_TypeSuffix = GetPrintableDefinition();
-			m_Args.push_back(m_TypeSuffix);
+			m_Args.push_back(m_TypeSuffix + ArgName);
 			m_TypeSuffix = "";
 			m_TypePrefix = "";
 		}
