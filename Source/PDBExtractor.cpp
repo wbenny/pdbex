@@ -450,6 +450,8 @@ PDBExtractor::PrintPDBHeader()
 			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_AMD64 ? "AMD64" :
 			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_IA64  ? "IA64"  :
 			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_ARMNT ? "ArmNT" :
+			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_ARM64 ? "ARM64" :
+			m_PDB.GetMachineType() == IMAGE_FILE_MACHINE_CHPE_X86 ? "CHPE_X86" :
 			                                                     "Unknown";
 
 		static char HEADER_FILE_HEADER_FORMATTED[16 * 1024];
