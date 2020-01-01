@@ -7,6 +7,11 @@
 #include <memory>
 #include <string>
 
+// From ntimage.h
+#ifndef IMAGE_FILE_MACHINE_CHPE_X86
+#define IMAGE_FILE_MACHINE_CHPE_X86 0x3A64
+#endif
+
 #define PDBEX_VERSION_MAJOR 0
 #define PDBEX_VERSION_MINOR 18
 
