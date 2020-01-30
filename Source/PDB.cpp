@@ -74,7 +74,7 @@ SymbolModuleBase::LoadDiaViaLoadLibrary()
 	if (!Module)
 	{
 		Result = HRESULT_FROM_WIN32(GetLastError());
-		return FALSE;
+		return Result;
 	}
 
 	using PDLLGETCLASSOBJECT_ROUTINE = HRESULT(WINAPI*)(REFCLSID, REFIID, LPVOID);
@@ -83,7 +83,7 @@ SymbolModuleBase::LoadDiaViaLoadLibrary()
 	if (!DllGetClassObject)
 	{
 		Result = HRESULT_FROM_WIN32(GetLastError());
-		return FALSE;
+		return Result;
 	}
 
 	CComPtr<IClassFactory> ClassFactory;
@@ -91,7 +91,7 @@ SymbolModuleBase::LoadDiaViaLoadLibrary()
 
 	if (FAILED(Result))
 	{
-		return FALSE;
+		return Result;
 	}
 
 	return ClassFactory->CreateInstance(nullptr, __uuidof(IDiaDataSource), (void**)& m_DataSource);
