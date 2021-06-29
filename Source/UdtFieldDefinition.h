@@ -37,7 +37,13 @@ class UdtFieldDefinition
 				m_TypePrefix += "volatile ";
 			}
 
-			m_TypePrefix += PDB::GetBasicTypeString(Symbol, m_Settings->UseStdInt);
+			//
+			// If this returns null, it probably means BasicTypeMapMSVC and/or BasicTypeMapStdInt are out of date compared to MS DIA.
+			// Output the (non-compilable) type "<unknown_type>" instead of crashing.
+			//
+
+			const CHAR* BasicTypeString = PDB::GetBasicTypeString(Symbol, m_Settings->UseStdInt);
+			m_TypePrefix += (BasicTypeString != nullptr ? BasicTypeString : "<unknown_type>");
 		}
 
 		void
