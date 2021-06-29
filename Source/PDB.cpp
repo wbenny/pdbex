@@ -1013,6 +1013,7 @@ BasicTypeMapElement BasicTypeMapStdInt[] = {
 	{ btNoType,       0,  "btNoType",         nullptr            },
 	{ btVoid,         0,  "btVoid",           "void"             },
 	{ btChar,         1,  "btChar",           "char"             },
+	{ btChar8,        1,  "btChar8",          "char8_t"          },
 	{ btChar16,       2,  "btChar16",         "char16_t"         },
 	{ btChar32,       4,  "btChar32",         "char32_t"         },
 	{ btWChar,        2,  "btWChar",          "wchar_t"          },
@@ -1040,7 +1041,6 @@ BasicTypeMapElement BasicTypeMapStdInt[] = {
 	{ btBit,          0,  "btBit",            nullptr            },
 	{ btBSTR,         0,  "btBSTR",           "BSTR"             },
 	{ btHresult,      4,  "btHresult",        "HRESULT"          },
-	{ btChar8,        1,  "btChar8",          "char8_t"          },
 	{ (BasicType)0,   0,  nullptr,            nullptr            },
 };
 
