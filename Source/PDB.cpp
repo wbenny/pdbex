@@ -1005,6 +1005,7 @@ BasicTypeMapElement BasicTypeMapMSVC[] = {
 	{ btBit,          0,  "btBit",            nullptr            },
 	{ btBSTR,         0,  "btBSTR",           "BSTR"             },
 	{ btHresult,      4,  "btHresult",        "HRESULT"          },
+	{ btChar8,        1,  "btChar8",          "char8_t"          },
 	{ (BasicType)0,   0,  nullptr,            nullptr            },
 };
 
@@ -1039,6 +1040,7 @@ BasicTypeMapElement BasicTypeMapStdInt[] = {
 	{ btBit,          0,  "btBit",            nullptr            },
 	{ btBSTR,         0,  "btBSTR",           "BSTR"             },
 	{ btHresult,      4,  "btHresult",        "HRESULT"          },
+	{ btChar8,        1,  "btChar8",          "char8_t"          },
 	{ (BasicType)0,   0,  nullptr,            nullptr            },
 };
 
