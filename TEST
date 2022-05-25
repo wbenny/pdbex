@@ -1,0 +1,15 @@
+_GENERAL_LOOKASIDE
+_IMAGE_INFO
+_Rb_tree_base_iterator
+_PCI_CONFIG_COMMON
+has_trivial_default_constructor
+MsgMouseScrPT
+CSymbolModule
+writepad
+typedef union _Obj
+struct pair<unsigned long const ,TString<unsigned short,24> >
+typedef class __default_alloc_template<0,0>
+class CSyser :
+class CWispHexWnd : public CWispWnd
+m_UnReadableASCII //static
+class CWispConsoleWnd

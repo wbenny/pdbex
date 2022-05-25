@@ -9,9 +9,7 @@
 
 #include <cassert>
 
-PDBHeaderReconstructor::PDBHeaderReconstructor(
-	Settings* VisitorSettings
-	)
+PDBHeaderReconstructor::PDBHeaderReconstructor(Settings* VisitorSettings)
 {
 	static Settings DefaultSettings;
 
@@ -19,72 +17,42 @@ PDBHeaderReconstructor::PDBHeaderReconstructor(
 	{
 		VisitorSettings = &DefaultSettings;
 	}
-
 	m_Settings = VisitorSettings;
 }
 
-void
-PDBHeaderReconstructor::Clear()
+void PDBHeaderReconstructor::Clear()
 {
 	assert(m_Depth == 0);
 
 	m_AnonymousDataTypeCounter = 0;
 	m_PaddingMemberCounter = 0;
 
-	m_UnnamedSymbols.clear();
 	m_CorrectedSymbolNames.clear();
 	m_VisitedSymbols.clear();
 }
 
-const std::string&
-PDBHeaderReconstructor::GetCorrectedSymbolName(
-	const SYMBOL* Symbol
-	) const
+const std::string& PDBHeaderReconstructor::GetCorrectedSymbolName(const SYMBOL* Symbol) const
 {
-	if (!m_CorrectedSymbolNames.contains(Symbol))
+	auto CorrectedNameIt = m_CorrectedSymbolNames.find(Symbol);
+	if (CorrectedNameIt == m_CorrectedSymbolNames.end())
 	{
-		//
-		// Build corrected name:
-		// SymbolPrefix
-		//   + "_" (if Microsoft typedefs are enabled)
-		//   + unnamed tag (if symbol does not have name)
-		//   + symbol name (if symbol does have name)
-		//
-		// ...and cache the name.
-		//
-
-		std::string CorrectedName;
-
-		CorrectedName += m_Settings->SymbolPrefix;
+		std::string CorrectedName = m_Settings->SymbolPrefix;
 
 		if (PDB::IsUnnamedSymbol(Symbol))
 		{
-			if (m_Settings->MicrosoftTypedefs)
-			{
-				CorrectedName += "_";
-			}
-
-			m_UnnamedSymbols.insert(Symbol);
-
-			CorrectedName += m_Settings->UnnamedTypePrefix + std::to_string(m_UnnamedSymbols.size());
-		}
-		else
+			//
+		} else
 		{
 			CorrectedName += Symbol->Name;
 		}
 
 		CorrectedName += m_Settings->SymbolSuffix;
-
 		m_CorrectedSymbolNames[Symbol] = CorrectedName;
 	}
-
 	return m_CorrectedSymbolNames[Symbol];
 }
 
-bool
-PDBHeaderReconstructor::OnEnumType(
-	const SYMBOL* Symbol
-	)
+bool PDBHeaderReconstructor::OnEnumType(const SYMBOL* Symbol)
 {
 	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
 
@@ -100,18 +68,9 @@ PDBHeaderReconstructor::OnEnumType(
 	return Expand;
 }
 
-void
-PDBHeaderReconstructor::OnEnumTypeBegin(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::OnEnumTypeBegin(const SYMBOL* Symbol)
 {
 	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
-
-	//
-	// Handle begin of the typedef.
-	//
-
-	WriteTypedefBegin(Symbol);
 
 	Write("enum");
 
@@ -125,21 +84,12 @@ PDBHeaderReconstructor::OnEnumTypeBegin(
 	m_Depth += 1;
 }
 
-void
-PDBHeaderReconstructor::OnEnumTypeEnd(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::OnEnumTypeEnd(const SYMBOL* Symbol)
 {
 	m_Depth -= 1;
 
 	WriteIndent();
 	Write("}");
-
-	//
-	// Handle end of the typedef.
-	//
-
-	WriteTypedefEnd(Symbol);
 
 	if (m_Depth == 0)
 	{
@@ -147,10 +97,7 @@ PDBHeaderReconstructor::OnEnumTypeEnd(
 	}
 }
 
-void
-PDBHeaderReconstructor::OnEnumField(
-	const SYMBOL_ENUM_FIELD* EnumField
-	)
+void PDBHeaderReconstructor::OnEnumField(const SYMBOL_ENUM_FIELD* EnumField)
 {
 	WriteIndent();
 	Write("%s = ", EnumField->Name);
@@ -159,10 +106,7 @@ PDBHeaderReconstructor::OnEnumField(
 	Write(",\n");
 }
 
-bool
-PDBHeaderReconstructor::OnUdt(
-	const SYMBOL* Symbol
-	)
+bool PDBHeaderReconstructor::OnUdt(const SYMBOL* Symbol)
 {
 	bool Expand = ShouldExpand(Symbol);
 
@@ -176,11 +120,6 @@ PDBHeaderReconstructor::OnUdt(
 
 		Write("%s %s", PDB::GetUdtKindString(Symbol->u.Udt.Kind), CorrectedName.c_str());
 
-		//
-		// If we're not expanding the type at the root level,
-		// OnUdtEnd() won't be called, so print the semicolon here.
-		//
-
 		if (m_Depth == 0)
 		{
 			Write(";\n\n");
@@ -190,17 +129,8 @@ PDBHeaderReconstructor::OnUdt(
 	return Expand;
 }
 
-void
-PDBHeaderReconstructor::OnUdtBegin(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::OnUdtBegin(const SYMBOL* Symbol)
 {
-	//
-	// Handle begin of the typedef.
-	//
-
-	WriteTypedefBegin(Symbol);
-
 	WriteConstAndVolatile(Symbol);
 
 	Write("%s", PDB::GetUdtKindString(Symbol->u.Udt.Kind));
@@ -209,6 +139,27 @@ PDBHeaderReconstructor::OnUdtBegin(
 	{
 		std::string CorrectedName = GetCorrectedSymbolName(Symbol);
 		Write(" %s", CorrectedName.c_str());
+
+		if (Symbol->u.Udt.BaseClassCount)
+		{
+			std::string ClassName;
+			for (DWORD i = 0; i < Symbol->u.Udt.BaseClassCount; ++i)
+			{
+				std::string Access;
+				switch (Symbol->u.Udt.BaseClassFields[i].Access)
+				{
+				case 1: Access = "private "; break;
+				case 2: Access = "protected "; break;
+				case 3: Access = "public "; break;
+				}
+				std::string Virtual;
+				if (Symbol->u.Udt.BaseClassFields[i].IsVirtual) Virtual = "virtual ";
+				std::string CorrectFuncName = GetCorrectedSymbolName(Symbol->u.Udt.BaseClassFields[i].Type);
+				if (ClassName.size()) ClassName += ", ";
+				ClassName += Access + Virtual + CorrectFuncName;
+			}
+			Write(" : %s", ClassName.c_str());
+		}
 	}
 
 	Write("\n");
@@ -219,21 +170,12 @@ PDBHeaderReconstructor::OnUdtBegin(
 	m_Depth += 1;
 }
 
-void
-PDBHeaderReconstructor::OnUdtEnd(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::OnUdtEnd(const SYMBOL* Symbol)
 {
 	m_Depth -= 1;
 
 	WriteIndent();
 	Write("}");
-
-	//
-	// Handle end of the typedef.
-	//
-
-	WriteTypedefEnd(Symbol);
 
 	if (m_Depth == 0)
 	{
@@ -248,56 +190,43 @@ PDBHeaderReconstructor::OnUdtEnd(
 	}
 }
 
-void
-PDBHeaderReconstructor::OnUdtFieldBegin(
-	const SYMBOL_UDT_FIELD* UdtField
-	)
+void PDBHeaderReconstructor::OnUdtFieldBegin(const SYMBOL_UDT_FIELD* UdtField)
 {
 	WriteIndent();
 
-	//
-	// Do not show offsets for members which will be expanded.
-	//
+	if (UdtField->Parent->u.Udt.Kind == UdtClass)
+	{
+		std::string Access;
+		switch (UdtField->Access)
+		{
+		case 1: Write("private "); break;
+		case 2: Write("protected "); break;
+		case 3: Write("public "); break;
+		}
+	}
 
-	if (UdtField->Type->Tag != SymTagUDT ||
-	    ShouldExpand(UdtField->Type) == false)
+	if (UdtField->Type->Tag != SymTagFunction &&
+	    UdtField->Type->Tag != SymTagTypedef &&
+	    (UdtField->Type->Tag != SymTagUDT ||
+	    ShouldExpand(UdtField->Type) == false))
 	{
 		WriteOffset(UdtField, GetParentOffset());
 	}
 
-	AppendToTest(UdtField);
-
-	//
-	// Push current offset in case we will be expanding
-	// some UDT field.
-	//
-
 	m_OffsetStack.push_back(UdtField->Offset);
 }
 
-void
-PDBHeaderReconstructor::OnUdtFieldEnd(
-	const SYMBOL_UDT_FIELD* UdtField
-	)
+void PDBHeaderReconstructor::OnUdtFieldEnd(const SYMBOL_UDT_FIELD* UdtField)
 {
-	//
-	// Pop offset of the current UDT field.
-	//
-
 	m_OffsetStack.pop_back();
 }
 
-void
-PDBHeaderReconstructor::OnUdtField(
-	const SYMBOL_UDT_FIELD* UdtField,
-	UdtFieldDefinitionBase* MemberDefinition
-	)
+void PDBHeaderReconstructor::OnUdtField(const SYMBOL_UDT_FIELD* UdtField, UdtFieldDefinitionBase* MemberDefinition)
 {
-	Write("%s", MemberDefinition->GetPrintableDefinition().c_str());
+	if (UdtField->DataKind == DataIsStaticMember) //TODO
+		Write("static ");
 
-	//
-	// BitField handling.
-	//
+	Write("%s", MemberDefinition->GetPrintableDefinition().c_str());
 
 	if (UdtField->Bits != 0)
 	{
@@ -308,17 +237,13 @@ PDBHeaderReconstructor::OnUdtField(
 
 	if (UdtField->Bits != 0)
 	{
-		Write(" /* bit position: %i */", UdtField->BitPosition);
+		Write("   /* %i */", UdtField->BitPosition);
 	}
 
 	Write("\n");
 }
 
-void
-PDBHeaderReconstructor::OnAnonymousUdtBegin(
-	UdtKind Kind,
-	const SYMBOL_UDT_FIELD* FirstUdtField
-	)
+void PDBHeaderReconstructor::OnAnonymousUdtBegin(UdtKind Kind, const SYMBOL_UDT_FIELD* First)
 {
 	WriteIndent();
 	Write("%s\n", PDB::GetUdtKindString(Kind));
@@ -329,13 +254,8 @@ PDBHeaderReconstructor::OnAnonymousUdtBegin(
 	m_Depth += 1;
 }
 
-void
-PDBHeaderReconstructor::OnAnonymousUdtEnd(
-	UdtKind Kind,
-	const SYMBOL_UDT_FIELD* FirstUdtField,
-	const SYMBOL_UDT_FIELD* LastUdtField,
-	DWORD Size
-	)
+void PDBHeaderReconstructor::OnAnonymousUdtEnd(UdtKind Kind,
+	const SYMBOL_UDT_FIELD* First, const SYMBOL_UDT_FIELD* Last, DWORD Size)
 {
 	m_Depth -= 1;
 	WriteIndent();
@@ -344,24 +264,15 @@ PDBHeaderReconstructor::OnAnonymousUdtEnd(
 	WriteUnnamedDataType(Kind);
 
 	Write(";");
-
 	Write(" /* size: 0x%04x */", Size);
-
 	Write("\n");
 }
 
-void
-PDBHeaderReconstructor::OnUdtFieldBitFieldBegin(
-	const SYMBOL_UDT_FIELD* FirstUdtFieldBitField,
-	const SYMBOL_UDT_FIELD* LastUdtFieldBitField
-	)
+void PDBHeaderReconstructor::OnUdtFieldBitFieldBegin(const SYMBOL_UDT_FIELD* First, const SYMBOL_UDT_FIELD* Last)
 {
 	if (m_Settings->AllowBitFieldsInUnion == false)
 	{
-		//
-		// Do not wrap bitfields which have only one member.
-		//
-		if (FirstUdtFieldBitField != LastUdtFieldBitField)
+		if (First != Last)
 		{
 			WriteIndent();
 			Write("%s /* bitfield */\n", PDB::GetUdtKindString(UdtStruct));
@@ -374,15 +285,11 @@ PDBHeaderReconstructor::OnUdtFieldBitFieldBegin(
 	}
 }
 
-void
-PDBHeaderReconstructor::OnUdtFieldBitFieldEnd(
-	const SYMBOL_UDT_FIELD* FirstUdtFieldBitField,
-	const SYMBOL_UDT_FIELD* LastUdtFieldBitField
-	)
+void PDBHeaderReconstructor::OnUdtFieldBitFieldEnd(const SYMBOL_UDT_FIELD* First, const SYMBOL_UDT_FIELD* Last)
 {
 	if (m_Settings->AllowBitFieldsInUnion == false)
 	{
-		if (FirstUdtFieldBitField != LastUdtFieldBitField)
+		if (First != Last)
 		{
 			m_Depth -= 1;
 
@@ -392,13 +299,8 @@ PDBHeaderReconstructor::OnUdtFieldBitFieldEnd(
 	}
 }
 
-void
-PDBHeaderReconstructor::OnPaddingMember(
-	const SYMBOL_UDT_FIELD* UdtField,
-	BasicType PaddingBasicType,
-	DWORD PaddingBasicTypeSize,
-	DWORD PaddingSize
-	)
+void PDBHeaderReconstructor::OnPaddingMember(const SYMBOL_UDT_FIELD* UdtField,
+	BasicType PaddingBasicType, DWORD PaddingBasicTypeSize, DWORD PaddingSize)
 {
 	if (m_Settings->CreatePaddingMembers)
 	{
@@ -422,42 +324,21 @@ PDBHeaderReconstructor::OnPaddingMember(
 	}
 }
 
-void
-PDBHeaderReconstructor::OnPaddingBitFieldField(
-	const SYMBOL_UDT_FIELD* UdtField,
-	const SYMBOL_UDT_FIELD* PreviousUdtField
-	)
+void PDBHeaderReconstructor::OnPaddingBitFieldField(
+	const SYMBOL_UDT_FIELD* UdtField, const SYMBOL_UDT_FIELD* PreviousUdtField)
 {
 	WriteIndent();
 
 	WriteOffset(UdtField, GetParentOffset());
 
-	//
-	// Bitfield fields can be unnamed.
-	// Check if prefix is specified and if not,
-	// simply do not print anything.
-	//
-
 	if (m_Settings->BitFieldPaddingMemberPrefix.empty())
 	{
-		Write(
-			"%s",
-			PDB::GetBasicTypeString(UdtField->Type) // TODO: UseStdInt
-		);
-	}
-	else
+		Write("%s", PDB::GetBasicTypeString(UdtField->Type));
+	} else
 	{
-		Write(
-			"%s %s%u",
-			PDB::GetBasicTypeString(UdtField->Type), // TODO: UseStdInt
-			m_Settings->PaddingMemberPrefix.c_str(),
-			m_PaddingMemberCounter++
-		);
+		Write("%s %s%u", PDB::GetBasicTypeString(UdtField->Type),
+			m_Settings->PaddingMemberPrefix.c_str(), m_PaddingMemberCounter++);
 	}
-
-	//
-	// BitField handling.
-	//
 
 	DWORD Bits = PreviousUdtField
 		? UdtField->BitPosition - (PreviousUdtField->BitPosition + PreviousUdtField->Bits)
@@ -470,19 +351,12 @@ PDBHeaderReconstructor::OnPaddingBitFieldField(
 	assert(Bits != 0);
 
 	Write(" : %i", Bits);
-
 	Write(";");
-
-	Write(" /* bit position: %i */", BitPosition);
-
+	Write("   /* %i */", BitPosition);
 	Write("\n");
 }
 
-void
-PDBHeaderReconstructor::Write(
-	const char* Format,
-	...
-	)
+void PDBHeaderReconstructor::Write(const char* Format, ...)
 {
 	char TempBuffer[8 * 1024];
 
@@ -494,71 +368,62 @@ PDBHeaderReconstructor::Write(
 	m_Settings->OutputFile->write(TempBuffer, strlen(TempBuffer));
 }
 
-void
-PDBHeaderReconstructor::WriteIndent()
+void PDBHeaderReconstructor::WriteIndent()
 {
-	for (DWORD i = 0; i < m_Depth; i++)
+	for (DWORD i = 0; i < m_Depth; ++i)
 	{
 		Write("  ");
 	}
 }
 
-void
-PDBHeaderReconstructor::WriteVariant(
-	const VARIANT* v
-	)
+void PDBHeaderReconstructor::WriteVariant(const VARIANT* v)
 {
 	switch (v->vt)
 	{
-		case VT_I1:
-			Write("%d", (INT)v->cVal);
-			break;
+	case VT_I1:
+		Write("%d", (INT)v->cVal);
+		break;
 
-		case VT_UI1:
-			Write("0x%x", (UINT)v->cVal);
-			break;
+	case VT_UI1:
+		Write("0x%x", (UINT)v->cVal);
+		break;
 
-		case VT_I2:
-			Write("%d", (UINT)v->iVal);
-			break;
+	case VT_I2:
+		Write("%d", (UINT)v->iVal);
+		break;
 
-		case VT_UI2:
-			Write("0x%x", (UINT)v->iVal);
-			break;
+	case VT_UI2:
+		Write("0x%x", (UINT)v->iVal);
+		break;
 
-		case VT_INT:
-		case VT_I4:
-			Write("%d", (UINT)v->lVal);
-			break;
+	case VT_INT:
+		Write("%d", (UINT)v->lVal);
+		break;
 
-		case VT_UINT:
-		case VT_UI4:
-			Write("0x%x", (UINT)v->lVal);
-			break;
+	case VT_UINT:
+	case VT_UI4:
+	case VT_I4:
+		Write("0x%x", (UINT)v->lVal);
+		break;
 	}
 }
 
-void
-PDBHeaderReconstructor::WriteUnnamedDataType(
-	UdtKind Kind
-	)
+void PDBHeaderReconstructor::WriteUnnamedDataType(UdtKind Kind)
 {
 	if (m_Settings->AllowAnonymousDataTypes == false)
 	{
 		switch (Kind)
 		{
-			case UdtStruct:
-			case UdtClass:
-				Write(" %s", m_Settings->AnonymousStructPrefix.c_str());
-				break;
-
-			case UdtUnion:
-				Write(" %s", m_Settings->AnonymousUnionPrefix.c_str());
-				break;
-
-			default:
-				assert(0);
-				break;
+		case UdtStruct:
+		case UdtClass:
+			Write(" %s", m_Settings->AnonymousStructPrefix.c_str());
+			break;
+		case UdtUnion:
+			Write(" %s", m_Settings->AnonymousUnionPrefix.c_str());
+			break;
+		default:
+			assert(0);
+			break;
 		}
 
 		if (m_AnonymousDataTypeCounter++ > 0)
@@ -568,45 +433,10 @@ PDBHeaderReconstructor::WriteUnnamedDataType(
 	}
 }
 
-void
-PDBHeaderReconstructor::WriteTypedefBegin(
-	const SYMBOL* Symbol
-	)
-{
-	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
-	bool UseTypedef = m_Settings->MicrosoftTypedefs && CorrectedName[0] == '_';
-
-	if (UseTypedef && m_Depth == 0)
-	{
-		Write("typedef ");
-	}
-}
-
-void
-PDBHeaderReconstructor::WriteTypedefEnd(
-	const SYMBOL* Symbol
-	)
-{
-	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
-	bool UseTypedef = m_Settings->MicrosoftTypedefs && CorrectedName[0] == '_';
-
-	if (UseTypedef && m_Depth == 0)
-	{
-		Write(" %s, *P%s", &CorrectedName[1], &CorrectedName[1]);
-	}
-}
-
-void
-PDBHeaderReconstructor::WriteConstAndVolatile(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::WriteConstAndVolatile(const SYMBOL* Symbol)
 {
 	if (m_Depth != 0)
 	{
-		//
-		// Allow only non-root UDTs to be "const" and/or "volatile".
-		//
-
 		if (Symbol->IsConst)
 		{
 			Write("const ");
@@ -619,11 +449,7 @@ PDBHeaderReconstructor::WriteConstAndVolatile(
 	}
 }
 
-void
-PDBHeaderReconstructor::WriteOffset(
-	const SYMBOL_UDT_FIELD* UdtField,
-	int PaddingOffset
-	)
+void PDBHeaderReconstructor::WriteOffset(const SYMBOL_UDT_FIELD* UdtField, int PaddingOffset)
 {
 	if (m_Settings->ShowOffsets)
 	{
@@ -631,153 +457,41 @@ PDBHeaderReconstructor::WriteOffset(
 	}
 }
 
-bool
-PDBHeaderReconstructor::HasBeenVisited(
-	const SYMBOL* Symbol
-	) const
+bool PDBHeaderReconstructor::HasBeenVisited(const SYMBOL* Symbol) const
 {
 	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
 	return m_VisitedSymbols.find(CorrectedName) != m_VisitedSymbols.end();
 }
 
-void
-PDBHeaderReconstructor::MarkAsVisited(
-	const SYMBOL* Symbol
-	)
+void PDBHeaderReconstructor::MarkAsVisited(const SYMBOL* Symbol)
 {
 	std::string CorrectedName = GetCorrectedSymbolName(Symbol);
 	m_VisitedSymbols.insert(CorrectedName);
 }
 
-DWORD
-PDBHeaderReconstructor::GetParentOffset() const
+DWORD PDBHeaderReconstructor::GetParentOffset() const
 {
 	return std::accumulate(m_OffsetStack.begin(), m_OffsetStack.end(), (DWORD)0);
 }
 
-void
-PDBHeaderReconstructor::AppendToTest(
-	const SYMBOL_UDT_FIELD* UdtField
-	)
-{
-	//
-	// Test of the current member is produced when:
-	//   - Test file was specified.
-	//   - We're in the root UDT.
-	//   - This field is not a part of the bitfield.
-	//
-
-	if (m_Settings->TestFile != nullptr &&
-	    m_OffsetStack.empty() &&
-	    UdtField->Bits == 0)
-	{
-		//
-		// Line of the test:
-		//
-		// printf(
-		//   \"[%%c] 0x%%04x - 0x%04x (%s %s.%s)\\n\",
-		//   offsetof(%s %s, %s) == %u ? ' ' : '!',
-		//   (unsigned)offsetof(%s %s, %s)
-		// );
-		//
-		//
-		// Example:
-		//
-		// printf(
-		//   "[%c] 0x%04x - 0x000c (struct _DEVICE_OBJECT.NextDevice)\n",
-		//   offsetof(struct _DEVICE_OBJECT, NextDevice) == 12 ? ' ' : '!',
-		//   (unsigned)offsetof(struct _DEVICE_OBJECT, NextDevice)
-		// );
-		//
-		static const char TestFormatString[] =
-			"\t"
-			"printf("
-				"\"[%%c] 0x%%04x - 0x%04x (%s %s.%s)\\n\", "
-				"offsetof(%s %s, %s) == %u ? ' ' : '!', "
-				"(unsigned)offsetof(%s %s, %s)"
-			");";
-
-		//
-		// Delimiter for the structs.
-		//
-		// printf("\n");
-		//
-		static const char TestDelimiterString[] =
-			"\t"
-			"printf("
-			"\"\\n\""
-			");";
-
-		//
-		// Holds corrected name of a last symbol
-		// which test was produced for.
-		// This is used for delimiting tests
-		// with extra new line.
-		//
-		static std::string LastTestedUdt;
-
-		std::string CorrectedSymbolName = GetCorrectedSymbolName(UdtField->Parent);
-
-		//
-		// If the current member is part of a different UDT
-		// than the previous one, delimit the output of the test
-		// by extra new line.
-		//
-		if (CorrectedSymbolName != LastTestedUdt)
-		{
-			(*m_Settings->TestFile) << TestDelimiterString << std::endl;
-		}
-
-		LastTestedUdt = CorrectedSymbolName;
-
-		//
-		// Build the line for the test.
-		//
-		static char FormattedStringBuffer[4096];
-		sprintf_s(
-			FormattedStringBuffer,
-			TestFormatString,
-			UdtField->Offset,
-
-			PDB::GetUdtKindString(UdtField->Parent->u.Udt.Kind),
-			CorrectedSymbolName.c_str(),
-			UdtField->Name,
-
-			PDB::GetUdtKindString(UdtField->Parent->u.Udt.Kind),
-			CorrectedSymbolName.c_str(),
-			UdtField->Name,
-			UdtField->Offset,
-
-			PDB::GetUdtKindString(UdtField->Parent->u.Udt.Kind),
-			CorrectedSymbolName.c_str(),
-			UdtField->Name
-			);
-
-		(*m_Settings->TestFile) << FormattedStringBuffer << std::endl;
-	}
-}
-
-bool
-PDBHeaderReconstructor::ShouldExpand(
-	const SYMBOL* Symbol
-	) const
+bool PDBHeaderReconstructor::ShouldExpand(const SYMBOL* Symbol) const
 {
 	bool Expand = false;
 
 	switch (m_Settings->MemberStructExpansion)
 	{
-		default:
-		case MemberStructExpansionType::None:
-			Expand = m_Depth == 0;
-			break;
+	default:
+	case MemberStructExpansionType::None:
+		Expand = m_Depth == 0;
+		break;
 
-		case MemberStructExpansionType::InlineUnnamed:
-			Expand = m_Depth == 0 || (Symbol->Tag == SymTagUDT && PDB::IsUnnamedSymbol(Symbol));
-			break;
+	case MemberStructExpansionType::InlineUnnamed:
+		Expand = m_Depth == 0 || (Symbol->Tag == SymTagUDT && PDB::IsUnnamedSymbol(Symbol));
+		break;
 
-		case MemberStructExpansionType::InlineAll:
-			Expand = !HasBeenVisited(Symbol);
-			break;
+	case MemberStructExpansionType::InlineAll:
+		Expand = !HasBeenVisited(Symbol);
+		break;
 	}
 
 	return Expand && Symbol->Size > 0;

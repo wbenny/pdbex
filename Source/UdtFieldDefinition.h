@@ -2,172 +2,200 @@
 #include "UdtFieldDefinitionBase.h"
 
 #include <string>
+#include <stack>
+#include <vector>
 
 class UdtFieldDefinition
 	: public UdtFieldDefinitionBase
 {
-	public:
-		struct Settings
-		{
-			bool UseStdInt = false;
-		};
+public:
+	void VisitBaseType(const SYMBOL* Symbol) override
+	{
+		if (Symbol->BaseType == btFloat && Symbol->Size == 10)
+			m_Comment += " /* 80-bit float */";
 
-		void
-		VisitBaseType(
-			const SYMBOL* Symbol
-			) override
-		{
-			//
-			// BaseType:
-			// short/int/long/...
-			//
+		if (Symbol->IsConst)	m_TypePrefix += "const ";
+		if (Symbol->IsVolatile)	m_TypePrefix += "volatile ";
+		m_TypePrefix += PDB::GetBasicTypeString(Symbol);
+	}
 
-			if (Symbol->BaseType == btFloat && Symbol->Size == 10)
-			{
-				m_Comment += " /* 80-bit float */";
-			}
+	void VisitTypedefTypeEnd(const SYMBOL* Symbol) override
+	{
+		m_TypePrefix = "typedef " + m_TypePrefix;
+	}
 
-			if (Symbol->IsConst)
-			{
-				m_TypePrefix += "const ";
-			}
+	void VisitEnumType(const SYMBOL* Symbol) override
+	{
+		if (Symbol->IsConst)	m_TypePrefix += "const ";
+		if (Symbol->IsVolatile)	m_TypePrefix += "volatile ";
+		m_TypePrefix += Symbol->Name;
+	}
 
-			if (Symbol->IsVolatile)
-			{
-				m_TypePrefix += "volatile ";
-			}
+	void VisitUdtType(const SYMBOL* Symbol) override
+	{
+		if (Symbol->IsConst)	m_TypePrefix += "const ";
+		if (Symbol->IsVolatile)	m_TypePrefix += "volatile ";
 
-			//
-			// If this returns null, it probably means BasicTypeMapMSVC and/or BasicTypeMapStdInt are out of date compared to MS DIA.
-			// Output the (non-compilable) type "<unknown_type>" instead of crashing.
-			//
+		//
+		// If this returns null, it probably means BasicTypeMapMSVC and/or BasicTypeMapStdInt are out of date compared to MS DIA.
+		// Output the (non-compilable) type "<unknown_type>" instead of crashing.
+		//
 
-			const CHAR* BasicTypeString = PDB::GetBasicTypeString(Symbol, m_Settings->UseStdInt);
-			m_TypePrefix += (BasicTypeString != nullptr ? BasicTypeString : "<unknown_type>");
-		}
+		const CHAR* BasicTypeString = PDB::GetBasicTypeString(Symbol, m_Settings->UseStdInt);
+		m_TypePrefix += (BasicTypeString != nullptr ? BasicTypeString : "<unknown_type>");
+	}
 
-		void
-		VisitPointerTypeEnd(
-			const SYMBOL* Symbol
-			) override
+
+	void VisitPointerTypeEnd(const SYMBOL* Symbol) override
+	{
+		if (Symbol->u.Pointer.Type->Tag == SymTagFunctionType)
 		{
 			if (Symbol->u.Pointer.IsReference)
-			{
-				m_TypePrefix += "&";
-			}
-			else
-			{
-				m_TypePrefix += "*";
-			}
+				m_MemberName = "& " + m_MemberName;
+			else	m_MemberName = "* " + m_MemberName;
 
-			if (Symbol->IsConst)
-			{
-				m_TypePrefix += " const";
-			}
+			if (Symbol->IsConst)	m_MemberName += " const";
+			if (Symbol->IsVolatile)	m_MemberName += " volatile";
 
-			if (Symbol->IsVolatile)
-			{
-				m_TypePrefix += " volatile";
-			}
+			m_MemberName = "(" + m_MemberName + ")";
+
+			return;
 		}
 
-		void
-		VisitArrayTypeEnd(
-			const SYMBOL* Symbol
-			) override
+		if (Symbol->u.Pointer.IsReference)
+			m_TypePrefix += "&";
+		else	m_TypePrefix += "*";
+
+		if (Symbol->IsConst)	m_TypePrefix += " const";
+		if (Symbol->IsVolatile)	m_TypePrefix += " volatile";
+	}
+
+	void VisitArrayTypeEnd(const SYMBOL* Symbol) override
+	{
+		if (Symbol->u.Array.ElementCount == 0)
 		{
-			//
-			// To my knowledge, array elements can't be declared like that.
-			//
-			//	if (Symbol->IsConst)
-			//	{
-			//		m_TypePrefix += " const";
-			//	}
-			//
-			//	if (Symbol->IsVolatile)
-			//	{
-			//		m_TypePrefix += " volatile";
-			//	}
-			//
-
-			if (Symbol->u.Array.ElementCount == 0)
-			{
-				//
-				// Apparently array with 0 element count can exist in PDB.
-				// But XYZ Name[0] is not compilable.
-				// This hack "converts" the zero-sized array into the pointer.
-				//
-				// Also, size of the symbol is set to 1 instead of 0,
-				// otherwise we would end up in anonymous union.
-				//
-
-				const_cast<SYMBOL*>(Symbol)->Size = 1;
-				m_TypePrefix += "*";
-
-				m_Comment += " /* zero-length array */";
-			}
-			else
-			{
-				m_TypeSuffix += "[" + std::to_string(Symbol->u.Array.ElementCount) + "]";
-			}
-		}
-
-		void
-		VisitFunctionTypeEnd(
-			const SYMBOL* Symbol
-			) override
+			const_cast<SYMBOL*>(Symbol)->Size = 1;
+			m_TypeSuffix += "[]";
+		} else
 		{
-			//
-			// #TODO:
-			// Currently, show void* instead of functions.
-			//
-
-			m_TypePrefix += "void";
-
-			m_Comment += " /* function */";
+			m_TypeSuffix += "[" + std::to_string(Symbol->u.Array.ElementCount) + "]";
 		}
+	}
 
-		void
-		SetMemberName(
-			const CHAR* MemberName
-			) override
+	void VisitFunctionTypeBegin(const SYMBOL* Symbol) override
+	{
+		if (m_Funcs.size())
 		{
-			m_MemberName = MemberName ? MemberName : std::string();
+			if (m_Funcs.top().Name == m_MemberName)
+				m_MemberName = "";
 		}
 
-		std::string
-		GetPrintableDefinition() const override
+		m_Funcs.push(Function{m_MemberName, m_Args});
+		m_MemberName = "";
+	}
+
+	void VisitFunctionTypeEnd(const SYMBOL* Symbol) override
+	{
+		if (Symbol->u.Function.IsStatic)
 		{
-			return m_TypePrefix + " " + m_MemberName + m_TypeSuffix + m_Comment;
-		}
-
-		void
-		SetSettings(
-			void* MemberDefinitionSettings
-			) override
+			m_TypePrefix = "static " + m_TypePrefix;
+		} else
+		if (Symbol->u.Function.IsVirtual)
 		{
-			static Settings DefaultSettings;
-
-			if (MemberDefinitionSettings == nullptr)
-			{
-				MemberDefinitionSettings = &DefaultSettings;
-			}
-
-			m_Settings = static_cast<Settings*>(MemberDefinitionSettings);
+			m_TypePrefix = "virtual " + m_TypePrefix;
 		}
-
-		virtual
-		void*
-		GetSettings() override
+	#if 0
+		std::string Access;
+		switch (Symbol->u.Function.Access)
 		{
-			return &m_Settings;
+		case 1: Access = "private "; break;
+		case 2: Access = "protected "; break;
+		case 3: Access = "public "; break;
+		}
+		m_TypePrefix = Access + m_TypePrefix;
+	#endif
+		if (Symbol->u.Function.IsConst)		m_Comment += " const";
+		if (Symbol->u.Function.IsOverride)	m_Comment += " override";
+		if (Symbol->u.Function.IsPure)		m_Comment += " = 0";
+
+		if (Symbol->u.Function.IsVirtual)
+		{
+			char hexbuf[16];
+			snprintf(hexbuf, sizeof(hexbuf), " 0x%02x ", Symbol->u.Function.VirtualOffset);
+			m_Comment += " /*" + std::string(hexbuf) + "*/";
 		}
 
-	private:
-		std::string m_TypePrefix; // "int*"
-		std::string m_MemberName; // "XYZ"
-		std::string m_TypeSuffix; // "[8]"
-		std::string m_Comment;
+		if (m_TypeSuffix.size())
+			m_TypePrefix = GetPrintableDefinition();
 
-		Settings* m_Settings;
+		m_TypeSuffix = "";
+
+		for (auto && e : m_Args)
+		{
+			if (m_TypeSuffix.size()) m_TypeSuffix += ", ";
+			m_TypeSuffix += e;
+		}
+		m_TypeSuffix = "(" + m_TypeSuffix + ")";
+
+		Function func = m_Funcs.top();
+
+		m_Funcs.pop();
+
+		m_Args = func.Args;
+		m_MemberName = func.Name;
+	}
+
+	void VisitFunctionArgTypeBegin(const SYMBOL* Symbol) override
+	{
+		Function func = m_Funcs.top();
+		//TODO
+	}
+
+	void VisitFunctionArgTypeEnd(const SYMBOL* Symbol) override
+	{
+		std::string ArgName;
+		if (Symbol->Name) ArgName = std::string(" ") + Symbol->Name;
+
+		if (m_MemberName.find('(') == std::string::npos)
+		{
+			m_Args.push_back(m_TypePrefix + ArgName);
+			m_TypeSuffix = "";
+			m_TypePrefix = "";
+		} else
+		{
+			m_TypeSuffix = GetPrintableDefinition();
+			m_Args.push_back(m_TypeSuffix + ArgName);
+			m_TypeSuffix = "";
+			m_TypePrefix = "";
+		}
+
+		Function func = m_Funcs.top();
+
+		m_MemberName = func.Name;
+		//TODO
+	}
+
+	void SetMemberName(const CHAR* MemberName) override
+	{
+		m_MemberName = MemberName ? MemberName : std::string();
+	}
+
+	std::string GetPrintableDefinition() const override
+	{
+		return m_TypePrefix + " " + m_MemberName + m_TypeSuffix + m_Comment;
+	}
+
+private:
+	struct Function
+	{
+		std::string Name;
+		std::vector<std::string> Args;
+	};
+
+	std::string m_TypePrefix;
+	std::string m_MemberName;
+	std::string m_TypeSuffix;
+	std::string m_Comment;
+	std::stack<Function> m_Funcs;
+	std::vector<std::string> m_Args;
 };
