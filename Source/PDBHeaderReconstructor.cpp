@@ -515,25 +515,25 @@ PDBHeaderReconstructor::WriteVariant(
 			break;
 
 		case VT_UI1:
-			Write("0x%x", (UINT)v->cVal);
+			Write("0x%x", (UINT)v->bVal);
 			break;
 
 		case VT_I2:
-			Write("%d", (UINT)v->iVal);
+			Write("%d", (INT)v->iVal);
 			break;
 
 		case VT_UI2:
-			Write("0x%x", (UINT)v->iVal);
+			Write("0x%x", (UINT)v->uiVal);
 			break;
 
 		case VT_INT:
 		case VT_I4:
-			Write("%d", (UINT)v->lVal);
+			Write("%d", (INT)v->lVal);
 			break;
 
 		case VT_UINT:
 		case VT_UI4:
-			Write("0x%x", (UINT)v->lVal);
+			Write("0x%x", (UINT)v->ulVal);
 			break;
 	}
 }
