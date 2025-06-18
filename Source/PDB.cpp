@@ -6,7 +6,6 @@
 
 #include <cassert>
 
-#include <string>
 #include <memory>
 
 //////////////////////////////////////////////////////////////////////////
@@ -18,7 +17,7 @@ class SymbolModuleBase
 	public:
 		SymbolModuleBase();
 
-		BOOL
+		HRESULT
 		Open(
 			IN const CHAR* Path
 			);
@@ -73,8 +72,7 @@ SymbolModuleBase::LoadDiaViaLoadLibrary()
 
 	if (!Module)
 	{
-		Result = HRESULT_FROM_WIN32(GetLastError());
-		return Result;
+		return HRESULT_FROM_WIN32(GetLastError());
 	}
 
 	using PDLLGETCLASSOBJECT_ROUTINE = HRESULT(WINAPI*)(REFCLSID, REFIID, LPVOID);
@@ -82,8 +80,7 @@ SymbolModuleBase::LoadDiaViaLoadLibrary()
 
 	if (!DllGetClassObject)
 	{
-		Result = HRESULT_FROM_WIN32(GetLastError());
-		return Result;
+		return HRESULT_FROM_WIN32(GetLastError());
 	}
 
 	CComPtr<IClassFactory> ClassFactory;
@@ -97,7 +94,7 @@ SymbolModuleBase::LoadDiaViaLoadLibrary()
 	return ClassFactory->CreateInstance(nullptr, __uuidof(IDiaDataSource), (void**)& m_DataSource);
 }
 
-BOOL
+HRESULT
 SymbolModuleBase::Open(
 	IN const CHAR* Path
 	)
@@ -114,7 +111,7 @@ SymbolModuleBase::Open(
 	if (FAILED(Result = LoadDiaViaCoCreateInstance()) &&
 	    FAILED(Result = LoadDiaViaLoadLibrary()))
 	{
-		return FALSE;
+		return Result;
 	}
 
 	//
@@ -190,11 +187,11 @@ SymbolModuleBase::Open(
 		goto Error;
 	}
 
-	return TRUE;
+	return Result;
 
 Error:
 	Close();
-	return FALSE;
+	return Result;
 }
 
 VOID
@@ -225,7 +222,7 @@ class SymbolModule
 
 		~SymbolModule();
 
-		BOOL
+		HRESULT
 		Open(
 			IN const CHAR* Path
 			);
@@ -368,18 +365,18 @@ SymbolModule::~SymbolModule()
 	Close();
 }
 
-BOOL
+HRESULT
 SymbolModule::Open(
 	IN const CHAR* Path
 	)
 {
-	BOOL Result;
+	HRESULT Result;
 
 	Result = SymbolModuleBase::Open(Path);
 
-	if (Result == FALSE)
+	if (FAILED(Result))
 	{
-		return FALSE;
+		return Result;
 	}
 
 	m_GlobalSymbol->get_machineType(&m_MachineType);
@@ -390,7 +387,7 @@ SymbolModule::Open(
 
 	BuildSymbolMap();
 
-	return TRUE;
+	return S_OK;
 }
 
 BOOL
@@ -1062,7 +1059,7 @@ PDB::~PDB()
 	delete m_Impl;
 }
 
-BOOL
+HRESULT
 PDB::Open(
 	IN const CHAR* Path
 	)

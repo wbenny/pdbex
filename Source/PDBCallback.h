@@ -11,17 +11,15 @@ class PDBCallback
 
 		ULONG STDMETHODCALLTYPE AddRef() override
 		{
-			return m_RefCount++;
+			return ++m_RefCount;
 		}
 
 		ULONG STDMETHODCALLTYPE Release() override
 		{
-			if ((--m_RefCount) == 0)
-			{
+			ULONG ref = --m_RefCount;
+			if (ref == 0)
 				delete this;
-			}
-
-			return m_RefCount;
+			return ref;
 		}
 
 		HRESULT STDMETHODCALLTYPE QueryInterface(REFIID Rid, void **Interface) override

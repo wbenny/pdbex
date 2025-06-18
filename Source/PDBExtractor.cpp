@@ -60,6 +60,12 @@ namespace
 	static const char* MESSAGE_FILE_NOT_FOUND =
 		"File not found";
 
+	static const char* MESSAGE_UNKNOWN_OPEN_FILE_ERROR =
+		"Unknown open file error";
+
+	static const char* MESSAGE_DLL_NOT_FOUND =
+		"msdia140.dll not found";
+
 	static const char* MESSAGE_SYMBOL_NOT_FOUND =
 		"Symbol not found";
 
@@ -201,7 +207,7 @@ PDBExtractor::ParseParameters(
 			: nullptr;
 
 		size_t NextArgumentLength = NextArgument
-			? strlen(CurrentArgument)
+			? strlen(NextArgument)
 			: 0;
 
 		//
@@ -410,9 +416,20 @@ PDBExtractor::ParseParameters(
 void
 PDBExtractor::OpenPDBFile()
 {
-	if (m_PDB.Open(m_Settings.PdbPath.c_str()) == FALSE)
+	HRESULT Result;
+
+	Result = m_PDB.Open(m_Settings.PdbPath.c_str());
+	if (FAILED(Result))
 	{
-		throw PDBDumperException(MESSAGE_FILE_NOT_FOUND);
+		switch (Result) {
+		case HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND):
+			throw PDBDumperException(MESSAGE_DLL_NOT_FOUND);
+		case HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND):
+		case E_PDB_NOT_FOUND:
+			throw PDBDumperException(MESSAGE_FILE_NOT_FOUND);
+		default:
+			throw PDBDumperException(MESSAGE_UNKNOWN_OPEN_FILE_ERROR);
+		}
 	}
 }
 
